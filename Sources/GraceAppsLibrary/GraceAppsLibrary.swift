@@ -20,8 +20,8 @@ public struct GraceApp {
 }
 
 public enum GraceAppsLibrary {
-    public static func getAllApps() -> [GraceApp] {
-        return [
+    public static func getAllApps(excluding appIdToExclude: String? = nil) -> [GraceApp] {
+        let allApps = [
             GraceApp(
                 name: "TallyCoin",
                 iconName: "TallyCoinIcon",
@@ -53,12 +53,17 @@ public enum GraceAppsLibrary {
                 appId: "id6615060694"
             ),
             GraceApp(
-                name: "ItemizeAI",
+                name: "Itemize AI",
                 iconName: "ItemizeAIIcon",
                 shortDescription: "Itemize AI is an AI-powered app that analyzes any text, breaks it down into important bullet points, and summarizes it for you. Designed for visual readers.",
                 appId: "id6737280335"
             )
         ]
+        
+        if let appIdToExclude {
+            return allApps.filter { $0.appId != appIdToExclude }
+        }
+        return allApps
     }
     
     public static func getAppStoreUrl(for appId: String) -> URL? {
