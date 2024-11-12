@@ -37,34 +37,26 @@ final class GraceAppsLibraryTests: XCTestCase {
     }
     
     func testLocalizations() throws {
-        let tallyCoinId = "id1633932632"
-        let bundle = Bundle.module
+        let apps = GraceAppsLibrary.getAllApps()
+        let tallyCoin = try XCTUnwrap(apps.first { $0.appId == "id1633932632" })
         
         // Test English
-        let enName = bundle.localizedString(forKey: "app.name.tallycoin", value: nil, table: nil)
-        let enDesc = bundle.localizedString(forKey: "app.description.tallycoin", value: nil, table: nil)
-        XCTAssertEqual(enName, "TallyCoin")
-        XCTAssertTrue(enDesc.contains("tracking chores and rewards"))
+        XCTAssertEqual(tallyCoin.localizedName, "TallyCoin")
+        XCTAssertTrue(tallyCoin.localizedDescription.contains("tracking chores and rewards"))
         
         // Test Japanese
-        let jaBundle = Bundle(path: try XCTUnwrap(bundle.path(forResource: "ja", ofType: "lproj")))
-        let jaName = jaBundle?.localizedString(forKey: "app.name.tallycoin", value: nil, table: nil)
-        let jaDesc = jaBundle?.localizedString(forKey: "app.description.tallycoin", value: nil, table: nil)
-        XCTAssertEqual(jaName, "TallyCoin タリーコイン")
-        XCTAssertTrue(jaDesc?.contains("家事や報酬を追跡") ?? false)
+        let jaLocale = Locale(identifier: "ja")
+        XCTAssertEqual(tallyCoin.localizedName(for: jaLocale), "TallyCoin タリーコイン")
+        XCTAssertTrue(tallyCoin.localizedDescription(for: jaLocale).contains("家事や報酬を追跡"))
         
         // Test Chinese
-        let zhBundle = Bundle(path: try XCTUnwrap(bundle.path(forResource: "zh-Hans", ofType: "lproj")))
-        let zhName = zhBundle?.localizedString(forKey: "app.name.tallycoin", value: nil, table: nil)
-        let zhDesc = zhBundle?.localizedString(forKey: "app.description.tallycoin", value: nil, table: nil)
-        XCTAssertEqual(zhName, "TallyCoin 劳动就打赏")
-        XCTAssertTrue(zhDesc?.contains("追踪家务和奖励") ?? false)
+        let zhLocale = Locale(identifier: "zh-Hans")
+        XCTAssertEqual(tallyCoin.localizedName(for: zhLocale), "TallyCoin 劳动就打赏")
+        XCTAssertTrue(tallyCoin.localizedDescription(for: zhLocale).contains("追踪家务和奖励"))
         
         // Test German
-        let deBundle = Bundle(path: try XCTUnwrap(bundle.path(forResource: "de", ofType: "lproj")))
-        let deName = deBundle?.localizedString(forKey: "app.name.tallycoin", value: nil, table: nil)
-        let deDesc = deBundle?.localizedString(forKey: "app.description.tallycoin", value: nil, table: nil)
-        XCTAssertEqual(deName, "TallyCoin")
-        XCTAssertTrue(deDesc?.contains("Verfolgung von Aufgaben und Belohnungen") ?? false)
+        let deLocale = Locale(identifier: "de")
+        XCTAssertEqual(tallyCoin.localizedName(for: deLocale), "TallyCoin")
+        XCTAssertTrue(tallyCoin.localizedDescription(for: deLocale).contains("Verfolgung von Aufgaben und Belohnungen"))
     }
 }

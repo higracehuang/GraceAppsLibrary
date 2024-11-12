@@ -11,11 +11,53 @@ public struct GraceApp: Hashable {
     public let appStoreUrl: URL
     
     public init(name: String, iconName: String, shortDescription: String, appId: String) {
-        self.name = NSLocalizedString(name, bundle: .module, comment: "App name")
+        self.name = name
         self.iconName = iconName
-        self.shortDescription = NSLocalizedString(shortDescription, bundle: .module, comment: "App description")
+        self.shortDescription = shortDescription
         self.appId = appId
         self.appStoreUrl = URL(string: "https://apps.apple.com/app/\(appId)")!
+    }
+    
+    public var localizedName: String {
+        Bundle.module.localizedString(forKey: name, value: nil, table: nil)
+    }
+    
+    public func localizedName(for locale: Locale) -> String {
+        let bundlePath = Bundle.module.path(forResource: locale.identifier, ofType: "lproj") ??
+                        Bundle.module.path(forResource: locale.languageCode, ofType: "lproj")
+        
+        // Check if the bundle path is valid
+        guard let path = bundlePath, let languageBundle = Bundle(path: path) else {
+            print("[Error] Localization bundle not found for locale: \(locale.identifier)")
+            return name // Fallback to the app name
+        }
+        
+        return languageBundle.localizedString(
+            forKey: name,
+            value: name,
+            table: "Localizable"
+        )
+    }
+    
+    public var localizedDescription: String {
+        Bundle.module.localizedString(forKey: shortDescription, value: nil, table: nil)
+    }
+    
+    public func localizedDescription(for locale: Locale) -> String {
+        let bundlePath = Bundle.module.path(forResource: locale.identifier, ofType: "lproj") ??
+                        Bundle.module.path(forResource: locale.languageCode, ofType: "lproj")
+        
+        // Check if the bundle path is valid
+        guard let path = bundlePath, let languageBundle = Bundle(path: path) else {
+            print("[Error] Localization bundle not found for locale: \(locale.identifier)")
+            return shortDescription // Fallback to the short description
+        }
+
+        return languageBundle.localizedString(
+            forKey: shortDescription,
+            value: shortDescription,
+            table: "Localizable"
+        )
     }
 }
 
