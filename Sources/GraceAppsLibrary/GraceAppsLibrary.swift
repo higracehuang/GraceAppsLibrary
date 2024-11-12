@@ -25,12 +25,7 @@ public struct GraceApp: Hashable {
     public func localizedName(for locale: Locale) -> String {
         let bundlePath = Bundle.module.path(forResource: locale.identifier, ofType: "lproj") ??
                         Bundle.module.path(forResource: locale.languageCode, ofType: "lproj")
-        
-        // Check if the bundle path is valid
-        guard let path = bundlePath, let languageBundle = Bundle(path: path) else {
-            print("[Error] Localization bundle not found for locale: \(locale.identifier)")
-            return name // Fallback to the app name
-        }
+        let languageBundle = bundlePath.flatMap { Bundle(path: $0) } ?? Bundle.module
         
         return languageBundle.localizedString(
             forKey: name,
@@ -46,12 +41,7 @@ public struct GraceApp: Hashable {
     public func localizedDescription(for locale: Locale) -> String {
         let bundlePath = Bundle.module.path(forResource: locale.identifier, ofType: "lproj") ??
                         Bundle.module.path(forResource: locale.languageCode, ofType: "lproj")
-        
-        // Check if the bundle path is valid
-        guard let path = bundlePath, let languageBundle = Bundle(path: path) else {
-            print("[Error] Localization bundle not found for locale: \(locale.identifier)")
-            return shortDescription // Fallback to the short description
-        }
+        let languageBundle = bundlePath.flatMap { Bundle(path: $0) } ?? Bundle.module
 
         return languageBundle.localizedString(
             forKey: shortDescription,
