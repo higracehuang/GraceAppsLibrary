@@ -3,7 +3,7 @@
 
 import Foundation
 
-public struct GraceApp {
+public struct GraceApp: Hashable {
     public let name: String
     public let iconName: String
     public let shortDescription: String
