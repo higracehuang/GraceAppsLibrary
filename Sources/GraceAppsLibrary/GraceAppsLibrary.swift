@@ -11,9 +11,9 @@ public struct GraceApp {
     public let appStoreUrl: URL
     
     public init(name: String, iconName: String, shortDescription: String, appId: String) {
-        self.name = name
+        self.name = NSLocalizedString(name, bundle: .module, comment: "App name")
         self.iconName = iconName
-        self.shortDescription = shortDescription
+        self.shortDescription = NSLocalizedString(shortDescription, bundle: .module, comment: "App description")
         self.appId = appId
         self.appStoreUrl = URL(string: "https://apps.apple.com/app/\(appId)")!
     }
@@ -23,39 +23,39 @@ public enum GraceAppsLibrary {
     public static func getAllApps(excluding appIdToExclude: String? = nil) -> [GraceApp] {
         let allApps = [
             GraceApp(
-                name: "TallyCoin",
+                name: "app.name.tallycoin",
                 iconName: "TallyCoinIcon",
-                shortDescription: "TallyCoin is the perfect app for tracking chores and rewards, designed with families in mind.",
+                shortDescription: "app.description.tallycoin",
                 appId: "id1633932632"
             ),
             GraceApp(
-                name: "ReadingClock",
+                name: "app.name.readingclock",
                 iconName: "ReadingClockIcon",
-                shortDescription: "ReadingClock is a simple app to track your daily reading time and progress. By cultivating a consistent reading habit, you can improve your reading skills and expand your knowledge.",
+                shortDescription: "app.description.readingclock",
                 appId: "id6473550400"
             ),
             GraceApp(
-                name: "Stem Cards",
+                name: "app.name.stemcards",
                 iconName: "StemCardsIcon",
-                shortDescription: "Stem Cards is a fun and easy way to learn English word roots, prefixes, and suffixes.",
+                shortDescription: "app.description.stemcards",
                 appId: "id6478243260"
             ),
             GraceApp(
-                name: "QuizMe.AI",
+                name: "app.name.quizmeai",
                 iconName: "QuizMeAIIcon",
-                shortDescription: "QuizMe.AI is an AI-powered quiz app that allows you to create quizzes on any topic from anything.",
+                shortDescription: "app.description.quizmeai",
                 appId: "id6720763773"
             ),
             GraceApp(
-                name: "LocalSpeaks",
+                name: "app.name.localspeaks",
                 iconName: "LocalSpeaksIcon",
-                shortDescription: "LocalSpeaks is a phrasebook app that helps you learn and practice authentic phrases in many different languages. Perfect for travelers and language learners.",
+                shortDescription: "app.description.localspeaks",
                 appId: "id6615060694"
             ),
             GraceApp(
-                name: "Itemize AI",
+                name: "app.name.itemizeai",
                 iconName: "ItemizeAIIcon",
-                shortDescription: "Itemize AI is an AI-powered app that analyzes any text, breaks it down into important bullet points, and summarizes it for you. Designed for visual readers.",
+                shortDescription: "app.description.itemizeai",
                 appId: "id6737280335"
             )
         ]
