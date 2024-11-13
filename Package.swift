@@ -21,7 +21,7 @@ let package = Package(
         .target(
             name: "GraceAppsLibrary",
             resources: [
-                .process("Resources")
+                .process("Resources"),
             ]
         ),
         .testTarget(
