@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct FeedbackView: View {
+public struct FeedbackViewToGrace: View {
     public init() {}
     
     public var body: some View {
@@ -14,11 +14,12 @@ public struct FeedbackView: View {
             Text(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackAppreciation, value: nil, table: nil))
 
             Text(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackSignature, value: nil, table: nil))
+            Spacer()
         }
         .padding()
     }
 }
 
 #Preview {
-    FeedbackView()
+    FeedbackViewToGrace()
 } 
