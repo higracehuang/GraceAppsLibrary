@@ -48,6 +48,33 @@ struct AppLink: View {
     }
 }
 
-#Preview {
+#Preview("Grace Apps") {
     GraceAppsView()
+} 
+
+public struct GraceAppsNavigationView: View {
+    let excludingAppId: String?
+    
+    public init(excludingAppId: String? = nil) {
+        self.excludingAppId = excludingAppId
+    }
+    
+  public var body: some View {
+        NavigationLink(destination: GraceAppsView(excludingAppId: excludingAppId)
+          .navigationTitle("Other Apps by Grace")) {
+          Label("Other Apps built by Grace", systemImage: "apps.iphone")
+        }
+    }
+} 
+
+#Preview("Navigation View") {
+    NavigationView {
+        GraceAppsNavigationView()
+    }
+} 
+
+#Preview("Navigation View excluding TallyCoin") {
+    NavigationView {
+        GraceAppsNavigationView(excludingAppId: "id1633932632")
+    }
 } 
