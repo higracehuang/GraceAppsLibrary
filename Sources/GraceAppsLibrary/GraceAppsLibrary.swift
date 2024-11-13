@@ -73,6 +73,12 @@ public enum GraceAppsLibrary {
                 appId: "id6478243260"
             ),
             GraceApp(
+                name: "app.name.stitchtally",
+                iconName: "StitchTallyIcon",
+                shortDescription: "app.description.stitchtally",
+                appId: "id6738016114"
+            ),
+            GraceApp(
                 name: "app.name.quizmeai",
                 iconName: "QuizMeAIIcon",
                 shortDescription: "app.description.quizmeai",
