@@ -59,10 +59,10 @@ public struct GraceAppsNavigationView: View {
         self.excludingAppId = excludingAppId
     }
     
-  public var body: some View {
+    public var body: some View {
         NavigationLink(destination: GraceAppsView(excludingAppId: excludingAppId)
-          .navigationTitle("Other Apps by Grace")) {
-          Label("Other Apps built by Grace", systemImage: "apps.iphone")
+            .navigationTitle(NSLocalizedString(Constants.StringKeys.otherAppsByGrace, bundle: .module, comment: ""))) {
+            Label(NSLocalizedString(Constants.StringKeys.otherAppsBuiltByGrace, bundle: .module, comment: ""), systemImage: "apps.iphone")
         }
     }
 } 
