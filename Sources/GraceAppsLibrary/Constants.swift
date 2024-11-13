@@ -7,5 +7,6 @@ public enum Constants {
         public static let feedbackMessage = "feedback.message"
         public static let feedbackAppreciation = "feedback.appreciation"
         public static let feedbackSignature = "feedback.signature"
+        public static let feedbackTitle = "feedback.title"
     }
 } 

@@ -23,3 +23,20 @@ public struct FeedbackToGraceView: View {
 #Preview {
     FeedbackToGraceView()
 } 
+
+public struct FeedbackToGraceNavigationView: View {
+    public init() {}
+
+    public var body: some View {
+        NavigationLink(destination: FeedbackToGraceView().navigationTitle(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackTitle, value: nil, table: nil))) {
+            Label(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackTitle, value: nil, table: nil), 
+                  systemImage: "envelope")
+        }
+    }
+}
+
+#Preview {
+    NavigationView {
+        FeedbackToGraceNavigationView()
+    }
+} 
