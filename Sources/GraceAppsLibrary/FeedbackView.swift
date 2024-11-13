@@ -8,8 +8,8 @@ public struct FeedbackView: View {
             
             Text("Have thoughts or suggestions? We'd love to hear from you! Your feedback helps us improve. Please send your feedback to:")
             
-            Link("higracehuang@gmail.com",
-                 destination: URL(string: "mailto:higracehuang@gmail.com")!)
+            Link(Constants.feedbackEmail,
+                 destination: URL(string: "mailto:\(Constants.feedbackEmail)")!)
 
             Text("Appreciate it! ❤️")
 
