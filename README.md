@@ -12,4 +12,28 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 
 ## Installation
 
-Add this package to your Xcode project using Swift Package Manager: 
+1. Add this package to your Xcode project using Swift Package Manager.
+2. Import the package in your Swift file:
+
+```swift
+import GraceAppsLibrary
+```
+
+3. Use the `getAllApps` function to get the list of apps:
+
+```swift
+let apps = GraceAppsLibrary.getAllApps()
+```
+ 
+or exclude a specific app:
+
+```swift
+let apps = GraceAppsLibrary.getAllApps(excluding: "id1633932632")
+```
+
+In the UI, while you loop through the apps, you can use the `localizedName` and `localizedDescription` properties to get the localized name and description for the current locale:
+
+```swift
+let name = app.localizedName
+let description = app.localizedDescription
+```
