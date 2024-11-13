@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct FeedbackViewToGrace: View {
+public struct FeedbackToGraceView: View {
     public init() {}
     
     public var body: some View {
@@ -21,5 +21,5 @@ public struct FeedbackViewToGrace: View {
 }
 
 #Preview {
-    FeedbackViewToGrace()
+    FeedbackToGraceView()
 } 

@@ -13,13 +13,15 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 ## Installation
 
 1. Add this package to your Xcode project using Swift Package Manager.
-2. Import the package in your Swift file:
+1. Import the package in your Swift file:
 
 ```swift
 import GraceAppsLibrary
 ```
+## Usage
 
-3. Use the `getAllApps` function to get the list of apps:
+### Methods
+Use the `getAllApps` function to get the list of apps:
 
 ```swift
 let apps = GraceAppsLibrary.getAllApps()
@@ -36,4 +38,25 @@ In the UI, while you loop through the apps, you can use the `localizedName` and 
 ```swift
 let name = app.localizedName
 let description = app.localizedDescription
+```
+
+### Views
+
+You can use the views directly in your SwiftUI code:
+
+To display all apps in a list:
+```swift
+GraceAppsView()
+```
+
+or 
+
+```swift
+GraceAppsView(excluding: "id1633932632")
+```
+
+To display a request for feedback:
+
+```swift
+FeedbackToGraceView()
 ```
