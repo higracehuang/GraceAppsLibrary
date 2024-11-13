@@ -29,7 +29,7 @@ struct AppLink: View {
     
     var body: some View {
         Link(destination: url) {
-            HStack(spacing: 16) {
+            HStack(alignment: .top, spacing: 16) {
                 Image(iconName, bundle: .module)
                     .resizable()
                     .frame(width: 60, height: 60)
