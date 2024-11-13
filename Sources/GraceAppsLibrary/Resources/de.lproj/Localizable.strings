@@ -18,3 +18,7 @@
 
 "app.name.stitchtally" = "Stitch Tally";
 "app.description.stitchtally" = "StitchTally ist eine App zur Verfolgung Ihrer Strick- und Häkelprojekte.";
+
+"feedback.message" = "Haben Sie Fragen oder Anregungen? Ich freue mich über Ihr Feedback:";
+"feedback.appreciation" = "Vielen Dank für Ihre Unterstützung!";
+"feedback.signature" = "Grace";

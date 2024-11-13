@@ -18,3 +18,7 @@
 
 "app.name.stitchtally" = "StitchTally 针织计数";
 "app.description.stitchtally" = "StitchTally 是一款应用程序，用于追踪您的针织和钩针编织项目。";
+
+"feedback.message" = "有想法或建议吗？我们很乐意听取您的意见！您的反馈帮助我们改进。请将您的反馈发送至：";
+"feedback.appreciation" = "感谢您！❤️";
+"feedback.signature" = "Grace";

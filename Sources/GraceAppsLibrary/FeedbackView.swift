@@ -6,14 +6,14 @@ public struct FeedbackView: View {
     public var body: some View {
       VStack(alignment: .leading, spacing: 16) {
             
-            Text("Have thoughts or suggestions? We'd love to hear from you! Your feedback helps us improve. Please send your feedback to:")
+            Text(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackMessage, value: nil, table: nil))
             
             Link(Constants.feedbackEmail,
                  destination: URL(string: "mailto:\(Constants.feedbackEmail)")!)
 
-            Text("Appreciate it! ❤️")
+            Text(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackAppreciation, value: nil, table: nil))
 
-            Text("- Grace")
+            Text(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackSignature, value: nil, table: nil))
         }
         .padding()
     }

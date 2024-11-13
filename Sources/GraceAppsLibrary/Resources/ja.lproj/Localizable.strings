@@ -18,3 +18,7 @@
 
 "app.name.stitchtally" = "Stitch Tally 編み物計数";
 "app.description.stitchtally" = "Stitch Tally は、編み物とかぎ針編みのプロジェクトを追跡するアプリです。";
+
+"feedback.message" = "ご質問やご提案がございましたら、以下のメールアドレスまでご連絡ください：";
+"feedback.appreciation" = "ご支援ありがとうございます！";
+"feedback.signature" = "グレース Grace";
