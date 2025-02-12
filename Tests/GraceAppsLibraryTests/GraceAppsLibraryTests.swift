@@ -47,6 +47,10 @@ final class GraceAppsLibraryTests: XCTestCase {
         XCTAssertEqual(chartyBee.localizedName, "ChartyBee")
         XCTAssertTrue(chartyBee.localizedDescription.contains("track many little things in life"))
         
+        // Test StitchTally name
+        let stitchTally = try XCTUnwrap(apps.first { $0.appId == "id6738016114" })
+        XCTAssertEqual(stitchTally.localizedName, "StitchTally")
+        
         // Test Japanese
         let jaLocale = Locale(identifier: "ja")
         XCTAssertEqual(tallyCoin.localizedName(for: jaLocale), "TallyCoin タリーコイン")

@@ -16,8 +16,8 @@
 "app.name.itemizeai" = "Itemize AI";
 "app.description.itemizeai" = "Itemize AI は、AIを活用してテキストを分析し、重要な要点に分解して要約するアプリです。視覚的な読者向けに設計されています。";
 
-"app.name.stitchtally" = "Stitch Tally 編み物計数";
-"app.description.stitchtally" = "Stitch Tally は、編み物とかぎ針編みのプロジェクトを追跡するアプリです。";
+"app.name.stitchtally" = "StitchTally 編み物計数";
+"app.description.stitchtally" = "StitchTally は、編み物とかぎ針編みのプロジェクトを追跡するアプリです。";
 
 "app.name.chartybee" = "ChartyBee チャーティービー";
 "app.description.chartybee" = "ChartyBeeは、読んだページ数や飲んだコーヒーの杯数、昨夜の睡眠の質など、日々の生活のちょっとしたことを記録できる小さなトラッキングアプリです。";
