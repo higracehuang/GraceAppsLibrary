@@ -95,6 +95,12 @@ public enum GraceAppsLibrary {
                 iconName: "ItemizeAIIcon",
                 shortDescription: "app.description.itemizeai",
                 appId: "id6737280335"
+            ),
+            GraceApp(
+                name: "app.name.chartybee",
+                iconName: "ChartYBeeIcon",
+                shortDescription: "app.description.chartybee",
+                appId: "id6740661428"
             )
         ]
         

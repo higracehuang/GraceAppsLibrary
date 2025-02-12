@@ -4,7 +4,7 @@ import XCTest
 final class GraceAppsLibraryTests: XCTestCase {
     func testGetAllApps() {
         let apps = GraceAppsLibrary.getAllApps()
-        XCTAssertEqual(apps.count, 6, "Should return all 6 apps")
+        XCTAssertEqual(apps.count, 8, "Should return all 8 apps")
         
         // Test first app
         let tallyCoin = apps.first { $0.appId == "id1633932632" }
@@ -13,15 +13,15 @@ final class GraceAppsLibraryTests: XCTestCase {
         XCTAssertEqual(tallyCoin?.appStoreUrl.absoluteString, "https://apps.apple.com/app/id1633932632")
         
         // Test last app
-        let itemizeAI = apps.first { $0.appId == "id6737280335" }
-        XCTAssertNotNil(itemizeAI)
-        XCTAssertEqual(itemizeAI?.iconName, "ItemizeAIIcon")
-        XCTAssertEqual(itemizeAI?.appStoreUrl.absoluteString, "https://apps.apple.com/app/id6737280335")
+        let chartyBee = apps.first { $0.appId == "id6740661428" }
+        XCTAssertNotNil(chartyBee)
+        XCTAssertEqual(chartyBee?.iconName, "ChartYBeeIcon")
+        XCTAssertEqual(chartyBee?.appStoreUrl.absoluteString, "https://apps.apple.com/app/id6740661428")
     }
     
     func testGetAllAppsWithExclusion() {
         let apps = GraceAppsLibrary.getAllApps(excluding: "id1633932632")
-        XCTAssertEqual(apps.count, 5, "Should return 5 apps when excluding one")
+        XCTAssertEqual(apps.count, 7, "Should return 7 apps when excluding one")
         XCTAssertNil(apps.first { $0.appId == "id1633932632" }, "Excluded app should not be present")
     }
     
@@ -39,24 +39,33 @@ final class GraceAppsLibraryTests: XCTestCase {
     func testLocalizations() throws {
         let apps = GraceAppsLibrary.getAllApps()
         let tallyCoin = try XCTUnwrap(apps.first { $0.appId == "id1633932632" })
+        let chartyBee = try XCTUnwrap(apps.first { $0.appId == "id6740661428" })
         
         // Test English
         XCTAssertEqual(tallyCoin.localizedName, "TallyCoin")
         XCTAssertTrue(tallyCoin.localizedDescription.contains("tracking chores and rewards"))
+        XCTAssertEqual(chartyBee.localizedName, "ChartyBee")
+        XCTAssertTrue(chartyBee.localizedDescription.contains("track many little things in life"))
         
         // Test Japanese
         let jaLocale = Locale(identifier: "ja")
         XCTAssertEqual(tallyCoin.localizedName(for: jaLocale), "TallyCoin タリーコイン")
         XCTAssertTrue(tallyCoin.localizedDescription(for: jaLocale).contains("家事や報酬を追跡"))
+        XCTAssertEqual(chartyBee.localizedName(for: jaLocale), "ChartyBee チャーティービー")
+        XCTAssertTrue(chartyBee.localizedDescription(for: jaLocale).contains("小さなトラッキングアプリ"))
         
         // Test Chinese
         let zhLocale = Locale(identifier: "zh-Hans")
         XCTAssertEqual(tallyCoin.localizedName(for: zhLocale), "TallyCoin 劳动就打赏")
         XCTAssertTrue(tallyCoin.localizedDescription(for: zhLocale).contains("追踪家务和奖励"))
+        XCTAssertEqual(chartyBee.localizedName(for: zhLocale), "ChartyBee 图表小蜜蜂")
+        XCTAssertTrue(chartyBee.localizedDescription(for: zhLocale).contains("点点滴滴"))
         
         // Test German
         let deLocale = Locale(identifier: "de")
         XCTAssertEqual(tallyCoin.localizedName(for: deLocale), "TallyCoin")
         XCTAssertTrue(tallyCoin.localizedDescription(for: deLocale).contains("Verfolgung von Aufgaben und Belohnungen"))
+        XCTAssertEqual(chartyBee.localizedName(for: deLocale), "ChartyBee")
+        XCTAssertTrue(chartyBee.localizedDescription(for: deLocale).contains("kleine Tracking-App"))
     }
 }

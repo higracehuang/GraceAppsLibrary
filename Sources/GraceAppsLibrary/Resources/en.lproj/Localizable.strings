@@ -19,6 +19,9 @@
 "app.name.stitchtally" = "Stitch Tally";
 "app.description.stitchtally" = "Stitch Tally is an app to track your knitting and crocheting projects.";
 
+"app.name.chartybee" = "ChartyBee";
+"app.description.chartybee" = "ChartyBee is a little tracking app that helps track many little things in life, # of pages you read, cups of coffee you drink, or whether you've slept well last night.";
+
 "feedback.message" = "Have thoughts or suggestions? We'd love to hear from you! Your feedback helps us improve. Please send your feedback to:";
 "feedback.appreciation" = "Appreciate it! ❤️";
 "feedback.signature" = "Grace";

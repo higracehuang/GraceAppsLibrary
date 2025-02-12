@@ -19,6 +19,9 @@
 "app.name.stitchtally" = "Stitch Tally 編み物計数";
 "app.description.stitchtally" = "Stitch Tally は、編み物とかぎ針編みのプロジェクトを追跡するアプリです。";
 
+"app.name.chartybee" = "ChartyBee チャーティービー";
+"app.description.chartybee" = "ChartyBeeは、読んだページ数や飲んだコーヒーの杯数、昨夜の睡眠の質など、日々の生活のちょっとしたことを記録できる小さなトラッキングアプリです。";
+
 "feedback.message" = "ご質問やご提案がございましたら、以下のメールアドレスまでご連絡ください：";
 "feedback.appreciation" = "ご支援ありがとうございます！";
 "feedback.signature" = "グレース Grace";
