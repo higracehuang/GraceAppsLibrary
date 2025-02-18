@@ -9,13 +9,15 @@ public struct GraceApp: Hashable {
     public let shortDescription: String
     public let appId: String
     public let appStoreUrl: URL
+    public let releaseDate: Date
     
-    public init(name: String, iconName: String, shortDescription: String, appId: String) {
+    public init(name: String, iconName: String, shortDescription: String, appId: String, releaseDate: Date) {
         self.name = name
         self.iconName = iconName
         self.shortDescription = shortDescription
         self.appId = appId
         self.appStoreUrl = URL(string: "https://apps.apple.com/app/\(appId)")!
+        self.releaseDate = releaseDate
     }
     
     public var localizedName: String {
@@ -58,49 +60,57 @@ public enum GraceAppsLibrary {
                 name: "app.name.tallycoin",
                 iconName: "TallyCoinIcon",
                 shortDescription: "app.description.tallycoin",
-                appId: "id1633932632"
+                appId: "id1633932632",
+                releaseDate: Calendar.current.date(from: DateComponents(year: 2022, month: 7, day: 11))!
             ),
             GraceApp(
                 name: "app.name.readingclock",
                 iconName: "ReadingClockIcon",
                 shortDescription: "app.description.readingclock",
-                appId: "id6473550400"
+                appId: "id6473550400",
+                releaseDate: Calendar.current.date(from: DateComponents(year: 2023, month: 11, day: 30))!
             ),
             GraceApp(
                 name: "app.name.stemcards",
                 iconName: "StemCardsIcon",
                 shortDescription: "app.description.stemcards",
-                appId: "id6478243260"
+                appId: "id6478243260",
+                releaseDate: Calendar.current.date(from: DateComponents(year: 2024, month: 2, day: 27))!
             ),
             GraceApp(
                 name: "app.name.stitchtally",
                 iconName: "StitchTallyIcon",
                 shortDescription: "app.description.stitchtally",
-                appId: "id6738016114"
+                appId: "id6738016114",
+                releaseDate: Calendar.current.date(from: DateComponents(year: 2024, month: 11, day: 12))!
             ),
             GraceApp(
                 name: "app.name.quizmeai",
                 iconName: "QuizMeAIIcon",
                 shortDescription: "app.description.quizmeai",
-                appId: "id6720763773"
+                appId: "id6720763773",
+                releaseDate: Calendar.current.date(from: DateComponents(year: 2024, month: 10, day: 5))!
             ),
             GraceApp(
                 name: "app.name.localspeaks",
                 iconName: "LocalSpeaksIcon",
                 shortDescription: "app.description.localspeaks",
-                appId: "id6615060694"
+                appId: "id6615060694",
+                releaseDate: Calendar.current.date(from: DateComponents(year: 2024, month: 8, day: 7))!
             ),
             GraceApp(
                 name: "app.name.itemizeai",
                 iconName: "ItemizeAIIcon",
                 shortDescription: "app.description.itemizeai",
-                appId: "id6737280335"
+                appId: "id6737280335",
+                releaseDate: Calendar.current.date(from: DateComponents(year: 2024, month: 10, day: 27))!
             ),
             GraceApp(
                 name: "app.name.chartybee",
                 iconName: "ChartYBeeIcon",
                 shortDescription: "app.description.chartybee",
-                appId: "id6740661428"
+                appId: "id6740661428",
+                releaseDate: Calendar.current.date(from: DateComponents(year: 2025, month: 2, day: 10))!
             )
         ]
         
