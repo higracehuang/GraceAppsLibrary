@@ -9,12 +9,16 @@ public struct GraceAppsView: View {
     
     public var body: some View {
         List {
-            ForEach(GraceAppsLibrary.getAllApps(excluding: excludingAppId), id: \.self) { app in
+            let apps = GraceAppsLibrary.getAllApps(excluding: excludingAppId)
+                .sorted(by: { $0.releaseDate > $1.releaseDate })
+            
+            ForEach(apps, id: \.self) { app in
                 AppLink(
                     iconName: app.iconName,
                     title: app.localizedName,
                     description: app.localizedDescription,
-                    url: app.appStoreUrl
+                    url: app.appStoreUrl,
+                    isNew: app == apps.first
                 )
             }
         }
@@ -26,6 +30,15 @@ struct AppLink: View {
     let title: String
     let description: String
     let url: URL
+    let isNew: Bool
+    
+    init(iconName: String, title: String, description: String, url: URL, isNew: Bool = false) {
+        self.iconName = iconName
+        self.title = title
+        self.description = description
+        self.url = url
+        self.isNew = isNew
+    }
     
     var body: some View {
         Link(destination: url) {
@@ -36,8 +49,19 @@ struct AppLink: View {
                     .cornerRadius(12)
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.headline)
+                    HStack {
+                        Text(title)
+                            .font(.headline)
+                        if isNew {
+                            Text("New")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.blue)
+                                .cornerRadius(4)
+                        }
+                    }
                     Text(description)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
