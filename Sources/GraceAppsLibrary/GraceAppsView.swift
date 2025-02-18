@@ -53,7 +53,7 @@ struct AppLink: View {
                         Text(title)
                             .font(.headline)
                         if isNew {
-                            Text("New")
+                            Text(Bundle.module.localizedString(forKey: "label.new", value: "New", table: nil))
                                 .font(.caption)
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 6)

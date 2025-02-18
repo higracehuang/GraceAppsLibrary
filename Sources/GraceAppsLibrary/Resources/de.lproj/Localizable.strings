@@ -14,6 +14,8 @@
 "app.description.localspeaks" = "LocalSpeaks ist eine Phrasenbuch-App, die Ihnen hilft, authentische Phrasen in vielen verschiedenen Sprachen zu lernen und zu üben. Perfekt für Reisende und Sprachenlerner.";
 
 "app.name.itemizeai" = "Itemize AI";
+
+"label.new" = "Neu";
 "app.description.itemizeai" = "Itemize AI ist eine KI-gestützte App, die beliebige Texte analysiert, in wichtige Stichpunkte zerlegt und für Sie zusammenfasst. Entwickelt für visuelle Leser.";
 
 "app.name.stitchtally" = "StitchTally";
