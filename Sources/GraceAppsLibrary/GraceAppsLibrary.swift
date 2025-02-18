@@ -123,4 +123,11 @@ public enum GraceAppsLibrary {
     public static func getAppStoreUrl(for appId: String) -> URL? {
         return getAllApps().first { $0.appId == appId }?.appStoreUrl
     }
+
+    public static func getSortedApps(excluding appIdToExclude: String? = nil) -> [GraceApp] {
+        let apps = getAllApps(excluding: appIdToExclude)
+                .sorted(by: { $0.releaseDate > $1.releaseDate })
+        
+        return apps
+    }
 }

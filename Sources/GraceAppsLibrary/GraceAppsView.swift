@@ -9,8 +9,7 @@ public struct GraceAppsView: View {
     
     public var body: some View {
         List {
-            let apps = GraceAppsLibrary.getAllApps(excluding: excludingAppId)
-                .sorted(by: { $0.releaseDate > $1.releaseDate })
+            let apps = GraceAppsLibrary.getSortedApps(excluding: excludingAppId)
             
             ForEach(apps, id: \.self) { app in
                 AppLink(
