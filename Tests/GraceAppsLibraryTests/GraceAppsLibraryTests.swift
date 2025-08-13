@@ -4,7 +4,7 @@ import XCTest
 final class GraceAppsLibraryTests: XCTestCase {
     func testGetAllApps() {
         let apps = GraceAppsLibrary.getAllApps()
-        XCTAssertEqual(apps.count, 8, "Should return all 8 apps")
+        XCTAssertEqual(apps.count, 9, "Should return all 9 apps")
         
         // Test first app
         let tallyCoin = apps.first { $0.appId == "id1633932632" }
@@ -21,7 +21,7 @@ final class GraceAppsLibraryTests: XCTestCase {
     
     func testGetAllAppsWithExclusion() {
         let apps = GraceAppsLibrary.getAllApps(excluding: "id1633932632")
-        XCTAssertEqual(apps.count, 7, "Should return 7 apps when excluding one")
+        XCTAssertEqual(apps.count, 8, "Should return 8 apps when excluding one")
         XCTAssertNil(apps.first { $0.appId == "id1633932632" }, "Excluded app should not be present")
     }
     

@@ -16,6 +16,9 @@
 "app.name.itemizeai" = "Itemize AI";
 "app.description.itemizeai" = "Itemize AI is an AI-powered app that analyzes any text, breaks it down into important bullet points, and summarizes it for you. Designed for visual readers.";
 
+"app.name.snapprogress" = "SnapProgress";
+"app.description.snapprogress" = "SnapProgress is an app to track your progress in a visual way.";
+
 "label.new" = "New";
 
 "app.name.stitchtally" = "StitchTally";
@@ -28,6 +31,7 @@
 "feedback.appreciation" = "Appreciate it! ❤️";
 "feedback.signature" = "Grace";
 "feedback.title" = "Share Your Feedback";
+
 
 "other.apps.by.grace" = "Other Apps by Grace";
 "other.apps.built.by.grace" = "Other Apps built by Grace";

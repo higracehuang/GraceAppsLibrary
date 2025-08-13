@@ -24,6 +24,10 @@
 "app.name.chartybee" = "ChartyBee 图表小蜜蜂";
 "app.description.chartybee" = "ChartyBee 是一款小巧的跟踪应用，可以记录生活中的点点滴滴，比如你读了多少页书、喝了几杯咖啡，或者昨晚睡得好不好。";
 
+"app.name.snapprogress" = "SnapProgress 拍照进度";
+"app.description.snapprogress" = "SnapProgress 是一款拍照进度跟踪应用，可以记录您的进度。";
+
+
 "feedback.message" = "有想法或建议吗？我们很乐意听取您的意见！您的反馈帮助我们改进。请将您的反馈发送至：";
 "feedback.appreciation" = "感谢您！❤️";
 "feedback.signature" = "Grace";

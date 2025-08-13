@@ -24,6 +24,10 @@
 "app.name.chartybee" = "ChartyBee";
 "app.description.chartybee" = "ChartyBee ist eine kleine Tracking-App, die hilft, viele kleine Dinge im Leben zu verfolgen, wie die Anzahl der gelesenen Seiten, getrunkene Tassen Kaffee oder ob Sie letzte Nacht gut geschlafen haben.";
 
+"app.name.snapprogress" = "SnapProgress";
+"app.description.snapprogress" = "SnapProgress ist eine App zur Verfolgung Ihres Fortschritts in visueller Weise.";
+
+
 "feedback.message" = "Haben Sie Fragen oder Anregungen? Ich freue mich über Ihr Feedback:";
 "feedback.appreciation" = "Vielen Dank für Ihre Unterstützung!";
 "feedback.signature" = "Grace";

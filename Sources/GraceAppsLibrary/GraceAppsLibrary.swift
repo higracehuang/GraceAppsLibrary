@@ -111,7 +111,14 @@ public enum GraceAppsLibrary {
                 shortDescription: "app.description.chartybee",
                 appId: "id6740661428",
                 releaseDate: Calendar.current.date(from: DateComponents(year: 2025, month: 2, day: 10))!
-            )
+            ),
+            GraceApp(
+                name: "app.name.snapprogress",
+                iconName: "SnapProgressIcon",
+                shortDescription: "app.description.snapprogress",
+                appId: "id6745906297",
+                releaseDate: Calendar.current.date(from: DateComponents(year: 2025, month: 5, day: 20))!
+            ),
         ]
         
         if let appIdToExclude {
