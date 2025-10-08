@@ -101,7 +101,7 @@ public enum GraceAppsLibrary {
                 shortDescription: "app.description.stitchtally",
                 appId: "id6738016114",
                 releaseDate: Calendar.current.date(from: DateComponents(year: 2024, month: 11, day: 12))!,
-                category: .productivity
+                category: .lifestyle
             ),
             GraceApp(
                 name: "app.name.quizmeai",
@@ -117,7 +117,7 @@ public enum GraceAppsLibrary {
                 shortDescription: "app.description.localspeaks",
                 appId: "id6615060694",
                 releaseDate: Calendar.current.date(from: DateComponents(year: 2024, month: 8, day: 7))!,
-                category: .utilities
+                category: .education
             ),
             GraceApp(
                 name: "app.name.itemizeai",
@@ -150,7 +150,7 @@ public enum GraceAppsLibrary {
                 shortDescription: "app.description.dialinespresso",
                 appId: "id6752831404",
                 releaseDate: Calendar.current.date(from: DateComponents(year: 2025, month: 9, day: 22))!,
-                category: .utilities
+                category: .lifestyle
             ),
         ]
 
