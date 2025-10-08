@@ -73,8 +73,8 @@ final class GraceAppsLibraryTests: XCTestCase {
         XCTAssertTrue(chartyBee.localizedDescription(for: deLocale).contains("kleine Tracking-App"))
         
         // Test Dial In Espresso
-        let dialInEspresso = try XCTUnwrap(apps.first { $0.appId == "id6738016114" })
+        let dialInEspresso = try XCTUnwrap(apps.first { $0.appId == "id6752831404" })
         XCTAssertEqual(dialInEspresso.localizedName(for: deLocale), "Dial In Espresso")
-        XCTAssertTrue(dialInEspresso.localizedDescription(for: deLocale).contains("kleine Tracking-App"))
+        XCTAssertTrue(dialInEspresso.localizedDescription(for: deLocale).contains("eine einfache App"))
     }
 }
