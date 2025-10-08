@@ -27,8 +27,10 @@
 "app.name.snapprogress" = "SnapProgress 拍照进度";
 "app.description.snapprogress" = "SnapProgress 是一款拍照进度跟踪应用，可以记录您的进度。";
 
+"app.name.dialinespresso" = "Dial In Espresso";
+"app.description.dialinespresso" = "Dial In Espresso 是一款简洁的咖啡记录应用，用于追踪咖啡豆与萃取过程，记录参数，尝试技巧，助你稳定冲煮出理想风味。";
 
-"feedback.message" = "有想法或建议吗？我们很乐意听取您的意见！您的反馈帮助我们改进。请将您的反馈发送至：";
+"feedback.message" = "有任何想法或建议？欢迎告诉我们！你的反馈将帮助我们做得更好。请发送至：";
 "feedback.appreciation" = "感谢您！❤️";
 "feedback.signature" = "Grace";
 "feedback.title" = "分享反馈";

@@ -119,6 +119,13 @@ public enum GraceAppsLibrary {
                 appId: "id6745906297",
                 releaseDate: Calendar.current.date(from: DateComponents(year: 2025, month: 5, day: 20))!
             ),
+            GraceApp(
+                name: "app.name.dialinespresso",
+                iconName: "DialInEspressoIcon",
+                shortDescription: "app.description.dialinespresso",
+                appId: "id6752831404",
+                releaseDate: Calendar.current.date(from: DateComponents(year: 2025, month: 9, day: 22))!
+            ),
         ]
         
         if let appIdToExclude {

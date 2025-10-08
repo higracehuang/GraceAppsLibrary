@@ -27,6 +27,8 @@
 "app.name.snapprogress" = "SnapProgress スナッププログレス";
 "app.description.snapprogress" = "SnapProgress は、視覚的に進捗状況を追跡するアプリです。";
 
+"app.name.dialinespresso" = "Dial In Espresso 豆トラッカー";
+"app.description.dialinespresso" = "Dial In Espresso は、豆や抽出の記録を簡単に管理できるアプリです。記録して、試して、調整することで、毎回ベストな一杯を淹れられます。";
 
 "feedback.message" = "ご質問やご提案がございましたら、以下のメールアドレスまでご連絡ください：";
 "feedback.appreciation" = "ご支援ありがとうございます！";
