@@ -80,20 +80,37 @@ final class GraceAppsLibraryTests: XCTestCase {
     
     func testAllAppsHaveAllLocalizations() {
         let apps = GraceAppsLibrary.getAllApps()
-        let locales = [
-            Locale(identifier: "en"),
-            Locale(identifier: "de"),
-            Locale(identifier: "ja"),
-            Locale(identifier: "zh-Hans")
+        let locales = ["en", "de", "ja", "zh-Hans"]
+        
+        let sharedKeys = [
+            Constants.StringKeys.feedbackMessage,
+            Constants.StringKeys.feedbackAppreciation,
+            Constants.StringKeys.feedbackSignature,
+            Constants.StringKeys.feedbackTitle,
+            Constants.StringKeys.otherAppsByGrace,
+            Constants.StringKeys.otherAppsBuiltByGrace
         ]
         
-        for app in apps {
-            for locale in locales {
-                let name = app.localizedName(for: locale)
-                let description = app.localizedDescription(for: locale)
+        for localeId in locales {
+            let bundlePath = Bundle.module.path(forResource: localeId, ofType: "lproj")
+            let bundle = bundlePath.flatMap { Bundle(path: $0) }
+            XCTAssertNotNil(bundle, "Bundle for locale \(localeId) should exist")
+            
+            guard let langBundle = bundle else { continue }
+            
+            // Check apps
+            for app in apps {
+                let name = langBundle.localizedString(forKey: app.name, value: nil, table: nil)
+                let description = langBundle.localizedString(forKey: app.shortDescription, value: nil, table: nil)
                 
-                XCTAssertNotEqual(name, app.name, "Missing name translation for \(app.appId) in \(locale.identifier)")
-                XCTAssertNotEqual(description, app.shortDescription, "Missing description translation for \(app.appId) in \(locale.identifier)")
+                XCTAssertNotEqual(name, app.name, "Missing name translation for \(app.appId) in \(localeId)")
+                XCTAssertNotEqual(description, app.shortDescription, "Missing description translation for \(app.appId) in \(localeId)")
+            }
+            
+            // Check shared keys
+            for key in sharedKeys {
+                let localized = langBundle.localizedString(forKey: key, value: nil, table: nil)
+                XCTAssertNotEqual(localized, key, "Missing shared translation for key '\(key)' in \(localeId)")
             }
         }
     }
