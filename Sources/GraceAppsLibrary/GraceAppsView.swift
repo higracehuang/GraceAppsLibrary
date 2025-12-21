@@ -85,7 +85,6 @@ struct AppRow: View {
             Text(title)
               .font(.system(.headline, design: .rounded))
               .foregroundColor(.primary)
-              .lineLimit(1)
             
             if isNew {
               Text(NSLocalizedString(Constants.StringKeys.labelNew, bundle: .module, comment: ""))
