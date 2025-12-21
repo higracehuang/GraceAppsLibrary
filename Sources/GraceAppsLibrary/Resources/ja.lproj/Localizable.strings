@@ -30,6 +30,9 @@
 "app.name.dialinespresso" = "Dial In Espresso 豆トラッカー";
 "app.description.dialinespresso" = "Dial In Espresso は、豆や抽出の記録を簡単に管理できるアプリです。記録して、試して、調整することで、毎回ベストな一杯を淹れられます。";
 
+"app.name.fastinglady" = "FastingLady ファスティング・レディ";
+"app.description.fastinglady" = "FastingLady は、女性向けに設計されたシンプルな断食トラッカーで、月経周期に合わせた断食をサポートします。";
+
 "feedback.message" = "ご質問やご提案がございましたら、以下のメールアドレスまでご連絡ください：";
 "feedback.appreciation" = "ご支援ありがとうございます！";
 "feedback.signature" = "グレース Grace";

@@ -30,6 +30,9 @@
 "app.name.dialinespresso" = "Dial In Espresso";
 "app.description.dialinespresso" = "Dial In Espresso 是一款简洁的咖啡记录应用，用于追踪咖啡豆与萃取过程，记录参数，尝试技巧，助你稳定冲煮出理想风味。";
 
+"app.name.fastinglady" = "FastingLady 周期断食";
+"app.description.fastinglady" = "FastingLady 是一款专为女性设计的简单断食追踪应用，帮助她们根据月经周期进行断食。";
+
 "feedback.message" = "有任何想法或建议？欢迎告诉我们！你的反馈将帮助我们做得更好。请发送至：";
 "feedback.appreciation" = "感谢您！❤️";
 "feedback.signature" = "Grace";

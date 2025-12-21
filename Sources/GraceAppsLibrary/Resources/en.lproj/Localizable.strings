@@ -30,6 +30,9 @@
 "app.name.dialinespresso" = "Dial In Espresso";
 "app.description.dialinespresso" = "Dial In Espresso is a simple app to track your beans and shots. Log, experiment, and refine to consistently brew your best cup.";
 
+"app.name.fastinglady" = "FastingLady";
+"app.description.fastinglady" = "FastingLady is a simple fasting tracker designed for women, helping them fast in sync with their menstrual cycle.";
+
 "feedback.message" = "Have thoughts or suggestions? We'd love to hear from you! Your feedback helps us improve. Please send your feedback to:";
 "feedback.appreciation" = "Appreciate it! ❤️";
 "feedback.signature" = "Grace";

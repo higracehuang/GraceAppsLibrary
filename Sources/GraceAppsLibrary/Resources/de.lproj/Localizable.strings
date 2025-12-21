@@ -30,6 +30,9 @@
 "app.name.dialinespresso" = "Dial In Espresso";
 "app.description.dialinespresso" = "Dial In Espresso ist eine einfache App, um deine Bohnen und Espresso-Shots zu verfolgen. Notiere, experimentiere und optimiere, um stets die beste Tasse zuzubereiten.";
 
+"app.name.fastinglady" = "FastingLady";
+"app.description.fastinglady" = "Fasting Lady ist ein einfacher Fasten-Tracker für Frauen, der ihnen hilft, im Einklang mit ihrem Menstruationszyklus zu fasten.";
+
 "feedback.message" = "Haben Sie Fragen oder Anregungen? Ich freue mich über Ihr Feedback:";
 "feedback.appreciation" = "Vielen Dank für Ihre Unterstützung!";
 "feedback.signature" = "Grace";
