@@ -19,7 +19,8 @@
 "app.name.snapprogress" = "SnapProgress";
 "app.description.snapprogress" = "SnapProgress is an app to track your progress in a visual way.";
 
-"label.new" = "New";
+"label.new" = "NEW";
+"label.get" = "GET";
 
 "app.name.stitchtally" = "StitchTally";
 "app.description.stitchtally" = "StitchTally is an app to track your knitting and crocheting projects.";

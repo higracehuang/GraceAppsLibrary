@@ -15,7 +15,8 @@
 
 "app.name.itemizeai" = "Itemize AI";
 
-"label.new" = "Neu";
+"label.new" = "NEU";
+"label.get" = "LADEN";
 "app.description.itemizeai" = "Itemize AI ist eine KI-gestützte App, die beliebige Texte analysiert, in wichtige Stichpunkte zerlegt und für Sie zusammenfasst. Entwickelt für visuelle Leser.";
 
 "app.name.stitchtally" = "StitchTally";

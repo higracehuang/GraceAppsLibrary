@@ -15,7 +15,8 @@
 
 "app.name.itemizeai" = "Itemize AI";
 
-"label.new" = "新着";
+"label.new" = "NEW";
+"label.get" = "入手";
 "app.description.itemizeai" = "Itemize AI は、AIを活用してテキストを分析し、重要な要点に分解して要約するアプリです。視覚的な読者向けに設計されています。";
 
 "app.name.stitchtally" = "StitchTally 編み物計数";

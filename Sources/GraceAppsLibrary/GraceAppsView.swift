@@ -88,7 +88,7 @@ struct AppRow: View {
               .lineLimit(1)
             
             if isNew {
-              Text("NEW")
+              Text(NSLocalizedString(Constants.StringKeys.labelNew, bundle: .module, comment: ""))
                 .font(.system(size: 8, weight: .black))
                 .foregroundColor(.white)
                 .padding(.horizontal, 4)
@@ -108,7 +108,7 @@ struct AppRow: View {
         
         Spacer()
         
-        Text("GET")
+        Text(NSLocalizedString(Constants.StringKeys.labelGet, bundle: .module, comment: ""))
           .font(.subheadline.bold())
           .foregroundColor(.accentColor)
           .padding(.horizontal, 16)
