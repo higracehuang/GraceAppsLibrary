@@ -11,5 +11,6 @@ public enum Constants {
         
         public static let otherAppsByGrace = "other.apps.by.grace"
         public static let otherAppsBuiltByGrace = "other.apps.built.by.grace"
+        public static let appsIntroduction = "apps.introduction"
     }
-} 
+}

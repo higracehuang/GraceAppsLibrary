@@ -9,6 +9,13 @@ public struct GraceAppsView: View {
   
   public var body: some View {
     List {
+      Section {
+        Text(Bundle.module.localizedString(forKey: Constants.StringKeys.appsIntroduction, value: nil, table: nil))
+          .font(.body)
+          .foregroundColor(.secondary)
+          .padding(.vertical, 8)
+      }
+
       let apps = GraceAppsLibrary.getSortedApps(excluding: excludingAppId)
       
       let categories = Array(Set(apps.map { $0.category }))

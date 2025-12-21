@@ -88,7 +88,8 @@ final class GraceAppsLibraryTests: XCTestCase {
             Constants.StringKeys.feedbackSignature,
             Constants.StringKeys.feedbackTitle,
             Constants.StringKeys.otherAppsByGrace,
-            Constants.StringKeys.otherAppsBuiltByGrace
+            Constants.StringKeys.otherAppsBuiltByGrace,
+            Constants.StringKeys.appsIntroduction
         ]
         
         for localeId in locales {
