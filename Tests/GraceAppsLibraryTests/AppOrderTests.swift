@@ -30,7 +30,7 @@ final class AppOrderTests: XCTestCase {
         }
         
         // Create a test environment to render the view
-        let appLink = AppLink(
+        let appRow = AppRow(
             iconName: newestApp.iconName,
             title: newestApp.localizedName,
             description: newestApp.localizedDescription,
@@ -39,7 +39,7 @@ final class AppOrderTests: XCTestCase {
         )
         
         // Verify the newest app has the isNew flag set
-        XCTAssertTrue(appLink.isNew, "The newest app should be marked as new")
+        XCTAssertTrue(appRow.isNew, "The newest app should be marked as new")
     }
     
     func testAppExclusion() {

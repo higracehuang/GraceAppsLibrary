@@ -1,22 +1,50 @@
 import SwiftUI
+import UIKit
 
 public struct FeedbackToGraceView: View {
     public init() {}
     
     public var body: some View {
-      VStack(alignment: .leading, spacing: 16) {
-            
-            Text(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackMessage, value: nil, table: nil))
-            
-            Link(Constants.feedbackEmail,
-                 destination: URL(string: "mailto:\(Constants.feedbackEmail)")!)
-
-            Text(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackAppreciation, value: nil, table: nil))
-
-            Text(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackSignature, value: nil, table: nil))
-            Spacer()
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackMessage, value: nil, table: nil))
+                        .font(.body)
+                        .foregroundColor(.primary)
+                        .lineSpacing(6)
+                    
+                    Link(destination: URL(string: "mailto:\(Constants.feedbackEmail)")!) {
+                        HStack {
+                            Image(systemName: "envelope.fill")
+                            Text(Constants.feedbackEmail)
+                                .fontWeight(.semibold)
+                        }
+                        .padding(.vertical, 14)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackAppreciation, value: nil, table: nil))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Text(Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackSignature, value: nil, table: nil))
+                            .font(.subheadline.italic())
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 8)
+                }
+                .padding(24)
+                .background(Color(UIColor.secondarySystemGroupedBackground))
+                .cornerRadius(20)
+            }
+            .padding(20)
         }
-        .padding()
+        .background(Color(UIColor.systemGroupedBackground).ignoresSafeArea())
     }
 }
 
@@ -39,4 +67,4 @@ public struct FeedbackToGraceNavigationView: View {
     NavigationView {
         FeedbackToGraceNavigationView()
     }
-} 
+}

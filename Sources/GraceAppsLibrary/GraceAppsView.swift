@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 public struct GraceAppsView: View {
   let excludingAppId: String?
@@ -8,85 +9,124 @@ public struct GraceAppsView: View {
   }
   
   public var body: some View {
-    List {
-      Section {
-        Text(Bundle.module.localizedString(forKey: Constants.StringKeys.appsIntroduction, value: nil, table: nil))
-          .font(.body)
-          .foregroundColor(.secondary)
-          .padding(.vertical, 8)
-      }
+    ScrollView {
+      VStack(alignment: .leading, spacing: 28) {
+        // App Store style introduction
+        VStack(alignment: .leading, spacing: 8) {
+          Text(Bundle.module.localizedString(forKey: Constants.StringKeys.appsIntroduction, value: nil, table: nil))
+            .font(.subheadline)
+            .foregroundColor(.secondary)
+            .lineSpacing(4)
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 16)
 
-      let apps = GraceAppsLibrary.getSortedApps(excluding: excludingAppId)
-      
-      let categories = Array(Set(apps.map { $0.category }))
-      
-      ForEach(categories, id: \.self) { category in
-        Section(header: Text(category.rawValue)) {
-          ForEach(apps.filter { $0.category == category }, id: \.self) { app in
-            AppLink(
-              iconName: app.iconName,
-              title: app.localizedName,
-              description: app.localizedDescription,
-              url: app.appStoreUrl,
-              isNew: app == apps.first
-            )
+        let apps = GraceAppsLibrary.getSortedApps(excluding: excludingAppId)
+        let categories = Array(Set(apps.map { $0.category })).sorted(by: { $0.rawValue < $1.rawValue })
+        
+        ForEach(categories, id: \.self) { category in
+          VStack(alignment: .leading, spacing: 12) {
+            Text(category.rawValue.uppercased())
+              .font(.footnote.bold())
+              .foregroundColor(.secondary)
+              .padding(.horizontal, 24)
+            
+            VStack(spacing: 0) {
+              let categoryApps = apps.filter { $0.category == category }
+              ForEach(categoryApps, id: \.self) { app in
+                AppRow(
+                  iconName: app.iconName,
+                  title: app.localizedName,
+                  description: app.localizedDescription,
+                  url: app.appStoreUrl,
+                  isNew: app == apps.first
+                )
+                
+                if app != categoryApps.last {
+                  Divider()
+                    .padding(.leading, 84)
+                }
+              }
+            }
+            .background(Color(UIColor.secondarySystemGroupedBackground))
+            .cornerRadius(16)
+            .padding(.horizontal, 16)
           }
         }
       }
+      .padding(.bottom, 40)
     }
+    .background(Color(UIColor.systemGroupedBackground).ignoresSafeArea())
   }
 }
 
-struct AppLink: View {
+struct AppRow: View {
   let iconName: String
   let title: String
   let description: String
   let url: URL
   let isNew: Bool
   
-  init(iconName: String, title: String, description: String, url: URL, isNew: Bool = false) {
-    self.iconName = iconName
-    self.title = title
-    self.description = description
-    self.url = url
-    self.isNew = isNew
-  }
-  
   var body: some View {
     Link(destination: url) {
-      HStack(alignment: .top, spacing: 16) {
+      HStack(alignment: .center, spacing: 16) {
         Image(iconName, bundle: .module)
           .resizable()
-          .frame(width: 60, height: 60)
-          .cornerRadius(12)
+          .aspectRatio(contentMode: .fit)
+          .frame(width: 52, height: 52)
+          .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+          .overlay(
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+              .stroke(Color.primary.opacity(0.08), lineWidth: 0.5)
+          )
         
-        VStack(alignment: .leading, spacing: 4) {
-          HStack {
+        VStack(alignment: .leading, spacing: 3) {
+          HStack(alignment: .center, spacing: 6) {
             Text(title)
-              .font(.headline)
+              .font(.system(.headline, design: .rounded))
+              .foregroundColor(.primary)
+              .lineLimit(1)
+            
             if isNew {
-              Text(Bundle.module.localizedString(forKey: "label.new", value: "New", table: nil))
-                .font(.caption)
+              Text("NEW")
+                .font(.system(size: 8, weight: .black))
                 .foregroundColor(.white)
-                .padding(.horizontal, 6)
+                .padding(.horizontal, 4)
                 .padding(.vertical, 2)
-                .background(Color.blue)
-                .cornerRadius(4)
+                .background(Color.accentColor)
+                .clipShape(Capsule())
             }
           }
+          
           Text(description)
-            .font(.subheadline)
+            .font(.caption)
             .foregroundColor(.secondary)
+            .lineLimit(2)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.vertical, 4)
+        
+        Spacer()
+        
+        Text("GET")
+          .font(.subheadline.bold())
+          .foregroundColor(.accentColor)
+          .padding(.horizontal, 16)
+          .padding(.vertical, 6)
+          .background(Color.accentColor.opacity(0.12))
+          .clipShape(Capsule())
       }
+      .padding(.vertical, 14)
+      .padding(.horizontal, 16)
+      .contentShape(Rectangle())
     }
+    .buttonStyle(PlainButtonStyle())
   }
 }
 
 #Preview("Grace Apps") {
   GraceAppsView()
-} 
+}
 
 public struct GraceAppsNavigationView: View {
   let excludingAppId: String?
@@ -101,16 +141,16 @@ public struct GraceAppsNavigationView: View {
         Label(NSLocalizedString(Constants.StringKeys.otherAppsBuiltByGrace, bundle: .module, comment: ""), systemImage: "apps.iphone")
       }
   }
-} 
+}
 
 #Preview("Navigation View") {
   NavigationView {
     GraceAppsNavigationView()
   }
-} 
+}
 
 #Preview("Navigation View excluding TallyCoin") {
   NavigationView {
     GraceAppsNavigationView(excludingAppId: "id1633932632")
   }
-} 
+}
