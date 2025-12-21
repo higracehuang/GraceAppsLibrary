@@ -101,7 +101,6 @@ struct AppRow: View {
           Text(description)
             .font(.caption)
             .foregroundColor(.secondary)
-            .lineLimit(2)
             .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)
         }
