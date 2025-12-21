@@ -1,38 +1,38 @@
 "app.name.tallycoin" = "TallyCoin タリーコイン";
-"app.description.tallycoin" = "TallyCoin は、家族向けに設計された家事や報酬を追跡するための完璧なアプリです。";
+"app.description.tallycoin" = "家族向けに設計された家事や報酬を追跡するための完璧なアプリです。";
 
 "app.name.readingclock" = "ReadingClock リーディングクロック";
-"app.description.readingclock" = "ReadingClock は、毎日の読書時間と進捗状況を追跡するシンプルなアプリです。";
+"app.description.readingclock" = "毎日の読書時間と進捗状況を追跡するシンプルなアプリです。";
 
 "app.name.stemcards" = "Stem Cards ステムカード";
-"app.description.stemcards" = "ステムカードは、英単語の語根、接頭辞、接尾辞を楽しく簡単に学べるアプリです。";
+"app.description.stemcards" = "英単語の語根、接頭辞、接尾辞を楽しく簡単に学べるアプリです。";
 
 "app.name.quizmeai" = "QuizMe.AI";
-"app.description.quizmeai" = "QuizMe.AIは、AIを活用してあらゆるトピックからクイズを作成できるアプリです。";
+"app.description.quizmeai" = "AIを活用してあらゆるトピックからクイズを作成できるアプリです。";
 
 "app.name.localspeaks" = "LocalSpeaks ローカルスピークス";
-"app.description.localspeaks" = "ローカルスピークスは、様々な言語の本物のフレーズを学び、練習できるフレーズブックアプリです。旅行者や語学学習者に最適です。";
+"app.description.localspeaks" = "様々な言語の本物のフレーズを学び、練習できるフレーズブックアプリです。旅行者や語学学習者に最適です。";
 
 "app.name.itemizeai" = "Itemize AI";
 
 "label.new" = "NEW";
 "label.get" = "入手";
-"app.description.itemizeai" = "Itemize AI は、AIを活用してテキストを分析し、重要な要点に分解して要約するアプリです。視覚的な読者向けに設計されています。";
+"app.description.itemizeai" = "AIを活用してテキストを分析し、重要な要点に分解して要約するアプリです。視覚的な読者向けに設計されています。";
 
 "app.name.stitchtally" = "StitchTally 編み物計数";
-"app.description.stitchtally" = "StitchTally は、編み物とかぎ針編みのプロジェクトを追跡するアプリです。";
+"app.description.stitchtally" = "編み物とかぎ針編みのプロジェクトを追跡するアプリです。";
 
 "app.name.chartybee" = "ChartyBee チャーティービー";
-"app.description.chartybee" = "ChartyBeeは、読んだページ数や飲んだコーヒーの杯数、昨夜の睡眠の質など、日々の生活のちょっとしたことを記録できる小さなトラッキングアプリです。";
+"app.description.chartybee" = "読んだページ数や飲んだコーヒーの杯数、昨夜の睡眠の質など、日々の生活のちょっとしたことを記録できる小さなトラッキングアプリです。";
 
 "app.name.snapprogress" = "SnapProgress スナッププログレス";
-"app.description.snapprogress" = "SnapProgress は、視覚的に進捗状況を追跡するアプリです。";
+"app.description.snapprogress" = "視覚的に進捗状況を追跡するアプリです。";
 
 "app.name.dialinespresso" = "Dial In Espresso 豆トラッカー";
-"app.description.dialinespresso" = "Dial In Espresso は、豆や抽出の記録を簡単に管理できるアプリです。記録して、試して、調整することで、毎回ベストな一杯を淹れられます。";
+"app.description.dialinespresso" = "豆や抽出の記録を簡単に管理できるアプリです。記録して、試して、調整することで、毎回ベストな一杯を淹れられます。";
 
 "app.name.fastinglady" = "FastingLady ファスティング・レディ";
-"app.description.fastinglady" = "FastingLady は、女性向けに設計されたシンプルな断食トラッカーで、月経周期に合わせた断食をサポートします。";
+"app.description.fastinglady" = "女性向けに設計されたシンプルな断食トラッカーで、月経周期に合わせた断食をサポートします。";
 
 "feedback.message" = "ご質問やご提案がございましたら、以下のメールアドレスまでご連絡ください：";
 "feedback.appreciation" = "ご支援ありがとうございます！";

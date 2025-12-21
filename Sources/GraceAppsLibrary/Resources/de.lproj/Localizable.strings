@@ -1,38 +1,38 @@
 "app.name.tallycoin" = "TallyCoin";
-"app.description.tallycoin" = "TallyCoin ist die perfekte App für die Verfolgung von Aufgaben und Belohnungen, entwickelt für Familien.";
+"app.description.tallycoin" = "Perfekte App für die Verfolgung von Aufgaben und Belohnungen, entwickelt für Familien.";
 
 "app.name.readingclock" = "ReadingClock";
-"app.description.readingclock" = "ReadingClock ist eine einfache App zur Verfolgung Ihrer täglichen Lesezeit und Ihres Fortschritts.";
+"app.description.readingclock" = "Einfache App zur Verfolgung Ihrer täglichen Lesezeit und Ihres Fortschritts.";
 
 "app.name.stemcards" = "Stem Cards";
-"app.description.stemcards" = "Stem Cards ist eine unterhaltsame und einfache Möglichkeit, englische Wortstämme, Präfixe und Suffixe zu lernen.";
+"app.description.stemcards" = "Unterhaltsame und einfache Möglichkeit, englische Wortstämme, Präfixe und Suffixe zu lernen.";
 
 "app.name.quizmeai" = "QuizMe.AI";
-"app.description.quizmeai" = "QuizMe.AI ist eine KI-gestützte Quiz-App, mit der Sie aus beliebigen Inhalten Quiz zu jedem Thema erstellen können.";
+"app.description.quizmeai" = "KI-gestützte Quiz-App, mit der Sie aus beliebigen Inhalten Quiz zu jedem Thema erstellen können.";
 
 "app.name.localspeaks" = "LocalSpeaks";
-"app.description.localspeaks" = "LocalSpeaks ist eine Phrasenbuch-App, die Ihnen hilft, authentische Phrasen in vielen verschiedenen Sprachen zu lernen und zu üben. Perfekt für Reisende und Sprachenlerner.";
+"app.description.localspeaks" = "Phrasenbuch-App, die Ihnen hilft, authentische Phrasen in vielen verschiedenen Sprachen zu lernen und zu üben. Perfekt für Reisende und Sprachenlerner.";
 
 "app.name.itemizeai" = "Itemize AI";
 
 "label.new" = "NEU";
 "label.get" = "LADEN";
-"app.description.itemizeai" = "Itemize AI ist eine KI-gestützte App, die beliebige Texte analysiert, in wichtige Stichpunkte zerlegt und für Sie zusammenfasst. Entwickelt für visuelle Leser.";
+"app.description.itemizeai" = "KI-gestützte App, die beliebige Texte analysiert, in wichtige Stichpunkte zerlegt und für Sie zusammenfasst. Entwickelt für visuelle Leser.";
 
 "app.name.stitchtally" = "StitchTally";
-"app.description.stitchtally" = "StitchTally ist eine App zur Verfolgung Ihrer Strick- und Häkelprojekte.";
+"app.description.stitchtally" = "Einfache App zur Verfolgung Ihrer Strick- und Häkelprojekte.";
 
 "app.name.chartybee" = "ChartyBee";
-"app.description.chartybee" = "ChartyBee ist eine kleine Tracking-App, die hilft, viele kleine Dinge im Leben zu verfolgen, wie die Anzahl der gelesenen Seiten, getrunkene Tassen Kaffee oder ob Sie letzte Nacht gut geschlafen haben.";
+"app.description.chartybee" = "Kleine Tracking-App, die hilft, viele kleine Dinge im Leben zu verfolgen, wie die Anzahl der gelesenen Seiten, getrunkene Tassen Kaffee oder ob Sie letzte Nacht gut geschlafen haben.";
 
 "app.name.snapprogress" = "SnapProgress";
-"app.description.snapprogress" = "SnapProgress ist eine App zur Verfolgung Ihres Fortschritts in visueller Weise.";
+"app.description.snapprogress" = "Visuelle Fortschrittskontrolle mit Fotos.";
 
 "app.name.dialinespresso" = "Dial In Espresso";
-"app.description.dialinespresso" = "Dial In Espresso ist eine einfache App, um deine Bohnen und Espresso-Shots zu verfolgen. Notiere, experimentiere und optimiere, um stets die beste Tasse zuzubereiten.";
+"app.description.dialinespresso" = "Einfache App, um deine Bohnen und Espresso-Shots zu verfolgen. Log, experimentiere und optimiere, um stets die beste Tasse zuzubereiten.";
 
 "app.name.fastinglady" = "FastingLady";
-"app.description.fastinglady" = "Fasting Lady ist ein einfacher Fasten-Tracker für Frauen, der ihnen hilft, im Einklang mit ihrem Menstruationszyklus zu fasten.";
+"app.description.fastinglady" = "Einfacher Fasten-Tracker für Frauen, der ihnen hilft, im Einklang mit ihrem Menstruationszyklus zu fasten.";
 
 "feedback.message" = "Haben Sie Fragen oder Anregungen? Ich freue mich über Ihr Feedback:";
 "feedback.appreciation" = "Vielen Dank für Ihre Unterstützung!";

@@ -70,12 +70,12 @@ final class GraceAppsLibraryTests: XCTestCase {
         XCTAssertEqual(tallyCoin.localizedName(for: deLocale), "TallyCoin")
         XCTAssertTrue(tallyCoin.localizedDescription(for: deLocale).contains("Verfolgung von Aufgaben und Belohnungen"))
         XCTAssertEqual(chartyBee.localizedName(for: deLocale), "ChartyBee")
-        XCTAssertTrue(chartyBee.localizedDescription(for: deLocale).contains("kleine Tracking-App"))
+        XCTAssertTrue(chartyBee.localizedDescription(for: deLocale).contains("Kleine Tracking-App"))
         
         // Test Dial In Espresso
         let dialInEspresso = try XCTUnwrap(apps.first { $0.appId == "id6752831404" })
         XCTAssertEqual(dialInEspresso.localizedName(for: deLocale), "Dial In Espresso")
-        XCTAssertTrue(dialInEspresso.localizedDescription(for: deLocale).contains("eine einfache App"))
+        XCTAssertTrue(dialInEspresso.localizedDescription(for: deLocale).contains("Einfache App"))
     }
     
     func testAllAppsHaveAllLocalizations() {

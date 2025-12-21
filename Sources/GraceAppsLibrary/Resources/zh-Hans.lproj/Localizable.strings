@@ -1,38 +1,38 @@
 "app.name.tallycoin" = "TallyCoin 劳动就打赏";
-"app.description.tallycoin" = "TallyCoin 是一款专为家庭设计的完美应用程序，用于追踪家务和奖励。";
+"app.description.tallycoin" = "专为家庭设计的完美应用程序，用于追踪家务和奖励。";
 
 "app.name.readingclock" = "ReadingClock 读书计时器";
-"app.description.readingclock" = "ReadingClock 读书计时器是一款简单的应用程序，用于追踪每日阅读时间和进度。";
+"app.description.readingclock" = "简单的应用程序，用于追踪每日阅读时间和进度。";
 
 "app.name.stemcards" = "Stem Cards 词根卡片";
-"app.description.stemcards" = "Stem Cards 是一种有趣且简单的方式来学习英语词根、前缀和后缀。";
+"app.description.stemcards" = "一种有趣且简单的方式来学习英语词根、前缀和后缀。";
 
 "app.name.quizmeai" = "QuizMe.AI";
-"app.description.quizmeai" = "QuizMe.AI是一款AI驱动的测验应用程序，可以从任何内容创建任何主题的测验。";
+"app.description.quizmeai" = "AI驱动的测验应用程序，可以从任何内容创建任何主题的测验。";
 
 "app.name.localspeaks" = "LocalSpeaks 当地话";
-"app.description.localspeaks" = "LocalSpeaks 是一款短语手册应用程序，帮助您学习和练习多种语言的地道表达。非常适合旅行者和语言学习者。";
+"app.description.localspeaks" = "短语手册应用程序，帮助您学习和练习多种语言的地道表达。非常适合旅行者和语言学习者。";
 
 "app.name.itemizeai" = "Itemize AI";
 
 "label.new" = "新";
 "label.get" = "获取";
-"app.description.itemizeai" = "Itemize AI 是一款AI驱动的应用程序，可以分析任何文本，将其分解为重要要点，并为您总结。专为视觉阅读者设计。";
+"app.description.itemizeai" = "AI驱动的应用程序，可以分析任何文本，将其分解为重要要点，并为您总结。专为视觉阅读者设计。";
 
 "app.name.stitchtally" = "StitchTally 针织计数";
-"app.description.stitchtally" = "StitchTally 是一款应用程序，用于追踪您的针织和钩针编织项目。";
+"app.description.stitchtally" = "用于追踪您的针织和钩针编织项目的应用程序。";
 
 "app.name.chartybee" = "ChartyBee 图表小蜜蜂";
-"app.description.chartybee" = "ChartyBee 是一款小巧的跟踪应用，可以记录生活中的点点滴滴，比如你读了多少页书、喝了几杯咖啡，或者昨晚睡得好不好。";
+"app.description.chartybee" = "小巧的跟踪应用，可以记录生活中的点点滴滴，比如你读了多少页书、喝了几杯咖啡，或者昨晚睡得好不好。";
 
 "app.name.snapprogress" = "SnapProgress 拍照进度";
-"app.description.snapprogress" = "SnapProgress 是一款拍照进度跟踪应用，可以记录您的进度。";
+"app.description.snapprogress" = "拍照进度跟踪应用，可以记录您的进度。";
 
 "app.name.dialinespresso" = "Dial In Espresso";
-"app.description.dialinespresso" = "Dial In Espresso 是一款简洁的咖啡记录应用，用于追踪咖啡豆与萃取过程，记录参数，尝试技巧，助你稳定冲煮出理想风味。";
+"app.description.dialinespresso" = "简洁的咖啡记录应用，用于追踪咖啡豆与萃取过程，记录参数，尝试技巧，助你稳定冲煮出理想风味。";
 
 "app.name.fastinglady" = "FastingLady 周期断食";
-"app.description.fastinglady" = "FastingLady 是一款专为女性设计的简单断食追踪应用，帮助她们根据月经周期进行断食。";
+"app.description.fastinglady" = "专为女性设计的简单断食追踪应用，帮助她们根据月经周期进行断食。";
 
 "feedback.message" = "有任何想法或建议？欢迎告诉我们！你的反馈将帮助我们做得更好。请发送至：";
 "feedback.appreciation" = "感谢您！❤️";

@@ -1,38 +1,38 @@
 "app.name.tallycoin" = "TallyCoin";
-"app.description.tallycoin" = "TallyCoin is the perfect app for tracking chores and rewards, designed with families in mind.";
+"app.description.tallycoin" = "Perfect app for tracking chores and rewards, designed with families in mind.";
 
 "app.name.readingclock" = "ReadingClock";
-"app.description.readingclock" = "ReadingClock is a simple app to track your daily reading time and progress.";
+"app.description.readingclock" = "Simple app to track your daily reading time and progress.";
 
 "app.name.stemcards" = "Stem Cards";
-"app.description.stemcards" = "Stem Cards is a fun and easy way to learn English word roots, prefixes, and suffixes.";
+"app.description.stemcards" = "Fun and easy way to learn English word roots, prefixes, and suffixes.";
 
 "app.name.quizmeai" = "QuizMe.AI";
-"app.description.quizmeai" = "QuizMe.AI is an AI-powered quiz app that allows you to create quizzes on any topic from anything.";
+"app.description.quizmeai" = "AI-powered quiz app that allows you to create quizzes on any topic from anything.";
 
 "app.name.localspeaks" = "LocalSpeaks";
-"app.description.localspeaks" = "LocalSpeaks is a phrasebook app that helps you learn and practice authentic phrases in many different languages. Perfect for travelers and language learners.";
+"app.description.localspeaks" = "Phrasebook app that helps you learn and practice authentic phrases in many different languages. Perfect for travelers and language learners.";
 
 "app.name.itemizeai" = "Itemize AI";
-"app.description.itemizeai" = "Itemize AI is an AI-powered app that analyzes any text, breaks it down into important bullet points, and summarizes it for you. Designed for visual readers.";
+"app.description.itemizeai" = "AI-powered app that analyzes any text, breaks it down into important bullet points, and summarizes it for you. Designed for visual readers.";
 
 "app.name.snapprogress" = "SnapProgress";
-"app.description.snapprogress" = "SnapProgress is an app to track your progress in a visual way.";
+"app.description.snapprogress" = "Visual way to track your progress with photos.";
 
 "label.new" = "NEW";
 "label.get" = "GET";
 
 "app.name.stitchtally" = "StitchTally";
-"app.description.stitchtally" = "StitchTally is an app to track your knitting and crocheting projects.";
+"app.description.stitchtally" = "Simple way to track your knitting and crocheting projects.";
 
 "app.name.chartybee" = "ChartyBee";
-"app.description.chartybee" = "ChartyBee is a little tracking app that helps track many little things in life, # of pages you read, cups of coffee you drink, or whether you've slept well last night.";
+"app.description.chartybee" = "Small tracking app that helps track many little things in life: pages read, coffee consumed, or sleep quality.";
 
 "app.name.dialinespresso" = "Dial In Espresso";
-"app.description.dialinespresso" = "Dial In Espresso is a simple app to track your beans and shots. Log, experiment, and refine to consistently brew your best cup.";
+"app.description.dialinespresso" = "Simple app to track your beans and shots. Log, experiment, and refine to consistently brew your best cup.";
 
 "app.name.fastinglady" = "FastingLady";
-"app.description.fastinglady" = "FastingLady is a simple fasting tracker designed for women, helping them fast in sync with their menstrual cycle.";
+"app.description.fastinglady" = "Simple fasting tracker designed for women, helping them fast in sync with their menstrual cycle.";
 
 "feedback.message" = "Have thoughts or suggestions? We'd love to hear from you! Your feedback helps us improve. Please send your feedback to:";
 "feedback.appreciation" = "Appreciate it! ❤️";
