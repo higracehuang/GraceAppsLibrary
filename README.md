@@ -64,11 +64,10 @@ FeedbackToGraceView()
 ```
 
 #### ReleaseNotesView
-To display release notes (typically in a `.sheet`), you can use the `ReleaseNotesManager` to handle the conditional display logic:
+To display release notes (typically in a `.sheet`), you can use the `graceReleaseNotes` view modifier for a robust and automatic integration:
 
 ```swift
 struct MyContentView: View {
-    @State private var showReleaseNotes = false
     private let releaseNotes = [
         ReleaseNote(
             version: "2.0.0",
@@ -84,20 +83,12 @@ struct MyContentView: View {
         VStack {
             // Your app content
         }
-        .onAppear {
-            if ReleaseNotesManager.shared.shouldShow(releaseNotes: releaseNotes) {
-                showReleaseNotes = true
-            }
-        }
-        .sheet(isPresented: $showReleaseNotes) {
-            ReleaseNotesView(
-                releaseNotes: releaseNotes,
-                onDismiss: {
-                    ReleaseNotesManager.shared.markCurrentVersionAsViewed()
-                    showReleaseNotes = false
-                }
-            )
-        }
+        .graceReleaseNotes(releaseNotes: releaseNotes)
     }
 }
 ```
+
+This modifier automatically:
+1. Checks if release notes should be shown for the current app version.
+2. Displays the `ReleaseNotesView` in a sheet if needed.
+3. Marks the current version as viewed when the sheet is dismissed (handles both "Done" button and swipe-to-dismiss).
