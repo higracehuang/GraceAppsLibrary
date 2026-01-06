@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct ReleaseNotesDebugView: View {
+public struct WhatIsNewView: View {
     let releaseNotes: [ReleaseNote]
     @State private var showingReleaseNotes = false
     
@@ -12,7 +12,7 @@ public struct ReleaseNotesDebugView: View {
         Button(action: {
             showingReleaseNotes = true
         }) {
-            Label("Show Release Notes (Debug)", systemImage: "sparkles")
+            Label(NSLocalizedString("release_notes.title", bundle: .module, value: "What's New", comment: ""), systemImage: "sparkles")
         }
         .sheet(isPresented: $showingReleaseNotes) {
             ReleaseNotesView(releaseNotes: releaseNotes) {
@@ -24,11 +24,11 @@ public struct ReleaseNotesDebugView: View {
 
 #Preview {
     List {
-        ReleaseNotesDebugView(
+        WhatIsNewView(
             releaseNotes: [
                 ReleaseNote(
                     version: "1.0.0",
-                    notes: ["Initial debug release notes."]
+                    notes: ["Initial release notes for testing."]
                 )
             ]
         )
