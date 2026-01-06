@@ -33,24 +33,36 @@ public class ReleaseNotesManager {
     ///   - releaseNotes: The list of available release notes
     /// - Returns: True if the current version's release notes haven't been seen yet
     public func shouldShowReleaseNotes(currentVersion: String, releaseNotes: [ReleaseNote]) -> Bool {
+        print("[ReleaseNotesManager] Checking if should show release notes for version: \(currentVersion)")
+        
         // If there are no release notes, don't show anything
-        guard !releaseNotes.isEmpty else { return false }
+        guard !releaseNotes.isEmpty else {
+            print("[ReleaseNotesManager] No release notes available.")
+            return false
+        }
+        
+        print("[ReleaseNotesManager] Available release notes versions: \(releaseNotes.map { $0.version })")
         
         // Find if there's a release note for the current version
         // (Assuming we only show the sheet if there's a note for the CURRENT version)
         guard releaseNotes.contains(where: { $0.version == currentVersion }) else {
+            print("[ReleaseNotesManager] No release note found for current version.")
             return false
         }
         
         let lastViewed = userDefaults.string(forKey: lastViewedVersionKey)
+        print("[ReleaseNotesManager] Last viewed version: \(lastViewed ?? "none")")
         
         // If last viewed is different from current, it's a new release
-        return lastViewed != currentVersion
+        let shouldShow = lastViewed != currentVersion
+        print("[ReleaseNotesManager] Should show release notes: \(shouldShow)")
+        return shouldShow
     }
     
     /// Marks the current version as viewed
     /// - Parameter version: The version to mark as viewed
     public func markAsViewed(version: String) {
+        print("[ReleaseNotesManager] Marking version \(version) as viewed")
         userDefaults.set(version, forKey: lastViewedVersionKey)
     }
 }
