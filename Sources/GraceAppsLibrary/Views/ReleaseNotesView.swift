@@ -11,23 +11,28 @@ public struct ReleaseNotesView: View {
     
     public var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 32) {
+                ScrollView {
+                VStack(spacing: 0) {
                     ForEach(releaseNotes) { note in
                         ReleaseNoteCard(note: note)
+                        if note.id != releaseNotes.last?.id {
+                            Divider()
+                                .padding(.horizontal, 20)
+                        }
                     }
                 }
-                .padding(.vertical, 24)
+                .padding(.vertical, 8)
                 
                 Text(String(format: NSLocalizedString(Constants.StringKeys.feedbackFootnote, bundle: .module, comment: ""), Constants.feedbackEmail))
                     .font(.footnote)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
+                    .padding(.top, 24)
                     .padding(.bottom, 40)
                     .frame(maxWidth: .infinity)
             }
-            .background(Color(UIColor.systemGroupedBackground))
+            .background(Color(UIColor.systemBackground))
             .navigationTitle(NSLocalizedString("release_notes.title", bundle: .module, value: "What's New", comment: ""))
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -52,38 +57,35 @@ struct ReleaseNoteCard: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 200)
+                    .frame(height: 180)
                     .clipped()
+                    .cornerRadius(12)
+                    .padding(.bottom, 16)
             }
             
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    Text("Version \(note.version)")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Version \(note.version)")
+                    .font(.title3.bold())
+                    .foregroundColor(.primary)
                 
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 10) {
                     ForEach(note.notes, id: \.self) { point in
                         HStack(alignment: .top, spacing: 12) {
-                            Circle()
-                                .fill(Color.accentColor)
-                                .frame(width: 6, height: 6)
-                                .padding(.top, 7)
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.accentColor)
+                                .padding(.top, 2)
                             
                             Text(point)
                                 .font(.body)
+                                .foregroundColor(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                 }
             }
-            .padding(20)
         }
-        .background(Color(UIColor.secondarySystemGroupedBackground))
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+        .padding(.vertical, 16)
         .padding(.horizontal, 20)
     }
 }
