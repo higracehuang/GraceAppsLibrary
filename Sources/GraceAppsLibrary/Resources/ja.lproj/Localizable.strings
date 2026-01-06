@@ -42,3 +42,4 @@
 "other.apps.by.grace" = "Graceの他のアプリ";
 "other.apps.built.by.grace" = "Graceが開発した他のアプリ";
 "apps.introduction" = "Grace は日常生活からヒントを得て、自身と家族が日々使い、愛用しているシンプルなアプリを開発しています。以下が彼女のアプリです：";
+"feedback.footnote" = "機能のリクエスト、フィードバック、バグ報告などがございましたら、%@ までご連絡ください";

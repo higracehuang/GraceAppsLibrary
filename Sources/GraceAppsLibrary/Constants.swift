@@ -12,6 +12,7 @@ public enum Constants {
         public static let otherAppsByGrace = "other.apps.by.grace"
         public static let otherAppsBuiltByGrace = "other.apps.built.by.grace"
         public static let appsIntroduction = "apps.introduction"
+        public static let feedbackFootnote = "feedback.footnote"
         
         public static let labelNew = "label.new"
         public static let labelGet = "label.get"

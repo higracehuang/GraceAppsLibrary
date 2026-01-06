@@ -18,6 +18,14 @@ public struct ReleaseNotesView: View {
                     }
                 }
                 .padding(.vertical, 24)
+                
+                Text(String(format: NSLocalizedString(Constants.StringKeys.feedbackFootnote, bundle: .module, comment: ""), Constants.feedbackEmail))
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 40)
+                    .frame(maxWidth: .infinity)
             }
             .background(Color(UIColor.systemGroupedBackground))
             .navigationTitle(NSLocalizedString("release_notes.title", bundle: .module, value: "What's New", comment: ""))
