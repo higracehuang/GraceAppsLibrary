@@ -40,55 +40,28 @@ let name = app.localizedName
 let description = app.localizedDescription
 ```
 
-### Views
+### Usage
 
-You can use the views directly in your SwiftUI code:
-
-#### GraceAppsView
-To display all apps in a list:
-```swift
-GraceAppsView()
-```
-
-or 
+#### 1. Display Apps & Feedback
+Use the built-in views to display the app list or feedback section:
 
 ```swift
-GraceAppsView(excluding: "id1633932632")
+GraceAppsView()           // App list
+FeedbackToGraceView()    // Feedback section
 ```
 
-#### FeedbackToGraceView
-To display a request for feedback:
+#### 2. Show Release Notes
+Use the `.graceReleaseNotes` modifier on any view. It automatically handles version checking and persistence (marking as viewed):
 
 ```swift
-FeedbackToGraceView()
+.graceReleaseNotes(releaseNotes: [
+    ReleaseNote(
+        version: "2.0.0",
+        notes: ["New features!", "Bug fixes."],
+        heroImageName: "AppIcon"
+    )
+])
 ```
 
-#### ReleaseNotesView
-To display release notes (typically in a `.sheet`), you can use the `graceReleaseNotes` view modifier for a robust and automatic integration:
-
-```swift
-struct MyContentView: View {
-    private let releaseNotes = [
-        ReleaseNote(
-            version: "2.0.0",
-            notes: [
-                "Added support for multiple bullet points in release notes.",
-                "Implemented optional hero images for each release.",
-            ],
-            heroImageName: "FastingLadyIcon"
-        )
-    ]
-
-    var body: some View {
-        VStack {
-            // Your app content
-        }
-        .graceReleaseNotes(releaseNotes: releaseNotes)
-    }
-}
-```
-
-This modifier automatically:
-1. Checks if release notes should be shown for the current app version.
-2. Displays the `ReleaseNotesView` in a sheet if needed.
-3. Marks the current version as viewed when the sheet is dismissed (handles both "Done" button and swipe-to-dismiss).
+> [!TIP]
+> This modifier handles both "Done" button and swipe-to-dismiss, ensuring users don't see the same notes twice.
