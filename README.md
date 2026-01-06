@@ -64,24 +64,40 @@ FeedbackToGraceView()
 ```
 
 #### ReleaseNotesView
-To display release notes (typically in a `.sheet`):
+To display release notes (typically in a `.sheet`), you can use the `ReleaseNotesManager` to handle the conditional display logic:
 
 ```swift
-.sheet(isPresented: $showReleaseNotes) {
-    ReleaseNotesView(
-        releaseNotes: [
-            ReleaseNote(
-                version: "2.0.0",
-                notes: [
-                    "Added support for multiple bullet points in release notes.",
-                    "Implemented optional hero images for each release.",
-                ],
-                heroImageName: "FastingLadyIcon" // Must be in the library's bundle
-            )
-        ],
-        onDismiss: {
-            showReleaseNotes = false
+struct MyContentView: View {
+    @State private var showReleaseNotes = false
+    private let releaseNotes = [
+        ReleaseNote(
+            version: "2.0.0",
+            notes: [
+                "Added support for multiple bullet points in release notes.",
+                "Implemented optional hero images for each release.",
+            ],
+            heroImageName: "FastingLadyIcon"
+        )
+    ]
+
+    var body: some View {
+        VStack {
+            // Your app content
         }
-    )
+        .onAppear {
+            if ReleaseNotesManager.shared.shouldShow(releaseNotes: releaseNotes) {
+                showReleaseNotes = true
+            }
+        }
+        .sheet(isPresented: $showReleaseNotes) {
+            ReleaseNotesView(
+                releaseNotes: releaseNotes,
+                onDismiss: {
+                    ReleaseNotesManager.shared.markCurrentVersionAsViewed()
+                    showReleaseNotes = false
+                }
+            )
+        }
+    }
 }
 ```

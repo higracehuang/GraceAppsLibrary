@@ -10,6 +10,23 @@ public class ReleaseNotesManager {
         self.userDefaults = userDefaults
     }
     
+    /// The current version of the app as defined in the main bundle's Info.plist
+    public var currentVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+    }
+    
+    /// Checks if the release notes should be shown for the current app version
+    /// - Parameter releaseNotes: The list of available release notes
+    /// - Returns: True if the current version's release notes haven't been seen yet
+    public func shouldShow(releaseNotes: [ReleaseNote]) -> Bool {
+        shouldShowReleaseNotes(currentVersion: currentVersion, releaseNotes: releaseNotes)
+    }
+    
+    /// Marks the current app version as viewed
+    public func markCurrentVersionAsViewed() {
+        markAsViewed(version: currentVersion)
+    }
+    
     /// Checks if the release notes should be shown for the current version
     /// - Parameters:
     ///   - currentVersion: The current version of the app (e.g., from Bundle)
