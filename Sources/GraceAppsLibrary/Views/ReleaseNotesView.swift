@@ -30,8 +30,7 @@ public struct ReleaseNotesView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                     .padding(.top, 24)
-                    .padding(.bottom, 40)
-                    .frame(maxWidth: .infinity)
+                DeveloperSignatureView()
             }
             .background(Color(UIColor.systemBackground))
             .navigationTitle(NSLocalizedString("release_notes.title", bundle: .module, value: "What's New", comment: ""))

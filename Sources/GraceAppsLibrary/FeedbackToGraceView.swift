@@ -40,7 +40,8 @@ public struct FeedbackToGraceView: View {
                 }
                 .padding(24)
                 .background(Color(UIColor.secondarySystemGroupedBackground))
-                .cornerRadius(20)
+                
+                DeveloperSignatureView()
             }
             .padding(20)
         }

@@ -53,6 +53,8 @@ public struct GraceAppsView: View {
             .padding(.horizontal, 16)
           }
         }
+        
+        DeveloperSignatureView()
       }
       .padding(.bottom, 40)
     }
