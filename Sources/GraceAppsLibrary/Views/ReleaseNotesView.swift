@@ -5,7 +5,7 @@ public struct ReleaseNotesView: View {
     let onDismiss: () -> Void
     
     public init(releaseNotes: [ReleaseNote], onDismiss: @escaping () -> Void) {
-        self.releaseNotes = releaseNotes
+        self.releaseNotes = Array(releaseNotes.prefix(5))
         self.onDismiss = onDismiss
     }
     
