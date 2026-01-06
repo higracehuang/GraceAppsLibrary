@@ -12,7 +12,7 @@ public struct ReleaseNotesView: View {
     public var body: some View {
         NavigationView {
                 ScrollView {
-                VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
                     ForEach(releaseNotes) { note in
                         ReleaseNoteCard(note: note)
                         if note.id != releaseNotes.last?.id {
@@ -22,6 +22,7 @@ public struct ReleaseNotesView: View {
                     }
                 }
                 .padding(.vertical, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Text(String(format: NSLocalizedString(Constants.StringKeys.feedbackFootnote, bundle: .module, comment: ""), Constants.feedbackEmail))
                     .font(.footnote)
@@ -87,6 +88,7 @@ struct ReleaseNoteCard: View {
         }
         .padding(.vertical, 16)
         .padding(.horizontal, 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
