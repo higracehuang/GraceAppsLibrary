@@ -65,3 +65,14 @@ Use the `.graceReleaseNotes` modifier on any view. It automatically handles vers
 
 > [!TIP]
 > This modifier handles both "Done" button and swipe-to-dismiss, ensuring users don't see the same notes twice.
+
+#### 3. Debugging Release Notes
+If you want to manually trigger the Release Notes view for testing or within a debug menu:
+
+```swift
+ReleaseNotesDebugView(releaseNotes: [
+    ReleaseNote(version: "2.0.0", notes: ["New features!", "Bug fixes."])
+])
+```
+
+This view provides a simple button with a sparkles icon that always pops up the release notes when clicked.
