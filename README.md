@@ -44,6 +44,7 @@ let description = app.localizedDescription
 
 You can use the views directly in your SwiftUI code:
 
+#### GraceAppsView
 To display all apps in a list:
 ```swift
 GraceAppsView()
@@ -55,8 +56,32 @@ or
 GraceAppsView(excluding: "id1633932632")
 ```
 
+#### FeedbackToGraceView
 To display a request for feedback:
 
 ```swift
 FeedbackToGraceView()
+```
+
+#### ReleaseNotesView
+To display release notes (typically in a `.sheet`):
+
+```swift
+.sheet(isPresented: $showReleaseNotes) {
+    ReleaseNotesView(
+        releaseNotes: [
+            ReleaseNote(
+                version: "2.0.0",
+                notes: [
+                    "Added support for multiple bullet points in release notes.",
+                    "Implemented optional hero images for each release.",
+                ],
+                heroImageName: "FastingLadyIcon" // Must be in the library's bundle
+            )
+        ],
+        onDismiss: {
+            showReleaseNotes = false
+        }
+    )
+}
 ```
