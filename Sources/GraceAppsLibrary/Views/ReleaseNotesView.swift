@@ -91,7 +91,7 @@ struct ReleaseNoteCard: View {
                     "Improved sheet view to follow Apple design principles.",
                     "Enhanced localization support for better accessibility."
                 ],
-                heroImageName: nil
+                heroImageName: "FastingLadyIcon"
             ),
             ReleaseNote(
                 version: "1.5.0",
