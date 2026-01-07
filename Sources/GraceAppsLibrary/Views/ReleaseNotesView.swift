@@ -63,10 +63,8 @@ struct ReleaseNoteCard: View {
                 
                 image
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .scaledToFit()
                     .frame(maxWidth: .infinity)
-                    .frame(height: 180)
-                    .clipped()
                     .cornerRadius(12)
                     .padding(.bottom, 16)
             }
@@ -118,7 +116,7 @@ struct ReleaseNoteCard: View {
                     "Fixed minor stability issues.",
                     "Performance optimizations for better UI responsiveness."
                 ],
-                heroImageName: nil
+                heroImageName: "ReleaseNotes/TallImage"
             )
         ],
         onDismiss: {}
