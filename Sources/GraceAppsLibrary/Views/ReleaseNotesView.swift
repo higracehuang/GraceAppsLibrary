@@ -53,7 +53,15 @@ struct ReleaseNoteCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if let imageName = note.heroImageName {
-                Image(imageName, bundle: .module)
+                let image: Image = {
+                    if UIImage(named: imageName, in: .module, with: nil) != nil {
+                        return Image(imageName, bundle: .module)
+                    } else {
+                        return Image(imageName)
+                    }
+                }()
+                
+                image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(maxWidth: .infinity)
