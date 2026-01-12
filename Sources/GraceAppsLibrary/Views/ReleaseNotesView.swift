@@ -38,8 +38,9 @@ public struct ReleaseNotesView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: onDismiss) {
-                        Text(NSLocalizedString("common.done", bundle: .module, value: "Done", comment: ""))
-                            .bold()
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
