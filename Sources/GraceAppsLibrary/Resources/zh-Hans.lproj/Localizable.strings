@@ -44,3 +44,6 @@
 "apps.introduction" = "Grace 从日常生活中汲取灵感，打造了她与亲友们日常使用并喜爱的简约应用。以下是她的APP列表：";
 "feedback.footnote" = "如果您有任何功能请求、反馈或错误报告，请通过 %@ 联系我";
 "faq.title" = "常见问题";
+"legal.section" = "法律条款";
+"legal.privacy_policy" = "隐私政策";
+"legal.terms_of_use" = "使用条款";

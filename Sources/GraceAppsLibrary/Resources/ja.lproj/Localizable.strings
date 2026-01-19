@@ -44,3 +44,6 @@
 "apps.introduction" = "Grace は日常生活からヒントを得て、自身と家族が日々使い、愛用しているシンプルなアプリを開発しています。以下が彼女のアプリです：";
 "feedback.footnote" = "機能のリクエスト、フィードバック、バグ報告などがございましたら、%@ までご連絡ください";
 "faq.title" = "よくある質問";
+"legal.section" = "規約と法的事項";
+"legal.privacy_policy" = "プライバシーポリシー";
+"legal.terms_of_use" = "利用規約";

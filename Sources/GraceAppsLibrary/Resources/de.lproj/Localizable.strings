@@ -44,3 +44,6 @@
 "apps.introduction" = "Grace lässt sich vom Alltag inspirieren und entwickelt einfache Apps, die sie und ihre Angehörigen täglich nutzen und schätzen. Hier sind ihre Apps:";
 "feedback.footnote" = "Bei Wünschen, Feedback oder Fehlermeldungen kontaktieren Sie mich bitte unter %@";
 "faq.title" = "FAQs";
+"legal.section" = "Rechtliches";
+"legal.privacy_policy" = "Datenschutzerklärung";
+"legal.terms_of_use" = "Nutzungsbedingungen";
