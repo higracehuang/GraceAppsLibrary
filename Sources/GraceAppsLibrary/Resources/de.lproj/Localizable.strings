@@ -33,6 +33,8 @@
 
 "app.name.fastinglady" = "FastingLady";
 "app.description.fastinglady" = "Einfacher Fasten-Tracker für Frauen, der ihnen hilft, im Einklang mit ihrem Menstruationszyklus zu fasten.";
+"app.name.herweigh" = "HerWeigh";
+"app.description.herweigh" = "Einfacher Gewichts-Tracker für Frauen, der den Menstruationszyklus berücksichtigt.";
 
 "feedback.message" = "Haben Sie Fragen oder Anregungen? Ich freue mich über Ihr Feedback:";
 "feedback.appreciation" = "Vielen Dank für Ihre Unterstützung!";

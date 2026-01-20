@@ -33,6 +33,8 @@
 
 "app.name.fastinglady" = "FastingLady ファスティング・レディ";
 "app.description.fastinglady" = "女性向けに設計されたシンプルな断食トラッカーで、月経周期に合わせた断食をサポートします。";
+"app.name.herweigh" = "HerWeigh";
+"app.description.herweigh" = "生理周期を考慮した、女性のためのシンプルな体重管理アプリ。";
 
 "feedback.message" = "ご質問やご提案がございましたら、以下のメールアドレスまでご連絡ください：";
 "feedback.appreciation" = "ご支援ありがとうございます！";

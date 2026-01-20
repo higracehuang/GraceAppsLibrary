@@ -33,6 +33,8 @@
 
 "app.name.fastinglady" = "FastingLady";
 "app.description.fastinglady" = "Simple fasting tracker designed for women, helping them fast in sync with their menstrual cycle.";
+"app.name.herweigh" = "HerWeigh";
+"app.description.herweigh" = "Simple weight tracker for women that takes their menstrual cycle into account.";
 
 "feedback.message" = "Have thoughts or suggestions? We'd love to hear from you! Your feedback helps us improve. Please send your feedback to:";
 "feedback.appreciation" = "Appreciate it! ❤️";

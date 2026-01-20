@@ -160,6 +160,14 @@ public enum GraceAppsLibrary {
                 releaseDate: Calendar.current.date(from: DateComponents(year: 2025, month: 11, day: 21))!,
                 category: .health
             ),
+            GraceApp(
+                name: "app.name.herweigh",
+                iconName: "HerWeighIcon",
+                shortDescription: "app.description.herweigh",
+                appId: "id6757766090",
+                releaseDate: Calendar.current.date(from: DateComponents(year: 2026, month: 1, day: 15))!,
+                category: .health
+            ),
         ]
 
         let apps = allApps.filter { !$0.isExcluded }

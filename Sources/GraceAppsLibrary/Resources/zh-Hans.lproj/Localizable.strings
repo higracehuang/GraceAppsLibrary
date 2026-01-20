@@ -33,6 +33,8 @@
 
 "app.name.fastinglady" = "FastingLady 周期断食";
 "app.description.fastinglady" = "专为女性设计的简单断食追踪应用，帮助她们根据月经周期进行断食。";
+"app.name.herweigh" = "HerWeigh 她体重";
+"app.description.herweigh" = "专为女性设计的体重记录应用，将生理周期纳入考量，让体重管理更科学。";
 
 "feedback.message" = "有任何想法或建议？欢迎告诉我们！你的反馈将帮助我们做得更好。请发送至：";
 "feedback.appreciation" = "感谢您！❤️";
