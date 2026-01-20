@@ -26,10 +26,14 @@ public struct GraceAppsView: View {
         
         ForEach(categories, id: \.self) { category in
           VStack(alignment: .leading, spacing: 12) {
-            Text(category.rawValue.uppercased())
-              .font(.footnote.bold())
-              .foregroundColor(.secondary)
-              .padding(.horizontal, 24)
+            HStack(spacing: 6) {
+              Image(systemName: category.symbolName)
+                .font(.footnote.bold())
+              Text(category.rawValue.uppercased())
+                .font(.footnote.bold())
+            }
+            .foregroundColor(.secondary)
+            .padding(.horizontal, 24)
             
             VStack(spacing: 0) {
               let categoryApps = apps.filter { $0.category == category }

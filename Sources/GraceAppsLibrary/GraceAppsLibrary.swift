@@ -3,7 +3,7 @@
 
 import Foundation
 
-public enum Category: String {
+public enum Category: String, Codable {
     case productivity = "Productivity"
     case education = "Education"
     case entertainment = "Entertainment"
@@ -12,9 +12,22 @@ public enum Category: String {
     case social = "Social"
     case travel = "Travel"
     case utilities = "Utilities"
+    
+    public var symbolName: String {
+        switch self {
+        case .productivity: return "checklist"
+        case .education: return "book.fill"
+        case .entertainment: return "play.circle.fill"
+        case .health: return "heart.fill"
+        case .lifestyle: return "leaf.fill"
+        case .social: return "person.2.fill"
+        case .travel: return "airplane"
+        case .utilities: return "wrench.and.screwdriver.fill"
+        }
+    }
 }
 
-public struct GraceApp: Hashable {
+public struct GraceApp: Hashable, Identifiable, Codable {
     public let name: String
     public let iconName: String
     public let shortDescription: String
@@ -23,6 +36,8 @@ public struct GraceApp: Hashable {
     public let releaseDate: Date
     public let category: Category
     public let isExcluded: Bool
+    
+    public var id: String { appId }
     
     public init(name: String, iconName: String, shortDescription: String, appId: String, releaseDate: Date, category: Category, isExcluded: Bool = false) {
         self.name = name
@@ -69,13 +84,17 @@ public struct GraceApp: Hashable {
 }
 
 public enum GraceAppsLibrary {
+    private static func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
+        Calendar.current.date(from: DateComponents(year: year, month: month, day: day))!
+    }
+
     private static let allGraceApps: [GraceApp] = [
         GraceApp(
             name: "app.name.tallycoin",
             iconName: "TallyCoinIcon",
             shortDescription: "app.description.tallycoin",
             appId: "id1633932632",
-            releaseDate: Calendar.current.date(from: DateComponents(year: 2022, month: 7, day: 11))!,
+            releaseDate: date(2022, 7, 11),
             category: .productivity
         ),
         GraceApp(
@@ -83,7 +102,7 @@ public enum GraceAppsLibrary {
             iconName: "ReadingClockIcon",
             shortDescription: "app.description.readingclock",
             appId: "id6473550400",
-            releaseDate: Calendar.current.date(from: DateComponents(year: 2023, month: 11, day: 30))!,
+            releaseDate: date(2023, 11, 30),
             category: .productivity
         ),
         GraceApp(
@@ -91,7 +110,7 @@ public enum GraceAppsLibrary {
             iconName: "StemCardsIcon",
             shortDescription: "app.description.stemcards",
             appId: "id6478243260",
-            releaseDate: Calendar.current.date(from: DateComponents(year: 2024, month: 2, day: 27))!,
+            releaseDate: date(2024, 2, 27),
             category: .education
         ),
         GraceApp(
@@ -99,7 +118,7 @@ public enum GraceAppsLibrary {
             iconName: "StitchTallyIcon",
             shortDescription: "app.description.stitchtally",
             appId: "id6738016114",
-            releaseDate: Calendar.current.date(from: DateComponents(year: 2024, month: 11, day: 12))!,
+            releaseDate: date(2024, 11, 12),
             category: .lifestyle
         ),
         GraceApp(
@@ -107,7 +126,7 @@ public enum GraceAppsLibrary {
             iconName: "QuizMeAIIcon",
             shortDescription: "app.description.quizmeai",
             appId: "id6720763773",
-            releaseDate: Calendar.current.date(from: DateComponents(year: 2024, month: 10, day: 5))!,
+            releaseDate: date(2024, 10, 5),
             category: .education
         ),
         GraceApp(
@@ -115,7 +134,7 @@ public enum GraceAppsLibrary {
             iconName: "LocalSpeaksIcon",
             shortDescription: "app.description.localspeaks",
             appId: "id6615060694",
-            releaseDate: Calendar.current.date(from: DateComponents(year: 2024, month: 8, day: 7))!,
+            releaseDate: date(2024, 8, 7),
             category: .education
         ),
         GraceApp(
@@ -123,7 +142,7 @@ public enum GraceAppsLibrary {
             iconName: "ItemizeAIIcon",
             shortDescription: "app.description.itemizeai",
             appId: "id6737280335",
-            releaseDate: Calendar.current.date(from: DateComponents(year: 2024, month: 10, day: 27))!,
+            releaseDate: date(2024, 10, 27),
             category: .utilities,
             isExcluded: true
         ),
@@ -132,7 +151,7 @@ public enum GraceAppsLibrary {
             iconName: "ChartYBeeIcon",
             shortDescription: "app.description.chartybee",
             appId: "id6740661428",
-            releaseDate: Calendar.current.date(from: DateComponents(year: 2025, month: 2, day: 10))!,
+            releaseDate: date(2025, 2, 10),
             category: .utilities
         ),
         GraceApp(
@@ -140,7 +159,7 @@ public enum GraceAppsLibrary {
             iconName: "SnapProgressIcon",
             shortDescription: "app.description.snapprogress",
             appId: "id6745906297",
-            releaseDate: Calendar.current.date(from: DateComponents(year: 2025, month: 5, day: 20))!,
+            releaseDate: date(2025, 5, 20),
             category: .utilities
         ),
         GraceApp(
@@ -148,7 +167,7 @@ public enum GraceAppsLibrary {
             iconName: "DialInEspressoIcon",
             shortDescription: "app.description.dialinespresso",
             appId: "id6752831404",
-            releaseDate: Calendar.current.date(from: DateComponents(year: 2025, month: 9, day: 22))!,
+            releaseDate: date(2025, 9, 22),
             category: .lifestyle
         ),
         GraceApp(
@@ -156,7 +175,7 @@ public enum GraceAppsLibrary {
             iconName: "FastingLadyIcon",
             shortDescription: "app.description.fastinglady",
             appId: "id6755406114",
-            releaseDate: Calendar.current.date(from: DateComponents(year: 2025, month: 11, day: 21))!,
+            releaseDate: date(2025, 11, 21),
             category: .health
         ),
         GraceApp(
@@ -164,7 +183,7 @@ public enum GraceAppsLibrary {
             iconName: "HerWeighIcon",
             shortDescription: "app.description.herweigh",
             appId: "id6757766090",
-            releaseDate: Calendar.current.date(from: DateComponents(year: 2026, month: 1, day: 15))!,
+            releaseDate: date(2026, 1, 15),
             category: .health
         ),
     ]
