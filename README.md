@@ -76,3 +76,19 @@ WhatIsNewView(releaseNotes: [
 ```
 
 This view provides a simple button with a sparkles icon that pops up the release notes when clicked.
+
+#### 4. Emoji Input Support
+Use `EmojiTextField` to provide a focused emoji selection experience. It automatically forces the emoji keyboard and restricts input to a single character.
+
+```swift
+@State private var emoji: String = "✨"
+
+EmojiTextField(
+    text: $emoji,
+    placeholder: "Select Emoji",
+    font: .systemFont(ofSize: 40),
+    textAlignment: .center
+)
+.frame(height: 80)
+```
+
