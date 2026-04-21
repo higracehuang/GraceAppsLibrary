@@ -9,6 +9,7 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 - App Store links
 - Option to exclude specific apps from the list
 - iOS 14+ support
+- Built-in views for displaying apps, feedback, release notes, FAQs, and emoji input
 
 ## Installation
 
@@ -90,5 +91,20 @@ EmojiTextField(
     textAlignment: .center
 )
 .frame(height: 80)
+```
+
+#### 5. Show FAQs
+Use `FAQNavigationView` to easily add a Frequently Asked Questions section to your app:
+
+```swift
+FAQNavigationView(sections: [
+    FAQSection(
+        title: "Basics",
+        items: [
+            FAQItem(question: "How does this work?", answer: "It is very simple."),
+            FAQItem(question: "Is it free?", answer: "Yes, the basic version is free.")
+        ]
+    )
+])
 ```
 
