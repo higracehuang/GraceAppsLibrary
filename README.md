@@ -34,6 +34,17 @@ or exclude a specific app:
 let apps = GraceAppsLibrary.getAllApps(excluding: "id1633932632")
 ```
 
+#### ReleaseNotesManager
+`ReleaseNotesManager` provides manual control over release notes version tracking:
+
+```swift
+// Check if notes should be shown for a set of release notes
+let shouldShow = ReleaseNotesManager.shared.shouldShow(releaseNotes: myNotes)
+
+// Mark the current version as viewed manually
+ReleaseNotesManager.shared.markCurrentVersionAsViewed()
+```
+
 In the UI, while you loop through the apps, you can use the `localizedName` and `localizedDescription` properties to get the localized name and description for the current locale:
 
 ```swift
