@@ -50,3 +50,6 @@
 "legal.section" = "Legal";
 "legal.privacy_policy" = "Privacy Policy";
 "legal.terms_of_use" = "Terms of Use";
+
+"release_notes.title" = "What's New";
+"release_notes.version_prefix" = "Version";

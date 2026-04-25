@@ -16,5 +16,8 @@ public enum Constants {
         
         public static let labelNew = "label.new"
         public static let labelGet = "label.get"
+        
+        public static let releaseNotesTitle = "release_notes.title"
+        public static let releaseNotesVersionPrefix = "release_notes.version_prefix"
     }
 }

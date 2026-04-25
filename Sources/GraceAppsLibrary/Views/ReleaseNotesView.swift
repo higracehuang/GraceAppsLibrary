@@ -33,7 +33,7 @@ public struct ReleaseNotesView: View {
                 DeveloperSignatureView()
             }
             .background(Color(UIColor.systemBackground))
-            .navigationTitle(NSLocalizedString("release_notes.title", bundle: .module, value: "What's New", comment: ""))
+            .navigationTitle(NSLocalizedString(Constants.StringKeys.releaseNotesTitle, bundle: .module, value: "What's New", comment: ""))
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -71,7 +71,7 @@ struct ReleaseNoteCard: View {
             }
             
             VStack(alignment: .leading, spacing: 12) {
-                Text("Version \(note.version)")
+                Text("\(NSLocalizedString(Constants.StringKeys.releaseNotesVersionPrefix, bundle: .module, value: "Version", comment: "")) \(note.version)")
                     .font(.title3.bold())
                     .foregroundColor(.primary)
                 

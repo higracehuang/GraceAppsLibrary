@@ -49,3 +49,6 @@
 "legal.section" = "法律条款";
 "legal.privacy_policy" = "隐私政策";
 "legal.terms_of_use" = "使用条款";
+
+"release_notes.title" = "更新内容";
+"release_notes.version_prefix" = "版本";

@@ -12,7 +12,7 @@ public struct WhatIsNewView: View {
         Button(action: {
             showingReleaseNotes = true
         }) {
-            Label(NSLocalizedString("release_notes.title", bundle: .module, value: "What's New", comment: ""), systemImage: "sparkles")
+            Label(NSLocalizedString(Constants.StringKeys.releaseNotesTitle, bundle: .module, value: "What's New", comment: ""), systemImage: "sparkles")
         }
         .sheet(isPresented: $showingReleaseNotes) {
             ReleaseNotesView(releaseNotes: releaseNotes) {
