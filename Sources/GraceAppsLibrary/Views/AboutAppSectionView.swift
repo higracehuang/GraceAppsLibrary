@@ -45,7 +45,7 @@ public struct AboutAppSectionView: View {
     private var appName: String {
         Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String
             ?? Bundle.main.infoDictionary?["CFBundleName"] as? String
-            ?? "App"
+            ?? NSLocalizedString(Constants.StringKeys.aboutAppFallback, bundle: .module, comment: "")
     }
 
     // MARK: - Body
