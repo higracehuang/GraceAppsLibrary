@@ -76,7 +76,7 @@ struct ReleaseNoteCard: View {
                     .foregroundColor(.primary)
                 
                 VStack(alignment: .leading, spacing: 10) {
-                    ForEach(note.notes, id: \.self) { point in
+                    ForEach(Array(note.notes.enumerated()), id: \.offset) { index, point in
                         HStack(alignment: .top, spacing: 12) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 14, weight: .semibold))
