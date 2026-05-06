@@ -61,7 +61,9 @@ public struct AboutAppSectionView: View {
             }
 
             // What's New
-            WhatIsNewView(releaseNotes: releaseNotes)
+            if !releaseNotes.isEmpty {
+                WhatIsNewView(releaseNotes: releaseNotes)
+            }
 
             // Rate This App
             if let url = reviewURL {
