@@ -48,8 +48,8 @@ public struct AboutAppSectionView: View {
     }
 
     var appName: String {
-        Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String
-            ?? Bundle.main.infoDictionary?["CFBundleName"] as? String
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+            ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
             ?? NSLocalizedString(Constants.StringKeys.aboutAppFallback, bundle: .module, comment: "")
     }
 
