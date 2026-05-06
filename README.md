@@ -69,7 +69,11 @@ Use the `.graceReleaseNotes` modifier on any view. It automatically handles vers
 .graceReleaseNotes(releaseNotes: [
     ReleaseNote(
         version: "2.0.0",
-        notes: ["New features!", "Bug fixes."],
+        // String literals are automatically converted to LocalizedStringKey
+        notes: [
+            "Added support for multiple bullet points in release notes.",
+            "Implemented optional hero images for each release."
+        ],
         heroImageName: "AppIcon"
     )
 ])
