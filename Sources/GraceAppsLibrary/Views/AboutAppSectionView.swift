@@ -51,13 +51,13 @@ public struct AboutAppSectionView: View {
     // MARK: - Body
 
     public var body: some View {
-        Section("About \(appName)") {
+        Section(header: Text("About \(appName)")) {
             // Version row
             HStack {
                 Label("Version", systemImage: "info.circle")
                 Spacer()
                 Text(appVersion)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
             }
 
             // What's New
@@ -71,8 +71,12 @@ public struct AboutAppSectionView: View {
             }
 
             // Share This App
-            if let url = shareURL {
+            if #available(iOS 16, *), let url = shareURL {
                 ShareLink(item: url) {
+                    Label("Share This App", systemImage: "square.and.arrow.up")
+                }
+            } else if let url = shareURL {
+                Link(destination: url) {
                     Label("Share This App", systemImage: "square.and.arrow.up")
                 }
             }
@@ -81,7 +85,7 @@ public struct AboutAppSectionView: View {
 }
 
 #Preview {
-    NavigationStack {
+    NavigationView {
         Form {
             AboutAppSectionView(
                 appStoreId: "1234567890",
