@@ -12,26 +12,26 @@ public struct AboutAppSectionView: View {
     /// - Parameters:
     ///   - appStoreId: The numeric App Store ID string (e.g. `"id1234567890"` or just `"1234567890"`).
     ///   - releaseNotes: The array of `ReleaseNote` objects to show in the "What's New" sheet.
-    public init(appStoreId: String, releaseNotes: [ReleaseNote]) {
+    public init(appStoreId: String, releaseNotes: [ReleaseNote] = []) {
         self.appStoreId = appStoreId
         self.releaseNotes = releaseNotes
     }
 
     // MARK: - Computed helpers
 
-    private var normalizedAppStoreId: String {
+    var normalizedAppStoreId: String {
         appStoreId.hasPrefix("id") ? appStoreId : "id\(appStoreId)"
     }
 
-    private var reviewURL: URL? {
+    var reviewURL: URL? {
         URL(string: "https://apps.apple.com/app/\(normalizedAppStoreId)?action=write-review")
     }
 
-    private var shareURL: URL? {
+    var shareURL: URL? {
         URL(string: "https://apps.apple.com/app/\(normalizedAppStoreId)")
     }
 
-    private var appVersion: String {
+    var appVersion: String {
         let bundle = Bundle.main
         let release = bundle.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         let build   = bundle.infoDictionary?["CFBundleVersion"] as? String ?? "?"
@@ -42,7 +42,7 @@ public struct AboutAppSectionView: View {
 #endif
     }
 
-    private var appName: String {
+    var appName: String {
         Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String
             ?? Bundle.main.infoDictionary?["CFBundleName"] as? String
             ?? NSLocalizedString(Constants.StringKeys.aboutAppFallback, bundle: .module, comment: "")
