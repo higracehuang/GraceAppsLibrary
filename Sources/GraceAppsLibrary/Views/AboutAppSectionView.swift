@@ -12,7 +12,12 @@ public struct AboutAppSectionView: View {
     /// - Parameters:
     ///   - appStoreId: The numeric App Store ID string (e.g. `"id1234567890"` or just `"1234567890"`).
     ///   - releaseNotes: The array of `ReleaseNote` objects to show in the "What's New" sheet.
-    public init(appStoreId: String, releaseNotes: [ReleaseNote] = []) {
+    public init(appStoreId: String) {
+        self.appStoreId = appStoreId
+        self.releaseNotes = []
+    }
+
+    public init(appStoreId: String, releaseNotes: [ReleaseNote]) {
         self.appStoreId = appStoreId
         self.releaseNotes = releaseNotes
     }
