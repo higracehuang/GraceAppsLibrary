@@ -119,3 +119,29 @@ FAQNavigationView(sections: [
 ])
 ```
 
+#### 6. About App Section
+Use `AboutAppSectionView` to add a ready-made "About" section to your Settings screen. It displays the current app version, a "What's New" button, a link to rate the app, and a share sheet for the App Store page — all without any additional dependencies.
+
+**Parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `appStoreId` | `String` | Your numeric App Store ID. Accepts either `"1234567890"` or `"id1234567890"`. |
+| `releaseNotes` | `[ReleaseNote]` | The release notes array shown in the "What's New" sheet. |
+
+```swift
+AboutAppSectionView(
+    appStoreId: "1234567890",
+    releaseNotes: [
+        ReleaseNote(version: "2.0.0", notes: ["New features!", "Bug fixes."]),
+        ReleaseNote(version: "1.0.0", notes: ["Initial release."])
+    ]
+)
+```
+
+> [!NOTE]
+> `AboutAppSectionView` reads `CFBundleDisplayName` / `CFBundleName` and `CFBundleShortVersionString` / `CFBundleVersion` from `Bundle.main` automatically, so no additional configuration is needed.
+
+> [!TIP]
+> The "Share This App" row uses SwiftUI's native `ShareLink`, which requires **iOS 16+**. Make sure your deployment target is set accordingly.
+
