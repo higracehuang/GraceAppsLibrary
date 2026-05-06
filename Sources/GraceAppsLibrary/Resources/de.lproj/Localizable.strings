@@ -52,3 +52,8 @@
 
 "release_notes.title" = "Was ist neu";
 "release_notes.version_prefix" = "Version";
+
+"about.section.title" = "Über %@";
+"about.version" = "Version";
+"about.rate_this_app" = "Diese App bewerten";
+"about.share_this_app" = "Diese App teilen";

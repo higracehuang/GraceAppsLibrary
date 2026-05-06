@@ -52,3 +52,8 @@
 
 "release_notes.title" = "新機能";
 "release_notes.version_prefix" = "バージョン";
+
+"about.section.title" = "%@について";
+"about.version" = "バージョン";
+"about.rate_this_app" = "このアプリを評価する";
+"about.share_this_app" = "このアプリを共有する";

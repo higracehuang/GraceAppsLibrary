@@ -51,10 +51,10 @@ public struct AboutAppSectionView: View {
     // MARK: - Body
 
     public var body: some View {
-        Section(header: Text("About \(appName)")) {
+        Section(header: Text(String(format: NSLocalizedString(Constants.StringKeys.aboutSectionTitle, bundle: .module, comment: ""), appName))) {
             // Version row
             HStack {
-                Label("Version", systemImage: "info.circle")
+                Label(NSLocalizedString(Constants.StringKeys.aboutVersion, bundle: .module, comment: ""), systemImage: "info.circle")
                 Spacer()
                 Text(appVersion)
                     .foregroundColor(.secondary)
@@ -66,18 +66,18 @@ public struct AboutAppSectionView: View {
             // Rate This App
             if let url = reviewURL {
                 Link(destination: url) {
-                    Label("Rate This App", systemImage: "star")
+                    Label(NSLocalizedString(Constants.StringKeys.aboutRateThisApp, bundle: .module, comment: ""), systemImage: "star")
                 }
             }
 
             // Share This App
             if #available(iOS 16, *), let url = shareURL {
                 ShareLink(item: url) {
-                    Label("Share This App", systemImage: "square.and.arrow.up")
+                    Label(NSLocalizedString(Constants.StringKeys.aboutShareThisApp, bundle: .module, comment: ""), systemImage: "square.and.arrow.up")
                 }
             } else if let url = shareURL {
                 Link(destination: url) {
-                    Label("Share This App", systemImage: "square.and.arrow.up")
+                    Label(NSLocalizedString(Constants.StringKeys.aboutShareThisApp, bundle: .module, comment: ""), systemImage: "square.and.arrow.up")
                 }
             }
         }

@@ -53,3 +53,8 @@
 
 "release_notes.title" = "What's New";
 "release_notes.version_prefix" = "Version";
+
+"about.section.title" = "About %@";
+"about.version" = "Version";
+"about.rate_this_app" = "Rate This App";
+"about.share_this_app" = "Share This App";
