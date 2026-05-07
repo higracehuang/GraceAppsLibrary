@@ -6,34 +6,32 @@ import SwiftUI
 /// - Requires: The host app's `Bundle` must have `CFBundleDisplayName` or `CFBundleName`
 ///   set, and `CFBundleShortVersionString` / `CFBundleVersion` for the version display.
 public struct AboutAppSectionView: View {
-    let appStoreId: String
+    let appStoreId: String?
     let releaseNotes: [ReleaseNote]
 
     /// - Parameters:
     ///   - appStoreId: The numeric App Store ID string (e.g. `"id1234567890"` or just `"1234567890"`).
     ///   - releaseNotes: The array of `ReleaseNote` objects to show in the "What's New" sheet.
-    public init(appStoreId: String) {
-        self.appStoreId = appStoreId
-        self.releaseNotes = []
-    }
-
-    public init(appStoreId: String, releaseNotes: [ReleaseNote]) {
+    public init(appStoreId: String? = nil, releaseNotes: [ReleaseNote] = []) {
         self.appStoreId = appStoreId
         self.releaseNotes = releaseNotes
     }
 
     // MARK: - Computed helpers
 
-    var normalizedAppStoreId: String {
-        appStoreId.hasPrefix("id") ? appStoreId : "id\(appStoreId)"
+    var normalizedAppStoreId: String? {
+        guard let appStoreId else { return nil }
+        return appStoreId.hasPrefix("id") ? appStoreId : "id\(appStoreId)"
     }
 
     var reviewURL: URL? {
-        URL(string: "https://apps.apple.com/app/\(normalizedAppStoreId)?action=write-review")
+        guard let normalizedAppStoreId else { return nil }
+        return URL(string: "https://apps.apple.com/app/\(normalizedAppStoreId)?action=write-review")
     }
 
     var shareURL: URL? {
-        URL(string: "https://apps.apple.com/app/\(normalizedAppStoreId)")
+        guard let normalizedAppStoreId else { return nil }
+        return URL(string: "https://apps.apple.com/app/\(normalizedAppStoreId)")
     }
 
     var appVersion: String {
@@ -78,26 +76,41 @@ public struct AboutAppSectionView: View {
             }
 
             // Share This App
-            if #available(iOS 16, *), let url = shareURL {
-                ShareLink(item: url) {
-                    Label(NSLocalizedString(Constants.StringKeys.aboutShareThisApp, bundle: .module, comment: ""), systemImage: "square.and.arrow.up")
-                }
-            } else if let url = shareURL {
-                Link(destination: url) {
-                    Label(NSLocalizedString(Constants.StringKeys.aboutShareThisApp, bundle: .module, comment: ""), systemImage: "square.and.arrow.up")
+            if let url = shareURL {
+                if #available(iOS 16, *) {
+                    ShareLink(item: url) {
+                        Label(NSLocalizedString(Constants.StringKeys.aboutShareThisApp, bundle: .module, comment: ""), systemImage: "square.and.arrow.up")
+                    }
+                } else {
+                    Link(destination: url) {
+                        Label(NSLocalizedString(Constants.StringKeys.aboutShareThisApp, bundle: .module, comment: ""), systemImage: "square.and.arrow.up")
+                    }
                 }
             }
         }
     }
 }
 
-#Preview {
+#Preview("With ID") {
     NavigationView {
         Form {
             AboutAppSectionView(
                 appStoreId: "1234567890",
                 releaseNotes: [
                     ReleaseNote(version: "2.0.0", notes: ["New features!", "Bug fixes."]),
+                    ReleaseNote(version: "1.0.0", notes: ["Initial release."])
+                ]
+            )
+        }
+        .navigationTitle("Settings")
+    }
+}
+
+#Preview("Without ID") {
+    NavigationView {
+        Form {
+            AboutAppSectionView(
+                releaseNotes: [
                     ReleaseNote(version: "1.0.0", notes: ["Initial release."])
                 ]
             )
