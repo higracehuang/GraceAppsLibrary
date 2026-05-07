@@ -7,6 +7,20 @@ public extension View {
     func graceReleaseNotes(releaseNotes: [ReleaseNote]) -> some View {
         self.modifier(GraceReleaseNotesModifier(releaseNotes: releaseNotes))
     }
+    
+    @ViewBuilder
+    func compatBadge(_ text: String) -> some View {
+        if #available(iOS 15.0, *) {
+            self.badge(text)
+        } else {
+            HStack {
+                self
+                Spacer()
+                Text(text)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
 }
 
 struct GraceReleaseNotesModifier: ViewModifier {

@@ -149,3 +149,10 @@ AboutAppSectionView(
 > [!TIP]
 > The "Share This App" row uses SwiftUI's native `ShareLink`, which requires **iOS 16+**. Make sure your deployment target is set accordingly.
 
+#### 7. Language Setting Link
+Use `LanguageSettingLinkView` to provide a direct link to the app's settings in the System Settings app, allowing users to quickly change the app's language. It displays the current preferred language as a badge (iOS 15+) or trailing text (iOS 14).
+
+```swift
+LanguageSettingLinkView()
+```
+
