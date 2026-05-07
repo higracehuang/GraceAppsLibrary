@@ -132,10 +132,10 @@ struct AppRow: View {
   GraceAppsView()
 }
 
-public struct GraceAppsNavigationView: View {
+struct GraceAppsNavigationView: View {
   let excludingAppId: String?
   
-  public init(excludingAppId: String? = nil) {
+  init(excludingAppId: String? = nil) {
     self.excludingAppId = excludingAppId
   }
   
