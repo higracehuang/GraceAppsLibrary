@@ -1,11 +1,11 @@
 import SwiftUI
 
-public struct SourcesView: View {
-    public let sections: [SourceSection]
-    public let disclaimer: LocalizedStringKey?
-    public let navigationTitle: LocalizedStringKey
+struct SourcesView: View {
+    let sections: [SourceSection]
+    let disclaimer: LocalizedStringKey?
+    let navigationTitle: LocalizedStringKey
     
-    public init(
+    init(
         sections: [SourceSection],
         disclaimer: LocalizedStringKey? = nil,
         navigationTitle: LocalizedStringKey? = nil
@@ -15,7 +15,7 @@ public struct SourcesView: View {
         self.navigationTitle = navigationTitle ?? LocalizedStringKey(Bundle.module.localizedString(forKey: Constants.StringKeys.supportSourcesReferences, value: nil, table: nil))
     }
     
-    public var body: some View {
+    var body: some View {
         Form {
             ForEach(sections) { section in
                 Section(

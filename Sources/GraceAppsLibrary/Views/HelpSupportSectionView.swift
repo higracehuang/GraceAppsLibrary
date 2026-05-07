@@ -1,28 +1,20 @@
 import SwiftUI
 
-public struct HelpSupportSectionView<SourcesDestination: View>: View {
+public struct HelpSupportSectionView: View {
     let faqSections: [FAQSection]?
-    let sourcesDestination: SourcesDestination?
+    let sourceSections: [SourceSection]?
+    let sourceDisclaimer: LocalizedStringKey?
     let showFeedback: Bool
     
-    // Initializer when sources is NOT provided
     public init(
         faqSections: [FAQSection]? = nil,
-        showFeedback: Bool = true
-    ) where SourcesDestination == EmptyView {
-        self.faqSections = faqSections
-        self.sourcesDestination = nil
-        self.showFeedback = showFeedback
-    }
-    
-    // Initializer when sources IS provided
-    public init(
-        faqSections: [FAQSection]? = nil,
-        @ViewBuilder sourcesDestination: () -> SourcesDestination,
+        sourceSections: [SourceSection]? = nil,
+        sourceDisclaimer: LocalizedStringKey? = nil,
         showFeedback: Bool = true
     ) {
         self.faqSections = faqSections
-        self.sourcesDestination = sourcesDestination()
+        self.sourceSections = sourceSections
+        self.sourceDisclaimer = sourceDisclaimer
         self.showFeedback = showFeedback
     }
     
@@ -32,8 +24,8 @@ public struct HelpSupportSectionView<SourcesDestination: View>: View {
                 FAQNavigationView(sections: faqSections)
             }
             
-            if let sourcesDestination = sourcesDestination {
-                NavigationLink(destination: sourcesDestination) {
+            if let sourceSections = sourceSections, !sourceSections.isEmpty {
+                NavigationLink(destination: SourcesView(sections: sourceSections, disclaimer: sourceDisclaimer)) {
                     Label {
                         Text(LocalizedStringKey(Constants.StringKeys.supportSourcesReferences), bundle: .module)
                     } icon: {
@@ -55,7 +47,9 @@ public struct HelpSupportSectionView<SourcesDestination: View>: View {
             faqSections: [
                 FAQSection(title: "General", items: [FAQItem(question: "Q", answer: "A")])
             ],
-            sourcesDestination: { Text("Sources") }
+            sourceSections: [
+                SourceSection(title: "Books", links: [SourceLink(title: "B", url: URL(string: "https://x.com")!)])
+            ]
         )
         
         HelpSupportSectionView(
