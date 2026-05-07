@@ -25,5 +25,9 @@ public enum Constants {
         public static let aboutRateThisApp = "about.rate_this_app"
         public static let aboutShareThisApp = "about.share_this_app"
         public static let aboutAppFallback = "about.app_fallback"
+        
+        public static let supportSectionTitle = "support.section.title"
+        public static let supportSourcesReferences = "support.sources_references"
+        public static let supportDisclaimer = "support.disclaimer"
     }
 }

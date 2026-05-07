@@ -59,3 +59,6 @@
 "about.share_this_app" = "分享此应用";
 "about.app_fallback" = "应用";
 "settings.language" = "语言";
+
+"support.section.title" = "帮助与支持";
+"support.sources_references" = "资料来源与引用";"support.disclaimer" = "免责声明";

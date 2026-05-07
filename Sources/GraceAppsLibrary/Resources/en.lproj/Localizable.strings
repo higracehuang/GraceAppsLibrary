@@ -60,3 +60,6 @@
 "about.share_this_app" = "Share This App";
 "about.app_fallback" = "App";
 "settings.language" = "Language";
+
+"support.section.title" = "Help & Support";
+"support.sources_references" = "Sources & References";"support.disclaimer" = "Disclaimer";

@@ -59,3 +59,6 @@
 "about.share_this_app" = "このアプリを共有する";
 "about.app_fallback" = "アプリ";
 "settings.language" = "言語";
+
+"support.section.title" = "ヘルプとサポート";
+"support.sources_references" = "ソースとリファレンス";"support.disclaimer" = "免責事項";

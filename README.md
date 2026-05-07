@@ -156,3 +156,32 @@ Use `LanguageSettingLinkView` to provide a direct link to the app's settings in 
 LanguageSettingLinkView()
 ```
 
+#### 8. Help & Support Section
+Use `HelpSupportSectionView` to provide a unified help section in your Settings screen. It can optionally show FAQs, a link to "Sources & References", and a feedback link.
+
+```swift
+HelpSupportSectionView(
+    faqSections: myFAQSections, // Optional: Shows FAQNavigationView if provided
+    sourcesDestination: { SourcesView(sections: mySources) }, // Optional: Shows NavigationLink to sources if provided
+    showFeedback: true // Optional: Defaults to true, shows FeedbackToGraceNavigationView
+)
+```
+
+#### 9. Sources & References
+Use `SourcesView` to list peer-reviewed research, books, or experts that support your app's content. It includes support for sections with titles and footers, as well as an optional disclaimer section.
+
+```swift
+SourcesView(
+    sections: [
+        SourceSection(
+            title: "Books",
+            footer: "Foundational reading.",
+            links: [
+                SourceLink(title: "Book Title", subtitle: "Author", url: URL(string: "...")!)
+            ]
+        )
+    ],
+    disclaimer: "The information in this app is for educational purposes only..." // Optional
+)
+```
+
