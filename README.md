@@ -168,5 +168,11 @@ HelpSupportSectionView(
 )
 ```
 
-```
+#### 9. About Developer Section
+Use `AboutDeveloperSectionView` to add a ready-made "About the App Developer" section to your Settings screen. It provides a navigation link to the developer's other apps.
 
+```swift
+AboutDeveloperSectionView(
+    excludingAppId: "id1234567890" // Optional: Excludes current app from the list
+)
+```

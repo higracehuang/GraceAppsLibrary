@@ -29,5 +29,7 @@ public enum Constants {
         public static let supportSectionTitle = "support.section.title"
         public static let supportSourcesReferences = "support.sources_references"
         public static let supportDisclaimer = "support.disclaimer"
+        
+        public static let developerSectionTitle = "developer.section.title"
     }
 }
