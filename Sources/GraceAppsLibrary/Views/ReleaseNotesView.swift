@@ -83,7 +83,7 @@ struct ReleaseNoteCard: View {
                                 .foregroundColor(.accentColor)
                                 .padding(.top, 2)
                             
-                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(item.text)
                                     .font(.body)
                                     .foregroundColor(.secondary)
@@ -99,6 +99,7 @@ struct ReleaseNoteCard: View {
                                         .clipShape(Capsule())
                                 }
                             }
+                            .padding(.top, 0)
                         }
                     }
                 }
