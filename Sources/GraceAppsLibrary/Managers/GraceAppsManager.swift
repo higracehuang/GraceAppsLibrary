@@ -1,6 +1,6 @@
 import Foundation
 
-public enum GraceAppsManager {
+enum GraceAppsManager {
     private static func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
         Calendar.current.date(from: DateComponents(year: year, month: month, day: day))!
     }
@@ -105,7 +105,7 @@ public enum GraceAppsManager {
         ),
     ]
 
-    public static func getAllApps(excluding appIdToExclude: String? = nil) -> [GraceApp] {
+    static func getAllApps(excluding appIdToExclude: String? = nil) -> [GraceApp] {
         let apps = allGraceApps.filter { !$0.isExcluded }
         
         if let appIdToExclude {
@@ -114,11 +114,11 @@ public enum GraceAppsManager {
         return apps
     }
     
-    public static func getAppStoreUrl(for appId: String) -> URL? {
+    static func getAppStoreUrl(for appId: String) -> URL? {
         return getAllApps().first { $0.appId == appId }?.appStoreUrl
     }
 
-    public static func getSortedApps(excluding appIdToExclude: String? = nil) -> [GraceApp] {
+    static func getSortedApps(excluding appIdToExclude: String? = nil) -> [GraceApp] {
         let apps = getAllApps(excluding: appIdToExclude)
                 .sorted(by: { $0.releaseDate > $1.releaseDate })
         

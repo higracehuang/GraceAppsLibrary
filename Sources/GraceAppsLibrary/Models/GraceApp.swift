@@ -1,6 +1,6 @@
 import Foundation
 
-public enum Category: String, Codable {
+enum Category: String, Codable {
     case productivity = "Productivity"
     case education = "Education"
     case entertainment = "Entertainment"
@@ -10,7 +10,7 @@ public enum Category: String, Codable {
     case travel = "Travel"
     case utilities = "Utilities"
     
-    public var symbolName: String {
+    var symbolName: String {
         switch self {
         case .productivity: return "checklist"
         case .education: return "book.fill"
@@ -24,19 +24,19 @@ public enum Category: String, Codable {
     }
 }
 
-public struct GraceApp: Hashable, Identifiable, Codable {
-    public let name: String
-    public let iconName: String
-    public let shortDescription: String
-    public let appId: String
-    public let appStoreUrl: URL
-    public let releaseDate: Date
-    public let category: Category
-    public let isExcluded: Bool
+struct GraceApp: Hashable, Identifiable, Codable {
+    let name: String
+    let iconName: String
+    let shortDescription: String
+    let appId: String
+    let appStoreUrl: URL
+    let releaseDate: Date
+    let category: Category
+    let isExcluded: Bool
     
-    public var id: String { appId }
+    var id: String { appId }
     
-    public init(name: String, iconName: String, shortDescription: String, appId: String, releaseDate: Date, category: Category, isExcluded: Bool = false) {
+    init(name: String, iconName: String, shortDescription: String, appId: String, releaseDate: Date, category: Category, isExcluded: Bool = false) {
         self.name = name
         self.iconName = iconName
         self.shortDescription = shortDescription
@@ -47,11 +47,11 @@ public struct GraceApp: Hashable, Identifiable, Codable {
         self.isExcluded = isExcluded
     }
     
-    public var localizedName: String {
+    var localizedName: String {
         Bundle.module.localizedString(forKey: name, value: nil, table: nil)
     }
     
-    public func localizedName(for locale: Locale) -> String {
+    func localizedName(for locale: Locale) -> String {
         let bundlePath = Bundle.module.path(forResource: locale.identifier, ofType: "lproj") ??
                         Bundle.module.path(forResource: locale.languageCode, ofType: "lproj")
         let languageBundle = bundlePath.flatMap { Bundle(path: $0) } ?? Bundle.module
@@ -63,11 +63,11 @@ public struct GraceApp: Hashable, Identifiable, Codable {
         )
     }
     
-    public var localizedDescription: String {
+    var localizedDescription: String {
         Bundle.module.localizedString(forKey: shortDescription, value: nil, table: nil)
     }
     
-    public func localizedDescription(for locale: Locale) -> String {
+    func localizedDescription(for locale: Locale) -> String {
         let bundlePath = Bundle.module.path(forResource: locale.identifier, ofType: "lproj") ??
                         Bundle.module.path(forResource: locale.languageCode, ofType: "lproj")
         let languageBundle = bundlePath.flatMap { Bundle(path: $0) } ?? Bundle.module

@@ -21,18 +21,7 @@ import GraceAppsLibrary
 ```
 ## Usage
 
-### Methods
-Use the `getAllApps` function to get the list of apps:
-
-```swift
-let apps = GraceAppsManager.getAllApps()
-```
- 
-or exclude a specific app:
-
-```swift
-let apps = GraceAppsManager.getAllApps(excluding: "id1633932632")
-```
+The library provides ready-to-use SwiftUI views for common settings and about screens.
 
 #### ReleaseNotesManager
 `ReleaseNotesManager` provides manual control over release notes version tracking:
@@ -45,12 +34,6 @@ let shouldShow = ReleaseNotesManager.shared.shouldShow(releaseNotes: myNotes)
 ReleaseNotesManager.shared.markCurrentVersionAsViewed()
 ```
 
-In the UI, while you loop through the apps, you can use the `localizedName` and `localizedDescription` properties to get the localized name and description for the current locale:
-
-```swift
-let name = app.localizedName
-let description = app.localizedDescription
-```
 
 ### Usage
 
