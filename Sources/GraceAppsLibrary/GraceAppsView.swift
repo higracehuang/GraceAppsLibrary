@@ -22,7 +22,11 @@ public struct GraceAppsView: View {
         .padding(.top, 16)
 
         let apps = GraceAppsManager.getSortedApps(excluding: excludingAppId)
-        let categories = Array(Set(apps.map { $0.category })).sorted(by: { $0.rawValue < $1.rawValue })
+        let categories = apps.reduce(into: [Category]()) { result, app in
+          if !result.contains(app.category) {
+            result.append(app.category)
+          }
+        }
         
         ForEach(categories, id: \.self) { category in
           VStack(alignment: .leading, spacing: 12) {

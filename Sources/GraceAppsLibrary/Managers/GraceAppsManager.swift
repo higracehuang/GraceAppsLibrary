@@ -119,9 +119,44 @@ enum GraceAppsManager {
     }
 
     static func getSortedApps(excluding appIdToExclude: String? = nil) -> [GraceApp] {
-        let apps = getAllApps(excluding: appIdToExclude)
-                .sorted(by: { $0.releaseDate > $1.releaseDate })
+        let allApps = allGraceApps.filter { !$0.isExcluded }
+        let excludedApp = allGraceApps.first { $0.appId == appIdToExclude }
+        let targetCategory = excludedApp?.category
         
-        return apps
+        // Find the absolute newest app among available apps
+        let availableApps = allApps.filter { $0.appId != appIdToExclude }
+        let newestApp = availableApps.sorted(by: { 
+            if $0.releaseDate != $1.releaseDate {
+                return $0.releaseDate > $1.releaseDate
+            }
+            return $0.name < $1.name
+        }).first
+        
+        return availableApps.sorted { app1, app2 in
+            // 1. Priority: Same category as excluded app
+            // This ensures audience relevance is prioritized over recency.
+            if let targetCategory = targetCategory {
+                if app1.category == targetCategory && app2.category != targetCategory {
+                    return true
+                }
+                if app1.category != targetCategory && app2.category == targetCategory {
+                    return false
+                }
+            }
+            
+            // 2. Priority: Absolute newest app (if not already handled by category)
+            if let newestId = newestApp?.appId {
+                if app1.appId == newestId { return true }
+                if app2.appId == newestId { return false }
+            }
+            
+            // 3. Default: Release date descending
+            if app1.releaseDate != app2.releaseDate {
+                return app1.releaseDate > app2.releaseDate
+            }
+            
+            // 4. Stable alphabetical tie-breaker
+            return app1.name < app2.name
+        }
     }
 }
