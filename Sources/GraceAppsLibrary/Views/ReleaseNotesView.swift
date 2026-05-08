@@ -76,19 +76,44 @@ struct ReleaseNoteCard: View {
                     .foregroundColor(.primary)
                 
                 VStack(alignment: .leading, spacing: 10) {
-                    ForEach(Array(note.notes.enumerated()), id: \.offset) { index, point in
+                    ForEach(note.items) { item in
                         HStack(alignment: .top, spacing: 12) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(.accentColor)
                                 .padding(.top, 2)
                             
-                            Text(point)
-                                .font(.body)
-                                .foregroundColor(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                Text(item.text)
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                
+                                if let badgeText = item.badgeText {
+                                    Text(badgeText)
+                                        .font(.system(size: 10, weight: .bold))
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.accentColor.opacity(0.2))
+                                        .foregroundColor(.accentColor)
+                                        .clipShape(Capsule())
+                                }
+                            }
                         }
                     }
+                }
+                
+                if let ctaTitle = note.ctaTitle, let action = note.ctaAction {
+                    Button(action: action) {
+                        Text(ctaTitle)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.accentColor)
+                            .cornerRadius(10)
+                    }
+                    .padding(.top, 8)
                 }
             }
         }
@@ -103,13 +128,15 @@ struct ReleaseNoteCard: View {
         releaseNotes: [
             ReleaseNote(
                 version: "2.0.0",
-                notes: [
-                    "Added support for multiple bullet points in release notes.",
-                    "Implemented optional hero images for each release.",
-                    "Improved sheet view to follow Apple design principles.",
-                    "Enhanced localization support for better accessibility."
+                items: [
+                    ReleaseNoteItem(text: "Added support for multiple bullet points in release notes."),
+                    ReleaseNoteItem(text: "Implemented optional hero images for each release.", badgeText: "PRO"),
+                    ReleaseNoteItem(text: "Improved sheet view to follow Apple design principles.", badgeText: "Premium"),
+                    ReleaseNoteItem(text: "Enhanced localization support for better accessibility.")
                 ],
-                heroImageName: "FastingLadyIcon"
+                heroImageName: "FastingLadyIcon",
+                ctaTitle: "Upgrade to Pro",
+                ctaAction: {}
             ),
             ReleaseNote(
                 version: "1.5.0",

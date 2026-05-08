@@ -52,12 +52,17 @@ Use the `.graceReleaseNotes` modifier on any view. It automatically handles vers
 .graceReleaseNotes(releaseNotes: [
     ReleaseNote(
         version: "2.0.0",
-        // String literals are automatically converted to LocalizedStringKey
-        notes: [
-            "Added support for multiple bullet points in release notes.",
-            "Implemented optional hero images for each release."
+        items: [
+            ReleaseNoteItem(text: "Added support for multiple bullet points in release notes."),
+            // Supports custom, translatable badges for premium features
+            ReleaseNoteItem(text: "Unlimited AI generations added.", badgeText: "PRO")
         ],
-        heroImageName: "AppIcon"
+        heroImageName: "AppIcon",
+        // Optional paywall bridge CTA
+        ctaTitle: "Unlock Premium",
+        ctaAction: {
+            // e.g. showPaywall = true
+        }
     )
 ])
 ```
@@ -70,7 +75,10 @@ If you want to allow users to manually trigger the Release Notes view (e.g., fro
 
 ```swift
 WhatIsNewView(releaseNotes: [
-    ReleaseNote(version: "2.0.0", notes: ["New features!", "Bug fixes."])
+    ReleaseNote(version: "2.0.0", items: [
+        ReleaseNoteItem(text: "New features!"),
+        ReleaseNoteItem(text: "Bug fixes.")
+    ])
 ])
 ```
 
@@ -120,8 +128,13 @@ Use `AboutAppSectionView` to add a ready-made "About" section to your Settings s
 AboutAppSectionView(
     appStoreId: "1234567890",
     releaseNotes: [
-        ReleaseNote(version: "2.0.0", notes: ["New features!", "Bug fixes."]),
-        ReleaseNote(version: "1.0.0", notes: ["Initial release."])
+        ReleaseNote(version: "2.0.0", items: [
+            ReleaseNoteItem(text: "New features!"), 
+            ReleaseNoteItem(text: "Bug fixes.")
+        ]),
+        ReleaseNote(version: "1.0.0", items: [
+            ReleaseNoteItem(text: "Initial release.")
+        ])
     ]
 )
 ```
