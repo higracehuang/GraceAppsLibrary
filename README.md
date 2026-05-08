@@ -25,13 +25,13 @@ import GraceAppsLibrary
 Use the `getAllApps` function to get the list of apps:
 
 ```swift
-let apps = GraceAppsLibrary.getAllApps()
+let apps = GraceAppsManager.getAllApps()
 ```
  
 or exclude a specific app:
 
 ```swift
-let apps = GraceAppsLibrary.getAllApps(excluding: "id1633932632")
+let apps = GraceAppsManager.getAllApps(excluding: "id1633932632")
 ```
 
 #### ReleaseNotesManager

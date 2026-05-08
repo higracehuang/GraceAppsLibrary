@@ -6,7 +6,7 @@ final class AppOrderTests: XCTestCase {
     
     func testAppsAreSortedByReleaseDateDescending() {
         // When
-        let apps = GraceAppsLibrary.getSortedApps()
+        let apps = GraceAppsManager.getSortedApps()
         
         // Then
         // Verify apps are in descending order by release date
@@ -21,7 +21,7 @@ final class AppOrderTests: XCTestCase {
     
     func testNewestAppIsMarkedAsNew() {
         // When
-        let apps = GraceAppsLibrary.getSortedApps()
+        let apps = GraceAppsManager.getSortedApps()
         
         // Then
         guard let newestApp = apps.first else {
@@ -44,14 +44,14 @@ final class AppOrderTests: XCTestCase {
     
     func testAppExclusion() {
         // Given
-        let allApps = GraceAppsLibrary.getAllApps()
+        let allApps = GraceAppsManager.getAllApps()
         guard let appToExclude = allApps.first else {
             XCTFail("Apps array should not be empty")
             return
         }
         
         // When
-        let filteredApps = GraceAppsLibrary.getSortedApps(excluding: appToExclude.appId)
+        let filteredApps = GraceAppsManager.getSortedApps(excluding: appToExclude.appId)
         
         // Then
         XCTAssertFalse(

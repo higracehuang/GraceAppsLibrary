@@ -21,7 +21,7 @@ public struct GraceAppsView: View {
         .padding(.horizontal, 24)
         .padding(.top, 16)
 
-        let apps = GraceAppsLibrary.getSortedApps(excluding: excludingAppId)
+        let apps = GraceAppsManager.getSortedApps(excluding: excludingAppId)
         let categories = Array(Set(apps.map { $0.category })).sorted(by: { $0.rawValue < $1.rawValue })
         
         ForEach(categories, id: \.self) { category in

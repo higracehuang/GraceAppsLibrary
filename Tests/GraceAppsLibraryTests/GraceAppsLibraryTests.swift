@@ -3,7 +3,7 @@ import XCTest
 
 final class GraceAppsLibraryTests: XCTestCase {
     func testGetAllApps() {
-        let apps = GraceAppsLibrary.getAllApps()
+        let apps = GraceAppsManager.getAllApps()
         XCTAssertEqual(apps.count, 10, "Should return all 10 apps")
         
         // Test first app
@@ -20,24 +20,24 @@ final class GraceAppsLibraryTests: XCTestCase {
     }
     
     func testGetAllAppsWithExclusion() {
-        let apps = GraceAppsLibrary.getAllApps(excluding: "id1633932632")
+        let apps = GraceAppsManager.getAllApps(excluding: "id1633932632")
         XCTAssertEqual(apps.count, 9, "Should return 9 apps when excluding one")
         XCTAssertNil(apps.first { $0.appId == "id1633932632" }, "Excluded app should not be present")
     }
     
     func testGetAppStoreUrl() {
         // Test existing app
-        let tallyUrl = GraceAppsLibrary.getAppStoreUrl(for: "id1633932632")
+        let tallyUrl = GraceAppsManager.getAppStoreUrl(for: "id1633932632")
         XCTAssertNotNil(tallyUrl)
         XCTAssertEqual(tallyUrl?.absoluteString, "https://apps.apple.com/app/id1633932632")
         
         // Test non-existing app
-        let nonExistingUrl = GraceAppsLibrary.getAppStoreUrl(for: "nonexisting")
+        let nonExistingUrl = GraceAppsManager.getAppStoreUrl(for: "nonexisting")
         XCTAssertNil(nonExistingUrl)
     }
     
     func testLocalizations() throws {
-        let apps = GraceAppsLibrary.getAllApps()
+        let apps = GraceAppsManager.getAllApps()
         let tallyCoin = try XCTUnwrap(apps.first { $0.appId == "id1633932632" })
         let chartyBee = try XCTUnwrap(apps.first { $0.appId == "id6740661428" })
         
@@ -79,7 +79,7 @@ final class GraceAppsLibraryTests: XCTestCase {
     }
     
     func testAllAppsHaveAllLocalizations() {
-        let apps = GraceAppsLibrary.getAllApps()
+        let apps = GraceAppsManager.getAllApps()
         let locales = ["en", "de", "ja", "zh-Hans"]
         
         let sharedKeys = [
