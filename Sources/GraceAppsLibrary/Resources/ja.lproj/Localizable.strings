@@ -54,7 +54,7 @@
 "release_notes.version_prefix" = "バージョン";
 "release_notes.tier_prefix" = "";
 "release_notes.tier_suffix" = "に含まれています";
-"release_notes.upgrade_to" = "%@ にアップグレード";
+"release_notes.upgrade_to %@" = "%@ にアップグレード";
 
 "about.section.title" = "%@について";
 "about.version" = "バージョン";
