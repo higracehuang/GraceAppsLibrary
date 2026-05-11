@@ -10,17 +10,20 @@ public struct AboutAppSectionView: View {
     let releaseNotes: [ReleaseNote]
     let isPaidUser: Bool
     let tierName: LocalizedStringKey
+    let paywallAction: (() -> Void)?
+
 
     /// - Parameters:
     ///   - appStoreId: The numeric App Store ID string (e.g. `"id1234567890"` or just `"1234567890"`).
     ///   - releaseNotes: The array of `ReleaseNote` objects to show in the "What's New" sheet.
     ///   - isPaidUser: Whether the user is a paid user.
     ///   - tierName: The name of the premium tier.
-    public init(appStoreId: String? = nil, releaseNotes: [ReleaseNote] = [], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium") {
+    public init(appStoreId: String? = nil, releaseNotes: [ReleaseNote] = [], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil) {
         self.appStoreId = appStoreId
         self.releaseNotes = releaseNotes
         self.isPaidUser = isPaidUser
         self.tierName = tierName
+        self.paywallAction = paywallAction
     }
 
     // MARK: - Computed helpers
@@ -71,7 +74,7 @@ public struct AboutAppSectionView: View {
 
             // What's New
             if !releaseNotes.isEmpty {
-                WhatIsNewView(releaseNotes: releaseNotes, isPaidUser: isPaidUser, tierName: tierName)
+                WhatIsNewView(releaseNotes: releaseNotes, isPaidUser: isPaidUser, tierName: tierName, paywallAction: paywallAction)
             }
 
             // Rate This App

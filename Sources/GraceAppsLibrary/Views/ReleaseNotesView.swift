@@ -4,12 +4,15 @@ public struct ReleaseNotesView: View {
     let releaseNotes: [ReleaseNote]
     let isPaidUser: Bool
     let tierName: LocalizedStringKey
+    let paywallAction: (() -> Void)?
     let onDismiss: () -> Void
+
     
-    public init(releaseNotes: [ReleaseNote], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", onDismiss: @escaping () -> Void) {
+    public init(releaseNotes: [ReleaseNote], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil, onDismiss: @escaping () -> Void) {
         self.releaseNotes = Array(releaseNotes.prefix(5))
         self.isPaidUser = isPaidUser
         self.tierName = tierName
+        self.paywallAction = paywallAction
         self.onDismiss = onDismiss
     }
     
@@ -18,7 +21,7 @@ public struct ReleaseNotesView: View {
                 ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(releaseNotes) { note in
-                        ReleaseNoteCard(note: note, isPaidUser: isPaidUser, tierName: tierName)
+                        ReleaseNoteCard(note: note, isPaidUser: isPaidUser, tierName: tierName, paywallAction: paywallAction)
                         if note.id != releaseNotes.last?.id {
                             Divider()
                                 .padding(.horizontal, 20)
@@ -56,6 +59,8 @@ struct ReleaseNoteCard: View {
     let note: ReleaseNote
     let isPaidUser: Bool
     let tierName: LocalizedStringKey
+    let paywallAction: (() -> Void)?
+
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -141,8 +146,10 @@ struct ReleaseNoteCard: View {
                     }
                 }
                 
-                if !isPaidUser, let action = note.ctaAction {
-                    Button(action: action) {
+                if !isPaidUser {
+                    let action = note.ctaAction ?? paywallAction
+                    if let action = action {
+                        Button(action: action) {
                         Group {
                             if let ctaTitle = note.ctaTitle {
                                 Text(ctaTitle)

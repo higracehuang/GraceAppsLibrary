@@ -27,6 +27,7 @@ struct GraceReleaseNotesModifier: ViewModifier {
     let releaseNotes: [ReleaseNote]
     let isPaidUser: Bool
     let tierName: LocalizedStringKey
+    let paywallAction: (() -> Void)?
     @State private var isPresented = false
     
     func body(content: Content) -> some View {
@@ -39,7 +40,7 @@ struct GraceReleaseNotesModifier: ViewModifier {
             .sheet(isPresented: $isPresented, onDismiss: {
                 ReleaseNotesManager.shared.markCurrentVersionAsViewed()
             }) {
-                ReleaseNotesView(releaseNotes: releaseNotes, isPaidUser: isPaidUser, tierName: tierName) {
+                ReleaseNotesView(releaseNotes: releaseNotes, isPaidUser: isPaidUser, tierName: tierName, paywallAction: paywallAction) {
                     isPresented = false
                     // onDismiss of sheet will call markCurrentVersionAsViewed()
                 }
