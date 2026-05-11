@@ -17,11 +17,19 @@ public struct ReleaseNotesView: View {
     }
     
     public var body: some View {
+        let firstPaidNoteId = releaseNotes.first(where: { $0.items.contains(where: { $0.isPaidFeature }) })?.id
+        
         NavigationView {
                 ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(releaseNotes) { note in
-                        ReleaseNoteCard(note: note, isPaidUser: isPaidUser, tierName: tierName, paywallAction: paywallAction)
+                        ReleaseNoteCard(
+                            note: note,
+                            isPaidUser: isPaidUser,
+                            tierName: tierName,
+                            paywallAction: paywallAction,
+                            showCTA: note.id == firstPaidNoteId
+                        )
                         if note.id != releaseNotes.last?.id {
                             Divider()
                                 .padding(.horizontal, 20)
@@ -60,6 +68,8 @@ struct ReleaseNoteCard: View {
     let isPaidUser: Bool
     let tierName: LocalizedStringKey
     let paywallAction: (() -> Void)?
+    let showCTA: Bool
+
 
     
     var body: some View {
@@ -146,7 +156,7 @@ struct ReleaseNoteCard: View {
                     }
                 }
                 
-                if !isPaidUser {
+                if showCTA && !isPaidUser {
                     let action = note.ctaAction ?? paywallAction
                     if let action = action {
                         Button(action: action) {
