@@ -4,8 +4,8 @@ public extension View {
     /// Automatically shows release notes if they haven't been viewed for the current version
     /// - Parameter releaseNotes: The list of available release notes
     /// - Returns: A view that shows release notes in a sheet if needed
-    func graceReleaseNotes(releaseNotes: [ReleaseNote], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium") -> some View {
-        self.modifier(GraceReleaseNotesModifier(releaseNotes: releaseNotes, isPaidUser: isPaidUser, tierName: tierName))
+    func graceReleaseNotes(releaseNotes: [ReleaseNote], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil) -> some View {
+        self.modifier(GraceReleaseNotesModifier(releaseNotes: releaseNotes, isPaidUser: isPaidUser, tierName: tierName, paywallAction: paywallAction))
     }
     
     @ViewBuilder

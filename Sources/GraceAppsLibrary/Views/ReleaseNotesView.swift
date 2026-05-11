@@ -173,6 +173,7 @@ struct ReleaseNoteCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+}
 
 #Preview("Free User") {
     ReleaseNotesView(
