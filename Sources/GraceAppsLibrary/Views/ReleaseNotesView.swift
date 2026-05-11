@@ -2,10 +2,14 @@ import SwiftUI
 
 public struct ReleaseNotesView: View {
     let releaseNotes: [ReleaseNote]
+    let isPaidUser: Bool
+    let tierName: LocalizedStringKey
     let onDismiss: () -> Void
     
-    public init(releaseNotes: [ReleaseNote], onDismiss: @escaping () -> Void) {
+    public init(releaseNotes: [ReleaseNote], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", onDismiss: @escaping () -> Void) {
         self.releaseNotes = Array(releaseNotes.prefix(5))
+        self.isPaidUser = isPaidUser
+        self.tierName = tierName
         self.onDismiss = onDismiss
     }
     
@@ -14,7 +18,7 @@ public struct ReleaseNotesView: View {
                 ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(releaseNotes) { note in
-                        ReleaseNoteCard(note: note)
+                        ReleaseNoteCard(note: note, isPaidUser: isPaidUser, tierName: tierName)
                         if note.id != releaseNotes.last?.id {
                             Divider()
                                 .padding(.horizontal, 20)
@@ -50,6 +54,8 @@ public struct ReleaseNotesView: View {
 
 struct ReleaseNoteCard: View {
     let note: ReleaseNote
+    let isPaidUser: Bool
+    let tierName: LocalizedStringKey
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -97,7 +103,7 @@ struct ReleaseNoteCard: View {
                                     .fixedSize(horizontal: false, vertical: true)
                                     .lineSpacing(2)
                                 
-                                if let tierName = item.tierName {
+                                if item.isPaidFeature {
                                     HStack(spacing: 4) {
                                         let prefix = NSLocalizedString(Constants.StringKeys.releaseNotesTierPrefix, bundle: .module, value: "Included with", comment: "")
                                         let suffix = NSLocalizedString(Constants.StringKeys.releaseNotesTierSuffix, bundle: .module, value: "", comment: "")
@@ -135,10 +141,16 @@ struct ReleaseNoteCard: View {
                     }
                 }
                 
-                if let ctaTitle = note.ctaTitle, let action = note.ctaAction {
+                if !isPaidUser, let action = note.ctaAction {
                     Button(action: action) {
-                        Text(ctaTitle)
-                            .font(.headline)
+                        Group {
+                            if let ctaTitle = note.ctaTitle {
+                                Text(ctaTitle)
+                            } else {
+                                Text("release_notes.upgrade_to \(Text(tierName))", bundle: .module)
+                            }
+                        }
+                        .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -155,30 +167,46 @@ struct ReleaseNoteCard: View {
     }
 }
 
-#Preview {
+#Preview("Free User") {
     ReleaseNotesView(
         releaseNotes: [
             ReleaseNote(
                 version: "2.0.0",
                 items: [
                     ReleaseNoteItem(text: "Added support for multiple bullet points in release notes."),
-                    ReleaseNoteItem(text: "Implemented optional hero images for each release.", tierName: "PRO"),
-                    ReleaseNoteItem(text: "Improved sheet view to follow Apple design principles.", tierName: "Premium"),
+                    ReleaseNoteItem(text: "Implemented optional hero images for each release.", isPaidFeature: true),
+                    ReleaseNoteItem(text: "Improved sheet view to follow Apple design principles.", isPaidFeature: true),
                     ReleaseNoteItem(text: "Enhanced localization support for better accessibility.")
                 ],
                 heroImageName: "FastingLadyIcon",
                 ctaTitle: "Upgrade to Pro",
                 ctaAction: {}
-            ),
-            ReleaseNote(
-                version: "1.5.0",
-                notes: [
-                    "Fixed minor stability issues.",
-                    "Performance optimizations for better UI responsiveness."
-                ],
-                heroImageName: "ReleaseNotes/TallImage"
             )
         ],
+        isPaidUser: false,
+        tierName: "Unlimited Access",
+        onDismiss: {}
+    )
+}
+
+#Preview("Paid User") {
+    ReleaseNotesView(
+        releaseNotes: [
+            ReleaseNote(
+                version: "2.0.0",
+                items: [
+                    ReleaseNoteItem(text: "Added support for multiple bullet points in release notes."),
+                    ReleaseNoteItem(text: "Implemented optional hero images for each release.", isPaidFeature: true),
+                    ReleaseNoteItem(text: "Improved sheet view to follow Apple design principles.", isPaidFeature: true),
+                    ReleaseNoteItem(text: "Enhanced localization support for better accessibility.")
+                ],
+                heroImageName: "FastingLadyIcon",
+                ctaTitle: "Upgrade to Pro",
+                ctaAction: {}
+            )
+        ],
+        isPaidUser: true,
+        tierName: "Unlimited Access",
         onDismiss: {}
     )
 }

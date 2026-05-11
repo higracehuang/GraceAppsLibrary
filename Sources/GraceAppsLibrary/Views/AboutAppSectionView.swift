@@ -8,13 +8,19 @@ import SwiftUI
 public struct AboutAppSectionView: View {
     let appStoreId: String?
     let releaseNotes: [ReleaseNote]
+    let isPaidUser: Bool
+    let tierName: LocalizedStringKey
 
     /// - Parameters:
     ///   - appStoreId: The numeric App Store ID string (e.g. `"id1234567890"` or just `"1234567890"`).
     ///   - releaseNotes: The array of `ReleaseNote` objects to show in the "What's New" sheet.
-    public init(appStoreId: String? = nil, releaseNotes: [ReleaseNote] = []) {
+    ///   - isPaidUser: Whether the user is a paid user.
+    ///   - tierName: The name of the premium tier.
+    public init(appStoreId: String? = nil, releaseNotes: [ReleaseNote] = [], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium") {
         self.appStoreId = appStoreId
         self.releaseNotes = releaseNotes
+        self.isPaidUser = isPaidUser
+        self.tierName = tierName
     }
 
     // MARK: - Computed helpers
@@ -65,7 +71,7 @@ public struct AboutAppSectionView: View {
 
             // What's New
             if !releaseNotes.isEmpty {
-                WhatIsNewView(releaseNotes: releaseNotes)
+                WhatIsNewView(releaseNotes: releaseNotes, isPaidUser: isPaidUser, tierName: tierName)
             }
 
             // Rate This App

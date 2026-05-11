@@ -55,6 +55,7 @@
 "release_notes.version_prefix" = "Version";
 "release_notes.tier_prefix" = "Included with";
 "release_notes.tier_suffix" = "";
+"release_notes.upgrade_to" = "Upgrade to %@";
 
 "about.section.title" = "About %@";
 "about.version" = "Version";

@@ -3,11 +3,11 @@ import SwiftUI
 public struct ReleaseNoteItem: Identifiable, Hashable {
     public let id = UUID()
     public let text: LocalizedStringKey
-    public let tierName: LocalizedStringKey?
+    public let isPaidFeature: Bool
     
-    public init(text: LocalizedStringKey, tierName: LocalizedStringKey? = nil) {
+    public init(text: LocalizedStringKey, isPaidFeature: Bool = false) {
         self.text = text
-        self.tierName = tierName
+        self.isPaidFeature = isPaidFeature
     }
     
     public static func == (lhs: ReleaseNoteItem, rhs: ReleaseNoteItem) -> Bool {

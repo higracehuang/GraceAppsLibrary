@@ -4,8 +4,8 @@ public extension View {
     /// Automatically shows release notes if they haven't been viewed for the current version
     /// - Parameter releaseNotes: The list of available release notes
     /// - Returns: A view that shows release notes in a sheet if needed
-    func graceReleaseNotes(releaseNotes: [ReleaseNote]) -> some View {
-        self.modifier(GraceReleaseNotesModifier(releaseNotes: releaseNotes))
+    func graceReleaseNotes(releaseNotes: [ReleaseNote], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium") -> some View {
+        self.modifier(GraceReleaseNotesModifier(releaseNotes: releaseNotes, isPaidUser: isPaidUser, tierName: tierName))
     }
     
     @ViewBuilder
@@ -25,6 +25,8 @@ public extension View {
 
 struct GraceReleaseNotesModifier: ViewModifier {
     let releaseNotes: [ReleaseNote]
+    let isPaidUser: Bool
+    let tierName: LocalizedStringKey
     @State private var isPresented = false
     
     func body(content: Content) -> some View {
@@ -37,7 +39,7 @@ struct GraceReleaseNotesModifier: ViewModifier {
             .sheet(isPresented: $isPresented, onDismiss: {
                 ReleaseNotesManager.shared.markCurrentVersionAsViewed()
             }) {
-                ReleaseNotesView(releaseNotes: releaseNotes) {
+                ReleaseNotesView(releaseNotes: releaseNotes, isPaidUser: isPaidUser, tierName: tierName) {
                     isPresented = false
                     // onDismiss of sheet will call markCurrentVersionAsViewed()
                 }

@@ -54,6 +54,7 @@
 "release_notes.version_prefix" = "Version";
 "release_notes.tier_prefix" = "In";
 "release_notes.tier_suffix" = "enthalten";
+"release_notes.upgrade_to" = "Auf %@ upgraden";
 
 "about.section.title" = "Über %@";
 "about.version" = "Version";
