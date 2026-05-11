@@ -147,7 +147,7 @@ struct ReleaseNoteCard: View {
                             if let ctaTitle = note.ctaTitle {
                                 Text(ctaTitle)
                             } else {
-                                Text("release_notes.upgrade_to \(tierName)", bundle: .module)
+                                Text("release_notes.upgrade_to \(Text(tierName))", bundle: .module)
                             }
                         }
                         .font(.headline)
