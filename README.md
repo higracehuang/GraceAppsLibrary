@@ -49,23 +49,26 @@ FeedbackToGraceView()    // Feedback section
 Use the `.graceReleaseNotes` modifier on any view. It automatically handles version checking and persistence (marking as viewed):
 
 ```swift
-.graceReleaseNotes(releaseNotes: [
-    ReleaseNote(
-        version: "2.0.0",
-        items: [
-            ReleaseNoteItem(text: "Added support for multiple bullet points in release notes."),
-            // Supports custom, translatable badges for premium features
-            ReleaseNoteItem(text: "Unlimited AI generations added.", badgeText: "PRO")
-        ],
-        heroImageName: "AppIcon",
-        // Optional paywall bridge CTA
-        ctaTitle: "Unlock Premium",
-        ctaAction: {
-            // e.g. showPaywall = true
-        }
-    )
-])
+.graceReleaseNotes(
+    releaseNotes: [
+        ReleaseNote(
+            version: "2.1.0",
+            items: [
+                ReleaseNoteItem(text: "New AI feature", isPaidFeature: true)
+            ],
+            heroImageName: "AppIcon"
+        )
+    ],
+    isPaidUser: purchaseStore.isPro, // Hides CTA if true
+    tierName: "Unlimited Access",    // Custom name for premium tier
+    paywallAction: {                // Action for the upgrade button
+        showPaywall = true 
+    }
+)
 ```
+
+> [!TIP]
+> The CTA button will only automatically appear for the **first release note in the list that contains a paid feature** (`isPaidFeature: true`), ensuring a clean UI.
 
 > [!TIP]
 > This modifier handles both "Done" button and swipe-to-dismiss, ensuring users don't see the same notes twice.
@@ -121,8 +124,11 @@ Use `AboutAppSectionView` to add a ready-made "About" section to your Settings s
 
 | Parameter | Type | Description |
 |---|---|---|
-| `appStoreId` | `String` | Your numeric App Store ID. Accepts either `"1234567890"` or `"id1234567890"`. |
-| `releaseNotes` | `[ReleaseNote]` | The release notes array shown in the "What's New" sheet. |
+| `appStoreId` | `String` | Your numeric App Store ID. |
+| `releaseNotes` | `[ReleaseNote]` | The release notes array. |
+| `isPaidUser` | `Bool` | Whether the user is a paid user (hides CTA). |
+| `tierName` | `LocalizedStringKey` | The name of the premium tier. |
+| `paywallAction` | `() -> Void` | The action to trigger the paywall flow. |
 
 ```swift
 AboutAppSectionView(
@@ -172,3 +178,14 @@ AboutDeveloperSectionView(
     excludingAppId: "id1234567890" // Optional: Excludes current app from the list
 )
 ```
+
+## Development
+
+### Translation Consistency
+This library supports multiple languages. To ensure all keys are synchronized across all `.lproj` folders, run the provided check script:
+
+```bash
+python3 scripts/check_translations.py
+```
+
+This check is also automatically performed when running `scripts/build.sh`.
