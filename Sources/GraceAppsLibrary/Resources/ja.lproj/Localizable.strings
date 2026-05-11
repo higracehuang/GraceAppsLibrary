@@ -52,6 +52,8 @@
 
 "release_notes.title" = "新機能";
 "release_notes.version_prefix" = "バージョン";
+"release_notes.tier_prefix" = "";
+"release_notes.tier_suffix" = "に含まれています";
 
 "about.section.title" = "%@について";
 "about.version" = "バージョン";

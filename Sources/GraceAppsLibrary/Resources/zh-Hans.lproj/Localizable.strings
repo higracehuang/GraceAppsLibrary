@@ -52,6 +52,8 @@
 
 "release_notes.title" = "更新内容";
 "release_notes.version_prefix" = "版本";
+"release_notes.tier_prefix" = "包含在";
+"release_notes.tier_suffix" = "中";
 
 "about.section.title" = "关于 %@";
 "about.version" = "版本";

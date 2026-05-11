@@ -52,6 +52,8 @@
 
 "release_notes.title" = "Was ist neu";
 "release_notes.version_prefix" = "Version";
+"release_notes.tier_prefix" = "In";
+"release_notes.tier_suffix" = "enthalten";
 
 "about.section.title" = "Über %@";
 "about.version" = "Version";

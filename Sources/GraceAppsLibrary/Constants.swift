@@ -19,6 +19,8 @@ public enum Constants {
         
         public static let releaseNotesTitle = "release_notes.title"
         public static let releaseNotesVersionPrefix = "release_notes.version_prefix"
+        public static let releaseNotesTierPrefix = "release_notes.tier_prefix"
+        public static let releaseNotesTierSuffix = "release_notes.tier_suffix"
 
         public static let aboutSectionTitle = "about.section.title"
         public static let aboutVersion = "about.version"

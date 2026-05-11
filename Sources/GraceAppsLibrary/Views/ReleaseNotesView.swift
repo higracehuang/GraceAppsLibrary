@@ -70,36 +70,67 @@ struct ReleaseNoteCard: View {
                     .padding(.bottom, 16)
             }
             
-            VStack(alignment: .leading, spacing: 12) {
-                Text("\(NSLocalizedString(Constants.StringKeys.releaseNotesVersionPrefix, bundle: .module, value: "Version", comment: "")) \(note.version)")
-                    .font(.title3.bold())
-                    .foregroundColor(.primary)
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(NSLocalizedString(Constants.StringKeys.releaseNotesVersionPrefix, bundle: .module, value: "Version", comment: ""))
+                        .font(.footnote.bold())
+                        .foregroundColor(.secondary)
+                        .textCase(.uppercase)
+                    
+                    Text(note.version)
+                        .font(.title3.bold())
+                        .foregroundColor(.primary)
+                }
                 
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 12) {
                     ForEach(note.items) { item in
-                        HStack(alignment: .top, spacing: 12) {
+                        HStack(alignment: .top, spacing: 14) {
                             Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.accentColor)
+                                .font(.system(size: 14))
+                                .foregroundColor(.accentColor.opacity(0.8))
                                 .padding(.top, 2)
                             
-                            VStack(alignment: .leading, spacing: 4) {
+                            VStack(alignment: .leading, spacing: 6) {
                                 Text(item.text)
                                     .font(.body)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.primary.opacity(0.8))
                                     .fixedSize(horizontal: false, vertical: true)
+                                    .lineSpacing(2)
                                 
-                                if let badgeText = item.badgeText {
-                                    Text(badgeText)
-                                        .font(.system(size: 10, weight: .bold))
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(Color.accentColor.opacity(0.2))
-                                        .foregroundColor(.accentColor)
-                                        .clipShape(Capsule())
+                                if let tierName = item.tierName {
+                                    HStack(spacing: 4) {
+                                        let prefix = NSLocalizedString(Constants.StringKeys.releaseNotesTierPrefix, bundle: .module, value: "Included with", comment: "")
+                                        let suffix = NSLocalizedString(Constants.StringKeys.releaseNotesTierSuffix, bundle: .module, value: "", comment: "")
+                                        
+                                        if !prefix.isEmpty {
+                                            Text(prefix)
+                                                .font(.system(size: 8))
+                                                .foregroundColor(.secondary)
+                                        }
+                                        
+                                        Text(tierName)
+                                            .font(.system(size: 10, weight: .bold))
+                                        
+                                        if !suffix.isEmpty {
+                                            Text(suffix)
+                                                .font(.system(size: 8))
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        Capsule()
+                                            .fill(Color.accentColor.opacity(0.08))
+                                    )
+                                    .overlay(
+                                        Capsule()
+                                            .strokeBorder(Color.accentColor.opacity(0.15), lineWidth: 0.5)
+                                    )
+                                    .foregroundColor(Color.accentColor)
+                                    .padding(.top, 2)
                                 }
                             }
-                            .padding(.top, 0)
                         }
                     }
                 }
@@ -131,8 +162,8 @@ struct ReleaseNoteCard: View {
                 version: "2.0.0",
                 items: [
                     ReleaseNoteItem(text: "Added support for multiple bullet points in release notes."),
-                    ReleaseNoteItem(text: "Implemented optional hero images for each release.", badgeText: "PRO"),
-                    ReleaseNoteItem(text: "Improved sheet view to follow Apple design principles.", badgeText: "Premium"),
+                    ReleaseNoteItem(text: "Implemented optional hero images for each release.", tierName: "PRO"),
+                    ReleaseNoteItem(text: "Improved sheet view to follow Apple design principles.", tierName: "Premium"),
                     ReleaseNoteItem(text: "Enhanced localization support for better accessibility.")
                 ],
                 heroImageName: "FastingLadyIcon",
