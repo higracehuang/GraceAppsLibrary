@@ -36,15 +36,15 @@
 "app.name.herweigh" = "HerWeigh";
 "app.description.herweigh" = "生理周期を考慮した、女性のためのシンプルな体重管理アプリ。";
 
-"feedback.message" = "ご質問やご提案がございましたら、以下のメールアドレスまでご連絡ください：";
-"feedback.appreciation" = "ご支援ありがとうございます！";
+"feedback.message" = "あなたのご意見をぜひお聞かせください！機能のアイデアやバグの報告、あるいは何が良くて何が改善が必要かなど、正直なフィードバックが私の励みになります。こちらまでご連絡ください：";
+"feedback.appreciation" = "改善へのご協力、ありがとうございます！ ❤️";
 "feedback.signature" = "グレース Grace";
 "feedback.title" = "フィードバックを送る";
 
 "other.apps.by.grace" = "Graceの他のアプリ";
 "other.apps.built.by.grace" = "Graceが開発した他のアプリ";
 "apps.introduction" = "Grace は日常生活からヒントを得て、自身と家族が日々使い、愛用しているシンプルなアプリを開発しています。以下が彼女のアプリです：";
-"feedback.footnote" = "機能のリクエスト、フィードバック、バグ報告などがございましたら、%@ までご連絡ください";
+"feedback.footnote" = "良い点も悪い点も、ぜひご意見をお聞かせください！ %@ までご連絡をお待ちしております";
 "faq.title" = "よくある質問";
 "legal.section" = "規約と法的事項";
 "legal.privacy_policy" = "プライバシーポリシー";

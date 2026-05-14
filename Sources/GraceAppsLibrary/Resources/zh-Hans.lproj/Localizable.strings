@@ -36,15 +36,15 @@
 "app.name.herweigh" = "HerWeigh 她体重";
 "app.description.herweigh" = "专为女性设计的体重记录应用，将生理周期纳入考量，让体重管理更科学。";
 
-"feedback.message" = "有任何想法或建议？欢迎告诉我们！你的反馈将帮助我们做得更好。请发送至：";
-"feedback.appreciation" = "感谢您！❤️";
+"feedback.message" = "我很想听听你的真实想法！无论是功能建议、bug 反馈，还是想告诉我哪些地方好用（或不好用）——你的反馈都能帮我做得更好。请致信：";
+"feedback.appreciation" = "感谢你帮助我做得更好！❤️";
 "feedback.signature" = "Grace";
 "feedback.title" = "分享反馈";
 
 "other.apps.by.grace" = "Grace的其他APP";
 "other.apps.built.by.grace" = "Grace开发的其他APP";
 "apps.introduction" = "Grace 从日常生活中汲取灵感，打造了她与亲友们日常使用并喜爱的简约应用。以下是她的APP列表：";
-"feedback.footnote" = "如果您有任何功能请求、反馈或错误报告，请通过 %@ 联系我";
+"feedback.footnote" = "我想听听你的真实想法（无论是好是坏）！请通过 %@ 联系我";
 "faq.title" = "常见问题";
 "legal.section" = "法律条款";
 "legal.privacy_policy" = "隐私政策";

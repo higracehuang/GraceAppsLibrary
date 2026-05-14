@@ -36,16 +36,16 @@
 "app.name.herweigh" = "HerWeigh";
 "app.description.herweigh" = "Simple weight tracker for women that takes their menstrual cycle into account.";
 
-"feedback.message" = "Have thoughts or suggestions? We'd love to hear from you! Your feedback helps us improve. Please send your feedback to:";
-"feedback.appreciation" = "Appreciate it! ❤️";
+"feedback.message" = "I'd love to hear your honest thoughts! Whether it's a feature idea, a bug, or just telling me what's working (and what isn't)—your feedback helps me improve. Please write to me at:";
+"feedback.appreciation" = "Thank you for helping me improve! ❤️";
 "feedback.signature" = "Grace";
-"feedback.title" = "Share Your Feedback";
+"feedback.title" = "Share Feedback";
 
 
 "other.apps.by.grace" = "Other Apps by Grace";
 "other.apps.built.by.grace" = "Other Apps built by Grace";
 "apps.introduction" = "Inspired by everyday life, Grace builds simple apps she and her loved ones genuinely use and love. Here are her apps:";
-"feedback.footnote" = "If you have any requests, feedback, or bug reports, please contact me at %@";
+"feedback.footnote" = "I'd love to hear your thoughts, good or bad! Please contact me at %@";
 "faq.title" = "FAQs";
 "legal.section" = "Legal";
 "legal.privacy_policy" = "Privacy Policy";
