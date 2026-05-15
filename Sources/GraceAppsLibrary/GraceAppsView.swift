@@ -22,6 +22,7 @@ public struct GraceAppsView: View {
         .padding(.top, 16)
 
         let apps = GraceAppsManager.getSortedApps(excluding: excludingAppId)
+        let newestApp = GraceAppsManager.getNewestApp(excluding: excludingAppId)
         let categories = apps.reduce(into: [Category]()) { result, app in
           if !result.contains(app.category) {
             result.append(app.category)
@@ -47,7 +48,7 @@ public struct GraceAppsView: View {
                   title: app.localizedName,
                   description: app.localizedDescription,
                   url: app.appStoreUrl,
-                  isNew: app == apps.first
+                  isNew: app.appId == newestApp?.appId
                 )
                 
                 if app != categoryApps.last {

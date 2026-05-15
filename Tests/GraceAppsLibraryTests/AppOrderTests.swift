@@ -86,4 +86,17 @@ final class AppOrderTests: XCTestCase {
             "Excluded app should not be present in the filtered list"
         )
     }
+    
+    func testGetNewestAppIdentifiesAbsoluteNewest() {
+        // Given
+        // herweigh is the newest app (2026-01-15)
+        // tallycoin is an old app (2022-07-11)
+        
+        // When
+        // Even if we are in TallyCoin (Productivity), getNewestApp should return herweigh (Health)
+        let newestApp = GraceAppsManager.getNewestApp(excluding: "id1633932632") // Exclude tallycoin
+        
+        // Then
+        XCTAssertEqual(newestApp?.name, "app.name.herweigh", "getNewestApp should return the absolute newest app regardless of the current app's category")
+    }
 }

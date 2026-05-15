@@ -158,5 +158,13 @@ enum GraceAppsManager {
             // 4. Stable alphabetical tie-breaker
             return app1.name < app2.name
         }
+    static func getNewestApp(excluding appIdToExclude: String? = nil) -> GraceApp? {
+        let allApps = allGraceApps.filter { !$0.isExcluded && $0.appId != appIdToExclude }
+        return allApps.sorted(by: { 
+            if $0.releaseDate != $1.releaseDate {
+                return $0.releaseDate > $1.releaseDate
+            }
+            return $0.name < $1.name
+        }).first
     }
 }
