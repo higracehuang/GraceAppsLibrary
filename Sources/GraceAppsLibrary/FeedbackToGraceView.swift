@@ -22,7 +22,8 @@ Device: \(deviceModel) (iOS \(systemVersion))
 """
         
         let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let encodedBody = body.replacingOccurrences(of: "\n", with: "\r\n")
+            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         
         return URL(string: "mailto:\(Constants.feedbackEmail)?subject=\(encodedSubject)&body=\(encodedBody)")!
     }
