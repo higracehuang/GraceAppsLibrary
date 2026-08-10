@@ -87,7 +87,6 @@ struct ReleaseNoteCard: View {
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: .infinity)
-                    .cornerRadius(12)
                     .padding(.bottom, 16)
             }
             
