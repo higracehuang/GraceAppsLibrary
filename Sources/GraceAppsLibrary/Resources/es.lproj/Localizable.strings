@@ -1,52 +1,53 @@
 "app.name.tallycoin" = "TallyCoin";
-"app.description.tallycoin" = "La app perfecta para el seguimiento de tareas del hogar y recompensas, diseñada pensando en las familias.";
+"app.description.tallycoin" = "Una app sencilla para llevar un registro de las tareas del hogar y las recompensas, pensada para toda la familia.";
 
 "app.name.readingclock" = "ReadingClock";
-"app.description.readingclock" = "App sencilla para registrar tu tiempo diario de lectura y tu progreso.";
+"app.description.readingclock" = "Una app sencilla para registrar tu tiempo de lectura diario y seguir tu progreso.";
 
 "app.name.stemcards" = "Stem Cards";
-"app.description.stemcards" = "Una forma divertida y fácil de aprender raíces de palabras en inglés, prefijos y sufijos.";
+"app.description.stemcards" = "Una forma divertida y sencilla de aprender raíces, prefijos y sufijos de palabras en inglés.";
 
 "app.name.quizmeai" = "QuizMe.AI";
-"app.description.quizmeai" = "App de cuestionarios impulsada por IA que te permite crear cuestionarios sobre cualquier tema a partir de cualquier contenido.";
+"app.description.quizmeai" = "Una app de cuestionarios con IA que te permite crear cuestionarios sobre cualquier tema a partir de cualquier contenido.";
 
 "app.name.localspeaks" = "LocalSpeaks";
-"app.description.localspeaks" = "Guía de frases que te ayuda a aprender y practicar frases auténticas en muchos idiomas diferentes. Perfecta para viajeros y estudiantes de idiomas.";
+"app.description.localspeaks" = "Una guía de frases que te ayuda a aprender y practicar expresiones auténticas en distintos idiomas. Perfecta para viajeros y estudiantes de idiomas.";
 
 "app.name.itemizeai" = "Itemize AI";
 
 "label.new" = "NUEVO";
 "label.get" = "OBTENER";
-"app.description.itemizeai" = "App impulsada por IA que analiza cualquier texto, lo desglosa en puntos clave y lo resume para ti. Diseñada para lectores visuales.";
+"app.description.itemizeai" = "Una app con IA que analiza cualquier texto, lo desglosa en puntos clave y lo resume para ti. Diseñada para lectores visuales.";
 
 "app.name.stitchtally" = "StitchTally";
-"app.description.stitchtally" = "Una forma sencilla de hacer seguimiento a tus proyectos de tejido y ganchillo.";
+"app.description.stitchtally" = "Una forma sencilla de llevar un registro de tus proyectos de tejido y ganchillo.";
 
 "app.name.chartybee" = "ChartyBee";
-"app.description.chartybee" = "Pequeña app de seguimiento para registrar los pequeños detalles de la vida: páginas leídas, café consumido o la calidad del sueño.";
+"app.description.chartybee" = "Una pequeña app para llevar un registro de los detalles cotidianos: páginas leídas, café tomado o calidad del sueño.";
 
 "app.name.snapprogress" = "SnapProgress";
-"app.description.snapprogress" = "Una forma visual de registrar tu progreso con fotos.";
+"app.description.snapprogress" = "Una forma visual de seguir tu progreso con fotos.";
 
 "app.name.dialinespresso" = "Dial In Espresso";
-"app.description.dialinespresso" = "App sencilla para registrar tus granos y extracciones. Registra, experimenta y perfecciona para preparar siempre tu mejor café.";
+"app.description.dialinespresso" = "Una app sencilla para registrar tus granos y extracciones. Registra, experimenta y perfecciona tu preparación para conseguir siempre tu mejor café.";
 
 "app.name.fastinglady" = "FastingLady";
-"app.description.fastinglady" = "Sencillo rastreador de ayuno diseñado para mujeres, que les ayuda a ayunar en sincronía con su ciclo menstrual.";
-"app.name.herweigh" = "HerWeigh";
-"app.description.herweigh" = "Sencillo registro de peso para mujeres que tiene en cuenta el ciclo menstrual.";
+"app.description.fastinglady" = "Un sencillo rastreador de ayuno diseñado para mujeres, que te ayuda a ayunar en sincronía con tu ciclo menstrual.";
 
-"feedback.message" = "¡Me encantaría conocer tu opinión sincera! Ya sea una idea para una función, un error o simplemente decirme qué funciona (y qué no), tus comentarios me ayudan a mejorar. Por favor, escríbeme a:";
+"app.name.herweigh" = "HerWeigh";
+"app.description.herweigh" = "Un sencillo registro de peso para mujeres que tiene en cuenta el ciclo menstrual.";
+
+"feedback.message" = "¡Me encantaría conocer tu opinión sincera! Ya sea una idea para una nueva función, un error o simplemente algo que te guste (o no), tus comentarios me ayudan a mejorar. Escríbeme a:";
 "feedback.appreciation" = "¡Gracias por ayudarme a mejorar! ❤️";
 "feedback.signature" = "Grace";
 "feedback.title" = "Enviar comentarios";
 
 "other.apps.by.grace" = "Otras apps de Grace";
 "other.apps.built.by.grace" = "Otras apps creadas por Grace";
-"apps.introduction" = "Inspirada en la vida cotidiana, Grace crea apps sencillas que ella y sus seres queridos usan y disfrutan sinceramente. Aquí están sus apps:";
-"feedback.footnote" = "¡Me encantaría conocer tu opinión, buena o mala! Por favor contáctame en %@";
+"apps.introduction" = "Inspirada en la vida cotidiana, Grace crea apps sencillas que ella y sus seres queridos realmente usan y disfrutan. Estas son sus apps:";
+"feedback.footnote" = "¡Me encantaría conocer tu opinión, sea buena o mala! Escríbeme a %@";
 "faq.title" = "Preguntas frecuentes";
-"legal.section" = "Legal";
+"legal.section" = "Información legal";
 "legal.privacy_policy" = "Política de privacidad";
 "legal.terms_of_use" = "Términos de uso";
 
@@ -67,4 +68,4 @@
 "support.sources_references" = "Fuentes y referencias";
 "support.disclaimer" = "Aviso legal";
 
-"developer.section.title" = "Acerca de la desarrolladora de la app";
+"developer.section.title" = "Sobre la desarrolladora";
