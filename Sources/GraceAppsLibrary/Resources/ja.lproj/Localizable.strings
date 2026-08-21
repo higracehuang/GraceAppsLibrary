@@ -64,6 +64,7 @@
 "settings.language" = "言語";
 
 "support.section.title" = "ヘルプとサポート";
-"support.sources_references" = "ソースとリファレンス";"support.disclaimer" = "免責事項";
+"support.sources_references" = "ソースとリファレンス";
+"support.disclaimer" = "免責事項";
 
 "developer.section.title" = "アプリ開発者について";

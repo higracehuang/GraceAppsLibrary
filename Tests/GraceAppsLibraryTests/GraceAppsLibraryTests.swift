@@ -4,7 +4,7 @@ import XCTest
 final class GraceAppsLibraryTests: XCTestCase {
     func testGetAllApps() {
         let apps = GraceAppsManager.getAllApps()
-        XCTAssertEqual(apps.count, 10, "Should return all 10 apps")
+        XCTAssertEqual(apps.count, 11, "Should return all 11 apps")
         
         // Test first app
         let tallyCoin = apps.first { $0.appId == "id1633932632" }
@@ -21,7 +21,7 @@ final class GraceAppsLibraryTests: XCTestCase {
     
     func testGetAllAppsWithExclusion() {
         let apps = GraceAppsManager.getAllApps(excluding: "id1633932632")
-        XCTAssertEqual(apps.count, 9, "Should return 9 apps when excluding one")
+        XCTAssertEqual(apps.count, 10, "Should return 10 apps when excluding one")
         XCTAssertNil(apps.first { $0.appId == "id1633932632" }, "Excluded app should not be present")
     }
     
@@ -72,15 +72,24 @@ final class GraceAppsLibraryTests: XCTestCase {
         XCTAssertEqual(chartyBee.localizedName(for: deLocale), "ChartyBee")
         XCTAssertTrue(chartyBee.localizedDescription(for: deLocale).contains("Kleine Tracking-App"))
         
+        // Test Spanish
+        let esLocale = Locale(identifier: "es")
+        XCTAssertEqual(tallyCoin.localizedName(for: esLocale), "TallyCoin")
+        XCTAssertTrue(tallyCoin.localizedDescription(for: esLocale).contains("seguimiento de tareas del hogar y recompensas"))
+        XCTAssertEqual(chartyBee.localizedName(for: esLocale), "ChartyBee")
+        XCTAssertTrue(chartyBee.localizedDescription(for: esLocale).contains("Pequeña app de seguimiento"))
+        
         // Test Dial In Espresso
         let dialInEspresso = try XCTUnwrap(apps.first { $0.appId == "id6752831404" })
         XCTAssertEqual(dialInEspresso.localizedName(for: deLocale), "Dial In Espresso")
         XCTAssertTrue(dialInEspresso.localizedDescription(for: deLocale).contains("Einfache App"))
+        XCTAssertEqual(dialInEspresso.localizedName(for: esLocale), "Dial In Espresso")
+        XCTAssertTrue(dialInEspresso.localizedDescription(for: esLocale).contains("granos y extracciones"))
     }
     
     func testAllAppsHaveAllLocalizations() {
         let apps = GraceAppsManager.getAllApps()
-        let locales = ["en", "de", "ja", "zh-Hans"]
+        let locales = ["en", "de", "ja", "zh-Hans", "es"]
         
         let sharedKeys = [
             Constants.StringKeys.feedbackMessage,

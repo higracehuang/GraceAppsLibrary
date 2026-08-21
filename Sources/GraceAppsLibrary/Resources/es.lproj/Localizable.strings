@@ -1,0 +1,70 @@
+"app.name.tallycoin" = "TallyCoin";
+"app.description.tallycoin" = "La app perfecta para el seguimiento de tareas del hogar y recompensas, diseñada pensando en las familias.";
+
+"app.name.readingclock" = "ReadingClock";
+"app.description.readingclock" = "App sencilla para registrar tu tiempo diario de lectura y tu progreso.";
+
+"app.name.stemcards" = "Stem Cards";
+"app.description.stemcards" = "Una forma divertida y fácil de aprender raíces de palabras en inglés, prefijos y sufijos.";
+
+"app.name.quizmeai" = "QuizMe.AI";
+"app.description.quizmeai" = "App de cuestionarios impulsada por IA que te permite crear cuestionarios sobre cualquier tema a partir de cualquier contenido.";
+
+"app.name.localspeaks" = "LocalSpeaks";
+"app.description.localspeaks" = "Guía de frases que te ayuda a aprender y practicar frases auténticas en muchos idiomas diferentes. Perfecta para viajeros y estudiantes de idiomas.";
+
+"app.name.itemizeai" = "Itemize AI";
+
+"label.new" = "NUEVO";
+"label.get" = "OBTENER";
+"app.description.itemizeai" = "App impulsada por IA que analiza cualquier texto, lo desglosa en puntos clave y lo resume para ti. Diseñada para lectores visuales.";
+
+"app.name.stitchtally" = "StitchTally";
+"app.description.stitchtally" = "Una forma sencilla de hacer seguimiento a tus proyectos de tejido y ganchillo.";
+
+"app.name.chartybee" = "ChartyBee";
+"app.description.chartybee" = "Pequeña app de seguimiento para registrar los pequeños detalles de la vida: páginas leídas, café consumido o la calidad del sueño.";
+
+"app.name.snapprogress" = "SnapProgress";
+"app.description.snapprogress" = "Una forma visual de registrar tu progreso con fotos.";
+
+"app.name.dialinespresso" = "Dial In Espresso";
+"app.description.dialinespresso" = "App sencilla para registrar tus granos y extracciones. Registra, experimenta y perfecciona para preparar siempre tu mejor café.";
+
+"app.name.fastinglady" = "FastingLady";
+"app.description.fastinglady" = "Sencillo rastreador de ayuno diseñado para mujeres, que les ayuda a ayunar en sincronía con su ciclo menstrual.";
+"app.name.herweigh" = "HerWeigh";
+"app.description.herweigh" = "Sencillo registro de peso para mujeres que tiene en cuenta el ciclo menstrual.";
+
+"feedback.message" = "¡Me encantaría conocer tu opinión sincera! Ya sea una idea para una función, un error o simplemente decirme qué funciona (y qué no), tus comentarios me ayudan a mejorar. Por favor, escríbeme a:";
+"feedback.appreciation" = "¡Gracias por ayudarme a mejorar! ❤️";
+"feedback.signature" = "Grace";
+"feedback.title" = "Enviar comentarios";
+
+"other.apps.by.grace" = "Otras apps de Grace";
+"other.apps.built.by.grace" = "Otras apps creadas por Grace";
+"apps.introduction" = "Inspirada en la vida cotidiana, Grace crea apps sencillas que ella y sus seres queridos usan y disfrutan sinceramente. Aquí están sus apps:";
+"feedback.footnote" = "¡Me encantaría conocer tu opinión, buena o mala! Por favor contáctame en %@";
+"faq.title" = "Preguntas frecuentes";
+"legal.section" = "Legal";
+"legal.privacy_policy" = "Política de privacidad";
+"legal.terms_of_use" = "Términos de uso";
+
+"release_notes.title" = "Novedades";
+"release_notes.version_prefix" = "Versión";
+"release_notes.tier_prefix" = "Incluido con";
+"release_notes.tier_suffix" = "";
+"release_notes.upgrade_to %@" = "Actualizar a %@";
+
+"about.section.title" = "Acerca de %@";
+"about.version" = "Versión";
+"about.rate_this_app" = "Calificar esta app";
+"about.share_this_app" = "Compartir esta app";
+"about.app_fallback" = "App";
+"settings.language" = "Idioma";
+
+"support.section.title" = "Ayuda y soporte";
+"support.sources_references" = "Fuentes y referencias";
+"support.disclaimer" = "Aviso legal";
+
+"developer.section.title" = "Acerca de la desarrolladora de la app";
