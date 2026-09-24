@@ -38,12 +38,16 @@ public class ReviewPromptManager {
         var count = UserDefaults.standard.integer(forKey: SettingKeys.engagementCounterKey)
         count += 1
         UserDefaults.standard.set(count, forKey: SettingKeys.engagementCounterKey)
+        GraceLogger.info("Recorded engagement count: \(count) / checkpoint: \(checkpointCount)", category: .review)
         return count
     }
 
     private func shouldPrompt() -> Bool {
         let count = recordEngagement()
-        return count >= checkpointCount && !hasPromptYet()
+        let alreadyPrompted = hasPromptYet()
+        let result = count >= checkpointCount && !alreadyPrompted
+        GraceLogger.info("Evaluate shouldPrompt: count=\(count), checkpoint=\(checkpointCount), hasPromptedYet=\(alreadyPrompted) -> \(result ? "SHOULD PROMPT" : "SKIP")", category: .review)
+        return result
     }
 
     /// Requests a review if conditions are met, presenting pre-filter prompt.
@@ -51,6 +55,7 @@ public class ReviewPromptManager {
     /// If user taps "Not really", `onNegativeFeedback` closure is executed if provided,
     /// or defaults to launching the support feedback email composer.
     public func requestReview(onNegativeFeedback: (() -> Void)? = nil) {
+        GraceLogger.info("requestReview() invoked", category: .review)
         if shouldPrompt() {
             askForReview(onPositive: showNativeReviewPrompt, onNegative: onNegativeFeedback)
         }
@@ -59,6 +64,7 @@ public class ReviewPromptManager {
     /// Requests review if conditions are met, returning whether prompt was shown.
     @discardableResult
     public func requestReviewIfNecessary(onNegativeFeedback: (() -> Void)? = nil) -> Bool {
+        GraceLogger.info("requestReviewIfNecessary() invoked", category: .review)
         if shouldPrompt() {
             askForReview(onPositive: showNativeReviewPrompt, onNegative: onNegativeFeedback)
             return true
@@ -70,18 +76,23 @@ public class ReviewPromptManager {
     public func requestReviewDaily(onNegativeFeedback: (() -> Void)? = nil) {
         let lastDate = UserDefaults.standard.object(forKey: SettingKeys.lastEngagementDateKey) as? Date
         if lastDate == nil || !Calendar.current.isDateInToday(lastDate!) {
+            GraceLogger.info("Daily review check passed. Requesting review...", category: .review)
             UserDefaults.standard.set(Date(), forKey: SettingKeys.lastEngagementDateKey)
             self.requestReview(onNegativeFeedback: onNegativeFeedback)
+        } else {
+            GraceLogger.info("Daily review check throttled (already checked today).", category: .review)
         }
     }
 
     /// Directly presents native StoreKit review prompt without intermediate pre-filter alert.
     public func requestDirectNativeReview() {
+        GraceLogger.info("Direct native review requested.", category: .review)
         showNativeReviewPrompt()
     }
 
     public static func debugResetEngagementCounter() {
         UserDefaults.standard.set(0, forKey: SettingKeys.engagementCounterKey)
+        GraceLogger.info("Reset engagement counter to 0.", category: .debug)
     }
 
     public static func appInit() {
@@ -89,8 +100,11 @@ public class ReviewPromptManager {
         let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
 
         if storedVersion != currentVersion {
+            GraceLogger.info("App version changed ('\(storedVersion)' -> '\(currentVersion)'). Resetting engagement counter.", category: .app)
             UserDefaults.standard.set(0, forKey: SettingKeys.engagementCounterKey)
             UserDefaults.standard.set(currentVersion, forKey: SettingKeys.appVersionForStorageKey)
+        } else {
+            GraceLogger.info("App initialized for version '\(currentVersion)'.", category: .app)
         }
     }
 
@@ -135,6 +149,7 @@ Device: \(deviceModel) (\(osVersion))
 
     private func openDefaultFeedbackMail() {
         guard let url = Self.getFeedbackMailURL() else { return }
+        GraceLogger.info("Opening feedback email composer: \(url)", category: .feedback)
         if UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url)
         }
@@ -178,6 +193,7 @@ Device: \(deviceModel) (\(osVersion))
     }
 
     private func markPromptedForCurrentVersion() {
+        GraceLogger.success("Marked version '\(self.releaseVersionNumber)' as prompted.", category: .review)
         UserDefaults.standard.set(self.releaseVersionNumber, forKey: SettingKeys.lastVersionPromptedForReviewKey)
     }
 
@@ -188,13 +204,16 @@ Device: \(deviceModel) (\(osVersion))
               topVC.viewIfLoaded?.window != nil,
               !topVC.isBeingDismissed else {
             if retryCount < 5 {
+                GraceLogger.warning("Top view controller unavailable/dismissing. Retrying presentation in 0.3s (attempt \(retryCount + 1)/5)...", category: .review)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                     self?.askForReview(retryCount: retryCount + 1, onPositive: onPositive, onNegative: onNegative)
                 }
+            } else {
+                GraceLogger.warning("Could not find stable top view controller after 5 retries.", category: .review)
             }
             return
         }
-        
+
         let rawTitle = NSLocalizedString(Constants.StringKeys.reviewPromptTitleFormat, bundle: .module, comment: "")
         let title = String(format: rawTitle, appName)
         let message = NSLocalizedString(Constants.StringKeys.reviewPromptMessage, bundle: .module, comment: "")
@@ -208,6 +227,7 @@ Device: \(deviceModel) (\(osVersion))
         )
 
         let noAction = UIAlertAction(title: noButton, style: .default) { [weak self] _ in
+            GraceLogger.info("User selected '\(noButton)'. Redirecting to feedback...", category: .review)
             if let onNegative {
                 onNegative()
             } else {
@@ -215,23 +235,28 @@ Device: \(deviceModel) (\(osVersion))
             }
         }
         let yesAction = UIAlertAction(title: yesButton, style: .default) { _ in
+            GraceLogger.success("User selected '\(yesButton)'. Presenting native StoreKit prompt...", category: .review)
             onPositive()
         }
 
         alert.addAction(noAction)
         alert.addAction(yesAction)
 
+        GraceLogger.info("Presenting pre-filter alert for '\(appName)' on \(type(of: topVC))", category: .review)
         topVC.present(alert, animated: true, completion: nil)
     }
 
     private func showNativeReviewPrompt() {
         if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+            GraceLogger.success("Triggered native StoreKit review prompt in active UIWindowScene.", category: .review)
             if #available(iOS 16.0, *) {
                 AppStore.requestReview(in: scene)
             } else {
                 SKStoreReviewController.requestReview(in: scene)
             }
             markPromptedForCurrentVersion()
+        } else {
+            GraceLogger.warning("Could not find active UIWindowScene to request native review.", category: .review)
         }
     }
 
