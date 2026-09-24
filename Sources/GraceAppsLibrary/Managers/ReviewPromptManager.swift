@@ -50,7 +50,7 @@ public class ReviewPromptManager {
         return result
     }
 
-    /// Requests a review if conditions are met, presenting pre-filter prompt.
+    /// Requests a review if conditions are met (or forced), presenting pre-filter prompt.
     /// If user taps "Love it!", StoreKit prompt is shown.
     /// If user taps "Not really", `onNegativeFeedback` closure is executed if provided,
     /// or defaults to launching the support feedback email composer.
@@ -92,7 +92,9 @@ public class ReviewPromptManager {
 
     public static func debugResetEngagementCounter() {
         UserDefaults.standard.set(0, forKey: SettingKeys.engagementCounterKey)
-        GraceLogger.info("Reset engagement counter to 0.", category: .debug)
+        UserDefaults.standard.removeObject(forKey: SettingKeys.lastVersionPromptedForReviewKey)
+        UserDefaults.standard.removeObject(forKey: SettingKeys.lastEngagementDateKey)
+        GraceLogger.info("Reset engagement counter to 0 and cleared prompted version status.", category: .debug)
     }
 
     public static func appInit() {
