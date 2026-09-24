@@ -149,14 +149,6 @@ Device: \(deviceModel) (\(osVersion))
         return URL(string: "mailto:\(Constants.feedbackEmail)?subject=\(encodedSubject)&body=\(encodedBody)")
     }
 
-    private func openDefaultFeedbackMail() {
-        guard let url = Self.getFeedbackMailURL() else { return }
-        GraceLogger.info("Opening feedback email composer: \(url)", category: .feedback)
-        if UIApplication.shared.canOpenURL(url) {
-            UIApplication.shared.open(url)
-        }
-    }
-
     private static func getTopViewController(base: UIViewController? = nil) -> UIViewController? {
         let baseVC: UIViewController? = base ?? {
             let scenes = UIApplication.shared.connectedScenes
@@ -229,11 +221,11 @@ Device: \(deviceModel) (\(osVersion))
         )
 
         let noAction = UIAlertAction(title: noButton, style: .default) { [weak self] _ in
-            GraceLogger.info("User selected '\(noButton)'. Redirecting to feedback...", category: .review)
+            GraceLogger.info("User selected '\(noButton)'. Redirecting to in-app feedback sheet...", category: .review)
             if let onNegative {
                 onNegative()
             } else {
-                self?.openDefaultFeedbackMail()
+                self?.presentFeedbackSheet()
             }
         }
         let yesAction = UIAlertAction(title: yesButton, style: .default) { _ in
@@ -246,6 +238,35 @@ Device: \(deviceModel) (\(osVersion))
 
         GraceLogger.info("Presenting pre-filter alert for '\(appName)' on \(type(of: topVC))", category: .review)
         topVC.present(alert, animated: true, completion: nil)
+    }
+
+    /// Presents `FeedbackToGraceView` inside an in-app SwiftUI sheet on top of the active view controller.
+    public func presentFeedbackSheet() {
+        guard let topVC = Self.getTopViewController() else {
+            GraceLogger.warning("Cannot present feedback sheet: topVC unavailable.", category: .feedback)
+            return
+        }
+        
+        let title = Bundle.module.localizedString(forKey: Constants.StringKeys.feedbackTitle, value: nil, table: nil)
+        
+        let feedbackView = NavigationView {
+            FeedbackToGraceView()
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Done") {
+                            topVC.dismiss(animated: true, completion: nil)
+                        }
+                    }
+                }
+        }
+        
+        let hostingController = UIHostingController(rootView: feedbackView)
+        hostingController.modalPresentationStyle = .pageSheet
+        
+        GraceLogger.info("Presenting FeedbackToGraceView in-app sheet on \(type(of: topVC))", category: .feedback)
+        topVC.present(hostingController, animated: true, completion: nil)
     }
 
     private func showNativeReviewPrompt() {
