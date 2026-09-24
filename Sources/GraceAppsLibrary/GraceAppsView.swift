@@ -7,7 +7,7 @@ public struct GraceAppsView: View {
   public init(excludingAppId: String? = nil) {
     self.excludingAppId = excludingAppId
   }
-  
+
   public var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 28) {

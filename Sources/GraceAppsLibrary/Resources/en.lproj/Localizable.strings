@@ -59,7 +59,7 @@
 
 "about.section.title" = "About %@";
 "about.version" = "Version";
-"about.rate_this_app" = "Rate This App";
+"about.rate_this_app" = "Leave a Rating";
 "about.share_this_app" = "Share This App";
 "about.app_fallback" = "App";
 "settings.language" = "Language";
@@ -69,3 +69,10 @@
 "support.disclaimer" = "Disclaimer";
 
 "developer.section.title" = "About the App Developer";
+
+/* Solicit Review */
+"Are you enjoying %@?" = "Are you enjoying %@?";
+"Tell us what you think" = "Tell us what you think";
+"Yes, I am 🥰" = "Yes, I am 🥰";
+"Not really" = "Not really";
+"Leave a Rating" = "Leave a Rating";

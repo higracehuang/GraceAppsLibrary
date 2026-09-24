@@ -58,7 +58,7 @@
 
 "about.section.title" = "Über %@";
 "about.version" = "Version";
-"about.rate_this_app" = "Diese App bewerten";
+"about.rate_this_app" = "Bewertung abgeben";
 "about.share_this_app" = "Diese App teilen";
 "about.app_fallback" = "App";
 "settings.language" = "Sprache";
@@ -68,3 +68,10 @@
 "support.disclaimer" = "Haftungsausschluss";
 
 "developer.section.title" = "Über den App-Entwickler";
+
+/* Solicit Review */
+"Are you enjoying %@?" = "Gefällt Ihnen %@?";
+"Tell us what you think" = "Teilen Sie uns Ihre Meinung mit";
+"Yes, I am 🥰" = "Ja, sehr 🥰";
+"Not really" = "Nicht wirklich";
+"Leave a Rating" = "Bewertung abgeben";

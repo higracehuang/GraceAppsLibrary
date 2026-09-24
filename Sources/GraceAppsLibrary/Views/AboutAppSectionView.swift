@@ -34,30 +34,21 @@ public struct AboutAppSectionView: View {
     }
 
     var reviewURL: URL? {
-        guard let normalizedAppStoreId else { return nil }
-        return URL(string: "https://apps.apple.com/app/\(normalizedAppStoreId)?action=write-review")
+        guard let appStoreId else { return nil }
+        return ReviewPromptManager.getReviewURL(appStoreId: appStoreId)
     }
 
     var shareURL: URL? {
-        guard let normalizedAppStoreId else { return nil }
-        return URL(string: "https://apps.apple.com/app/\(normalizedAppStoreId)")
+        guard let appStoreId else { return nil }
+        return ReviewPromptManager.getShareURL(appStoreId: appStoreId)
     }
 
     var appVersion: String {
-        let bundle = Bundle.main
-        let release = bundle.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
-        let build   = bundle.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-#if DEBUG
-        return "Debug - \(release) (\(build))"
-#else
-        return "Release - \(release) (\(build))"
-#endif
+        Bundle.main.displayVersionString
     }
 
     var appName: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
-            ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-            ?? NSLocalizedString(Constants.StringKeys.aboutAppFallback, bundle: .module, comment: "")
+        Bundle.main.appName
     }
 
     // MARK: - Body

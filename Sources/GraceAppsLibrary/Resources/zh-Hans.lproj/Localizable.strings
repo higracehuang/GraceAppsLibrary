@@ -58,7 +58,7 @@
 
 "about.section.title" = "关于 %@";
 "about.version" = "版本";
-"about.rate_this_app" = "评价此应用";
+"about.rate_this_app" = "前往评分";
 "about.share_this_app" = "分享此应用";
 "about.app_fallback" = "应用";
 "settings.language" = "语言";
@@ -68,3 +68,10 @@
 "support.disclaimer" = "免责声明";
 
 "developer.section.title" = "关于开发者";
+
+/* Solicit Review */
+"Are you enjoying %@?" = "您喜欢使用%@吗？";
+"Tell us what you think" = "请告诉我们您的想法";
+"Yes, I am 🥰" = "是的，很喜欢 🥰";
+"Not really" = "不太喜欢";
+"Leave a Rating" = "前往评分";

@@ -34,5 +34,11 @@ public enum Constants {
         public static let supportDisclaimer = "support.disclaimer"
         
         public static let developerSectionTitle = "developer.section.title"
+        
+        public static let reviewPromptTitleFormat = "Are you enjoying %@?"
+        public static let reviewPromptMessage = "Tell us what you think"
+        public static let reviewPromptPositive = "Yes, I am 🥰"
+        public static let reviewPromptNegative = "Not really"
+        public static let reviewPromptRateThisApp = "Leave a Rating"
     }
 }

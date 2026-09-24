@@ -75,9 +75,9 @@ final class GraceAppsLibraryTests: XCTestCase {
         // Test Spanish
         let esLocale = Locale(identifier: "es")
         XCTAssertEqual(tallyCoin.localizedName(for: esLocale), "TallyCoin")
-        XCTAssertTrue(tallyCoin.localizedDescription(for: esLocale).contains("seguimiento de tareas del hogar y recompensas"))
+        XCTAssertTrue(tallyCoin.localizedDescription(for: esLocale).contains("registro de las tareas del hogar y las recompensas"))
         XCTAssertEqual(chartyBee.localizedName(for: esLocale), "ChartyBee")
-        XCTAssertTrue(chartyBee.localizedDescription(for: esLocale).contains("Pequeña app de seguimiento"))
+        XCTAssertTrue(chartyBee.localizedDescription(for: esLocale).contains("pequeña app para llevar un registro"))
         
         // Test Dial In Espresso
         let dialInEspresso = try XCTUnwrap(apps.first { $0.appId == "id6752831404" })

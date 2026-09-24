@@ -5,27 +5,7 @@ public struct FeedbackToGraceView: View {
     public init() {}
     
     private var feedbackURL: URL {
-        let appName = Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ?? Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "App"
-        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
-        let appBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
-        let deviceModel = UIDevice.current.model
-        let systemVersion = UIDevice.current.systemVersion
-        
-        let subject = "Feedback: \(appName)"
-        let body = """
-
-
----
-App: \(appName)
-Version: \(appVersion) (\(appBuild))
-Device: \(deviceModel) (iOS \(systemVersion))
-"""
-        
-        let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let encodedBody = body.replacingOccurrences(of: "\n", with: "\r\n")
-            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        
-        return URL(string: "mailto:\(Constants.feedbackEmail)?subject=\(encodedSubject)&body=\(encodedBody)")!
+        ReviewPromptManager.getFeedbackMailURL() ?? URL(string: "mailto:\(Constants.feedbackEmail)")!
     }
     
     public var body: some View {

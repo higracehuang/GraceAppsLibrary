@@ -59,7 +59,7 @@
 
 "about.section.title" = "Acerca de %@";
 "about.version" = "Versión";
-"about.rate_this_app" = "Calificar esta app";
+"about.rate_this_app" = "Dejar una valoración";
 "about.share_this_app" = "Compartir esta app";
 "about.app_fallback" = "App";
 "settings.language" = "Idioma";
@@ -69,3 +69,9 @@
 "support.disclaimer" = "Aviso legal";
 
 "developer.section.title" = "Sobre la desarrolladora";
+/* Solicit Review */
+"Are you enjoying %@?" = "¿Te gusta %@?";
+"Tell us what you think" = "Cuéntanos qué piensas";
+"Yes, I am 🥰" = "¡Sí, me encanta! 🥰";
+"Not really" = "No mucho";
+"Leave a Rating" = "Dejar una valoración";

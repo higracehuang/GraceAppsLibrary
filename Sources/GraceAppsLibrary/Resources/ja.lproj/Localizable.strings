@@ -58,7 +58,7 @@
 
 "about.section.title" = "%@について";
 "about.version" = "バージョン";
-"about.rate_this_app" = "このアプリを評価する";
+"about.rate_this_app" = "評価を残す";
 "about.share_this_app" = "このアプリを共有する";
 "about.app_fallback" = "アプリ";
 "settings.language" = "言語";
@@ -68,3 +68,10 @@
 "support.disclaimer" = "免責事項";
 
 "developer.section.title" = "アプリ開発者について";
+
+/* Solicit Review */
+"Are you enjoying %@?" = "%@をお楽しみいただいていますか？";
+"Tell us what you think" = "ご意見をお聞かせください";
+"Yes, I am 🥰" = "はい、楽しんでいます 🥰";
+"Not really" = "あまり...";
+"Leave a Rating" = "評価を残す";

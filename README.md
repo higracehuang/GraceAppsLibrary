@@ -10,6 +10,7 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 - Option to exclude specific apps from the list
 - iOS 14+ support
 - Built-in views for displaying apps, feedback, release notes, FAQs, and emoji input
+- Smart review prompting (`ReviewPromptManager`) with 2-step pre-filter & feedback redirection
 
 ## Installation
 
@@ -178,6 +179,35 @@ AboutDeveloperSectionView(
     excludingAppId: "id1234567890" // Optional: Excludes current app from the list
 )
 ```
+
+#### 10. Review Prompt Manager
+Use `ReviewPromptManager` to politely prompt users for App Store reviews while directing unhappy users to feedback channels instead of leaving negative App Store ratings.
+
+It features a 2-step pre-filter dialog (*"Are you enjoying [AppName]?"*):
+* **Positive Response ("Yes, I am 🥰")**: Opens Apple's native StoreKit review prompt (`AppStore.requestReview`).
+* **Negative Response ("Not really")**: Triggers support feedback (pre-filled email to support or a custom `onNegativeFeedback` closure).
+
+```swift
+// Call in App Delegate or App init to reset engagement counts on new app versions
+ReviewPromptManager.appInit()
+
+// Request review after significant user actions (default checkpoint: 5 engagements)
+ReviewPromptManager.shared.requestReview()
+
+// Custom negative feedback redirection (e.g. open custom feedback sheet)
+ReviewPromptManager.shared.requestReview {
+    showFeedbackSheet = true
+}
+
+// Throttled daily review request
+ReviewPromptManager.shared.requestReviewDaily()
+
+// Directly present StoreKit review prompt without pre-filter alert
+ReviewPromptManager.shared.requestDirectNativeReview()
+```
+
+> [!NOTE]
+> `ReviewPromptManager` automatically tracks per-version review prompts and engagement counters in `UserDefaults`, ensuring users are never nagged repeatedly on the same app version.
 
 ## Development
 
