@@ -155,24 +155,45 @@ Device: \(deviceModel) (\(osVersion))
             return scenes.first?.windows.first?.rootViewController
         }()
 
+        guard let baseVC else { return nil }
+
+        if let presented = baseVC.presentedViewController,
+           !presented.isBeingDismissed,
+           presented.viewIfLoaded?.window != nil {
+            return getTopViewController(base: presented)
+        }
+
         if let nav = baseVC as? UINavigationController {
-            return getTopViewController(base: nav.visibleViewController)
+            return getTopViewController(base: nav.visibleViewController ?? nav.topViewController)
         }
         if let tab = baseVC as? UITabBarController, let selected = tab.selectedViewController {
             return getTopViewController(base: selected)
         }
-        if let presented = baseVC?.presentedViewController {
-            return getTopViewController(base: presented)
+
+        if baseVC.viewIfLoaded?.window != nil && !baseVC.isBeingDismissed {
+            return baseVC
         }
-        return baseVC
+
+        return nil
     }
 
     private func markPromptedForCurrentVersion() {
         UserDefaults.standard.set(self.releaseVersionNumber, forKey: SettingKeys.lastVersionPromptedForReviewKey)
     }
 
-    private func askForReview(onPositive: @escaping () -> Void, onNegative: (() -> Void)?) {
+    private func askForReview(retryCount: Int = 0, onPositive: @escaping () -> Void, onNegative: (() -> Void)?) {
         markPromptedForCurrentVersion()
+
+        guard let topVC = Self.getTopViewController(),
+              topVC.viewIfLoaded?.window != nil,
+              !topVC.isBeingDismissed else {
+            if retryCount < 5 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                    self?.askForReview(retryCount: retryCount + 1, onPositive: onPositive, onNegative: onNegative)
+                }
+            }
+            return
+        }
         
         let rawTitle = NSLocalizedString(Constants.StringKeys.reviewPromptTitleFormat, bundle: .module, comment: "")
         let title = String(format: rawTitle, appName)
@@ -200,9 +221,7 @@ Device: \(deviceModel) (\(osVersion))
         alert.addAction(noAction)
         alert.addAction(yesAction)
 
-        if let topVC = Self.getTopViewController() {
-            topVC.present(alert, animated: true, completion: nil)
-        }
+        topVC.present(alert, animated: true, completion: nil)
     }
 
     private func showNativeReviewPrompt() {
