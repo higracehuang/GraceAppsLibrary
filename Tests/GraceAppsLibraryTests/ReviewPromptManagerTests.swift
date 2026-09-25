@@ -11,14 +11,14 @@ final class ReviewPromptManagerTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        ReviewPromptManager.debugResetEngagementCounter()
+        ReviewPromptManager.debugResetReviewState()
         UserDefaults.standard.removeObject(forKey: lastVersionKey)
         UserDefaults.standard.removeObject(forKey: appVersionKey)
         UserDefaults.standard.removeObject(forKey: lastDateKey)
     }
     
     override func tearDown() {
-        ReviewPromptManager.debugResetEngagementCounter()
+        ReviewPromptManager.debugResetReviewState()
         UserDefaults.standard.removeObject(forKey: lastVersionKey)
         UserDefaults.standard.removeObject(forKey: appVersionKey)
         UserDefaults.standard.removeObject(forKey: lastDateKey)
@@ -50,9 +50,9 @@ final class ReviewPromptManagerTests: XCTestCase {
         XCTAssertTrue(feedbackURL?.absoluteString.contains("Feedback:") == true)
     }
     
-    func testDebugResetEngagementCounter() {
+    func testDebugResetReviewState() {
         UserDefaults.standard.set(7, forKey: engagementKey)
-        ReviewPromptManager.debugResetEngagementCounter()
+        ReviewPromptManager.debugResetReviewState()
         let count = UserDefaults.standard.integer(forKey: engagementKey)
         XCTAssertEqual(count, 0)
     }

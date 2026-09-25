@@ -165,7 +165,7 @@ public class ReviewPromptManager {
         return recordPositiveValueMoment(name, onNegativeFeedback: onNegativeFeedback)
     }
 
-    public static func debugResetEngagementCounter() {
+    public static func debugResetReviewState() {
         UserDefaults.standard.set(0, forKey: SettingKeys.engagementCounterKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastVersionPromptedForReviewKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastEngagementDateKey)
