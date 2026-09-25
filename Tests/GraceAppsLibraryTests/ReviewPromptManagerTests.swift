@@ -114,6 +114,28 @@ final class ReviewPromptManagerTests: XCTestCase {
         XCTAssertNotNil(lastDate)
         XCTAssertTrue(Calendar.current.isDateInToday(lastDate!))
     }
+
+    func testPositiveValueMomentsAndMilestones() {
+        let manager = ReviewPromptManager.shared
+
+        // Test milestone below threshold -> should not prompt
+        let milestoneBelow = manager.recordMilestone(count: 1, threshold: 2, name: "test_milestone")
+        XCTAssertFalse(milestoneBelow)
+
+        // 1st moment achieving milestone -> should prompt since version not yet prompted
+        let promptedFirst = manager.recordMilestone(count: 2, threshold: 2, name: "test_milestone")
+        XCTAssertTrue(promptedFirst)
+
+        let count = UserDefaults.standard.integer(forKey: "GraceApps_Review_EventCount_test_milestone")
+        XCTAssertEqual(count, 1)
+
+        // Subsequent positive moment on same version -> should NOT prompt again
+        let promptedSecond = manager.recordPositiveValueMoment("custom_event")
+        XCTAssertFalse(promptedSecond)
+
+        let customCount = UserDefaults.standard.integer(forKey: "GraceApps_Review_EventCount_custom_event")
+        XCTAssertEqual(customCount, 1)
+    }
     
     func testAllLanguagesHaveReviewPromptKeys() {
         let locales = ["en", "de", "ja", "zh-Hans", "es"]

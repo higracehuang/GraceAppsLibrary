@@ -8,6 +8,22 @@ import StoreKit
 import UIKit
 import SwiftUI
 
+/// Purely generic representation of a positive value moment in any Grace app.
+public struct PositiveValueMoment: RawRepresentable, Equatable, Hashable, ExpressibleByStringLiteral, Sendable {
+    public let rawValue: String
+
+    public init(rawValue: String) {
+        self.rawValue = rawValue
+    }
+
+    public init(stringLiteral value: String) {
+        self.rawValue = value
+    }
+
+    public static let genericMoment = PositiveValueMoment(rawValue: "positive_value_moment")
+    public static let milestoneReached = PositiveValueMoment(rawValue: "milestone_reached")
+}
+
 @MainActor
 public class ReviewPromptManager {
 
@@ -90,10 +106,74 @@ public class ReviewPromptManager {
         showNativeReviewPrompt()
     }
 
+    /// Records a positive value moment by string event identifier (defaults to "positive_value_moment").
+    /// Prompts for App Store review if the current version has not been prompted yet.
+    /// Never gates app features or provides rewards/incentives for ratings.
+    @discardableResult
+    public func recordPositiveValueMoment(
+        _ eventName: String = "positive_value_moment",
+        onNegativeFeedback: (() -> Void)? = nil
+    ) -> Bool {
+        GraceLogger.info("Positive value moment recorded: '\(eventName)'", category: .review)
+
+        let key = "GraceApps_Review_EventCount_\(eventName)"
+        let newCount = UserDefaults.standard.integer(forKey: key) + 1
+        UserDefaults.standard.set(newCount, forKey: key)
+
+        guard !hasPromptYet() else {
+            GraceLogger.info("Positive value moment '\(eventName)' recorded, but version '\(releaseVersionNumber)' was already prompted. Skipping prompt.", category: .review)
+            return false
+        }
+
+        GraceLogger.success("Positive value moment achieved ('\(eventName)'). Presenting review prompt...", category: .review)
+        askForReview(onPositive: showNativeReviewPrompt, onNegative: onNegativeFeedback)
+        return true
+    }
+
+    /// Overload for PositiveValueMoment struct.
+    @discardableResult
+    public func recordPositiveValueMoment(
+        _ moment: PositiveValueMoment,
+        onNegativeFeedback: (() -> Void)? = nil
+    ) -> Bool {
+        recordPositiveValueMoment(moment.rawValue, onNegativeFeedback: onNegativeFeedback)
+    }
+
+    /// Alias for requestReviewIfPositiveValueMoment.
+    @discardableResult
+    public func requestReviewIfPositiveValueMoment(
+        _ eventName: String = "positive_value_moment",
+        onNegativeFeedback: (() -> Void)? = nil
+    ) -> Bool {
+        recordPositiveValueMoment(eventName, onNegativeFeedback: onNegativeFeedback)
+    }
+
+    /// Records a milestone action with current count and target threshold.
+    /// Prompts for review when count >= threshold and version has not been prompted yet.
+    @discardableResult
+    public func recordMilestone(
+        count: Int,
+        threshold: Int = 2,
+        name: String = "milestone",
+        onNegativeFeedback: (() -> Void)? = nil
+    ) -> Bool {
+        GraceLogger.info("Milestone '\(name)' evaluated: count=\(count), threshold=\(threshold)", category: .review)
+        guard count >= threshold else {
+            GraceLogger.info("Milestone '\(name)' count (\(count)) is below threshold (\(threshold)). Skipping prompt.", category: .review)
+            return false
+        }
+        return recordPositiveValueMoment(name, onNegativeFeedback: onNegativeFeedback)
+    }
+
     public static func debugResetEngagementCounter() {
         UserDefaults.standard.set(0, forKey: SettingKeys.engagementCounterKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastVersionPromptedForReviewKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastEngagementDateKey)
+        for key in UserDefaults.standard.dictionaryRepresentation().keys {
+            if key.hasPrefix("GraceApps_Review_EventCount_") || key.hasPrefix("GraceApps_Review_MomentCount_") {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
         GraceLogger.info("Reset engagement counter to 0 and cleared prompted version status.", category: .debug)
     }
 
