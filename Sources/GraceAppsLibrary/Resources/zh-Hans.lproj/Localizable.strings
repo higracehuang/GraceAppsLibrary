@@ -36,6 +36,9 @@
 "app.name.herweigh" = "HerWeigh 她体重";
 "app.description.herweigh" = "专为女性设计的体重记录应用，将生理周期纳入考量，让体重管理更科学。";
 
+"app.name.dialinpourover" = "Dial In Pourovers";
+"app.description.dialinpourover" = "专属手冲咖啡冲煮日志，帮你记录每一项冲煮参数，精准复现最佳配方，让下一杯更加出色。";
+
 "feedback.message" = "我很想听听你的真实想法！无论是功能建议、bug 反馈，还是想告诉我哪些地方好用（或不好用）——你的反馈都能帮我做得更好。请致信：";
 "feedback.appreciation" = "感谢你帮助我做得更好！❤️";
 "feedback.signature" = "Grace";

@@ -36,6 +36,9 @@
 "app.name.herweigh" = "HerWeigh";
 "app.description.herweigh" = "生理周期を考慮した、女性のためのシンプルな体重管理アプリ。";
 
+"app.name.dialinpourover" = "Dial In Pourovers ハンドドリップ記録";
+"app.description.dialinpourover" = "あらゆる抽出データを記録し、ベストレシピを再現して、次の一杯をさらに美味しく淹れられるプライベートな抽出ログ。";
+
 "feedback.message" = "あなたのご意見をぜひお聞かせください！機能のアイデアやバグの報告、あるいは何が良くて何が改善が必要かなど、正直なフィードバックが私の励みになります。こちらまでご連絡ください：";
 "feedback.appreciation" = "改善へのご協力、ありがとうございます！ ❤️";
 "feedback.signature" = "グレース Grace";

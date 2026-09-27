@@ -37,6 +37,9 @@
 "app.name.herweigh" = "HerWeigh";
 "app.description.herweigh" = "Un sencillo registro de peso para mujeres que tiene en cuenta el ciclo menstrual.";
 
+"app.name.dialinpourover" = "Dial In Pourovers";
+"app.description.dialinpourover" = "Diario privado de filtrado para registrar cada variable, recrear tus mejores recetas y perfeccionar tu próxima taza.";
+
 "feedback.message" = "¡Me encantaría conocer tu opinión sincera! Ya sea una idea para una nueva función, un error o simplemente algo que te guste (o no), tus comentarios me ayudan a mejorar. Escríbeme a:";
 "feedback.appreciation" = "¡Gracias por ayudarme a mejorar! ❤️";
 "feedback.signature" = "Grace";

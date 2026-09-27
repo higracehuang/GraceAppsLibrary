@@ -34,18 +34,18 @@ final class AppOrderTests: XCTestCase {
         // Given
         // tallycoin is Productivity (2022)
         // readingclock is Productivity (2023)
-        // absolute newest is herweigh (Health, 2026)
+        // absolute newest is dialinpourover (Lifestyle, 2026)
         
         // When
         let apps = GraceAppsManager.getSortedApps(excluding: "id1633932632") // Exclude tallycoin
         
         // Then
-        // apps[0] should be readingclock (Same category as tallycoin, prioritized over herweigh)
-        // apps[1] should be herweigh (Absolute Newest)
+        // apps[0] should be readingclock (Same category as tallycoin, prioritized over dialinpourover)
+        // apps[1] should be dialinpourover (Absolute Newest)
         
         XCTAssertEqual(apps[0].name, "app.name.readingclock", "Same category should come first when audience relevance is prioritized")
         XCTAssertEqual(apps[0].category, .productivity)
-        XCTAssertEqual(apps[1].name, "app.name.herweigh", "Absolute newest should come after the related category group")
+        XCTAssertEqual(apps[1].name, "app.name.dialinpourover", "Absolute newest should come after the related category group")
     }
     
     func testNewestAppIsAtTopWhenNoCategoryMatch() {
@@ -62,7 +62,7 @@ final class AppOrderTests: XCTestCase {
         // herweigh is also Health, so it will be top anyway.
         
         // Let's test with tallycoin (Productivity) excluded.
-        // readingclock is Productivity. herweigh is Health (Newest).
+        // readingclock is Productivity. dialinpourover is Lifestyle (Newest).
         // Since Productivity is prioritized, readingclock wins.
         
         let apps = GraceAppsManager.getSortedApps(excluding: "id1633932632")
@@ -89,14 +89,14 @@ final class AppOrderTests: XCTestCase {
     
     func testGetNewestAppIdentifiesAbsoluteNewest() {
         // Given
-        // herweigh is the newest app (2026-01-15)
+        // dialinpourover is the newest app (2026-09-22)
         // tallycoin is an old app (2022-07-11)
         
         // When
-        // Even if we are in TallyCoin (Productivity), getNewestApp should return herweigh (Health)
+        // Even if we are in TallyCoin (Productivity), getNewestApp should return dialinpourover (Lifestyle)
         let newestApp = GraceAppsManager.getNewestApp(excluding: "id1633932632") // Exclude tallycoin
         
         // Then
-        XCTAssertEqual(newestApp?.name, "app.name.herweigh", "getNewestApp should return the absolute newest app regardless of the current app's category")
+        XCTAssertEqual(newestApp?.name, "app.name.dialinpourover", "getNewestApp should return the absolute newest app regardless of the current app's category")
     }
 }

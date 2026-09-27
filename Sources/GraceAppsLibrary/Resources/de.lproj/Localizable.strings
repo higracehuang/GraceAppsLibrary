@@ -36,6 +36,9 @@
 "app.name.herweigh" = "HerWeigh";
 "app.description.herweigh" = "Einfacher Gewichts-Tracker für Frauen, der den Menstruationszyklus berücksichtigt.";
 
+"app.name.dialinpourover" = "Dial In Pourovers";
+"app.description.dialinpourover" = "Persönliches Brühjournal, mit dem du alle Brühparameter erfasst, deine besten Rezepte reproduzierst und deine nächste Tasse noch besser machst.";
+
 "feedback.message" = "Ich würde mich über Ihre ehrliche Meinung freuen! Egal, ob es sich um eine Funktionsidee, einen Fehler oder einfach nur darum handelt, was funktioniert (und was nicht) – Ihr Feedback hilft mir, besser zu werden. Bitte schreiben Sie mir an:";
 "feedback.appreciation" = "Vielen Dank, dass Sie mir helfen, besser zu werden! ❤️";
 "feedback.signature" = "Grace";

@@ -4,7 +4,7 @@ import XCTest
 final class GraceAppsLibraryTests: XCTestCase {
     func testGetAllApps() {
         let apps = GraceAppsManager.getAllApps()
-        XCTAssertEqual(apps.count, 11, "Should return all 11 apps")
+        XCTAssertEqual(apps.count, 12, "Should return all 12 apps")
         
         // Test first app
         let tallyCoin = apps.first { $0.appId == "id1633932632" }
@@ -21,7 +21,7 @@ final class GraceAppsLibraryTests: XCTestCase {
     
     func testGetAllAppsWithExclusion() {
         let apps = GraceAppsManager.getAllApps(excluding: "id1633932632")
-        XCTAssertEqual(apps.count, 10, "Should return 10 apps when excluding one")
+        XCTAssertEqual(apps.count, 11, "Should return 11 apps when excluding one")
         XCTAssertNil(apps.first { $0.appId == "id1633932632" }, "Excluded app should not be present")
     }
     
@@ -85,6 +85,13 @@ final class GraceAppsLibraryTests: XCTestCase {
         XCTAssertTrue(dialInEspresso.localizedDescription(for: deLocale).contains("Einfache App"))
         XCTAssertEqual(dialInEspresso.localizedName(for: esLocale), "Dial In Espresso")
         XCTAssertTrue(dialInEspresso.localizedDescription(for: esLocale).contains("granos y extracciones"))
+        
+        // Test Dial In Pourovers
+        let dialInPourOver = try XCTUnwrap(apps.first { $0.appId == "id6812539084" })
+        XCTAssertEqual(dialInPourOver.localizedName(for: deLocale), "Dial In Pourovers")
+        XCTAssertTrue(dialInPourOver.localizedDescription(for: deLocale).contains("Brühjournal"))
+        XCTAssertEqual(dialInPourOver.localizedName(for: esLocale), "Dial In Pourovers")
+        XCTAssertTrue(dialInPourOver.localizedDescription(for: esLocale).contains("Diario privado"))
     }
     
     func testAllAppsHaveAllLocalizations() {

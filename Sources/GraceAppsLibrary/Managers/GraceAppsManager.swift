@@ -103,6 +103,14 @@ enum GraceAppsManager {
             releaseDate: date(2026, 1, 15),
             category: .health
         ),
+        GraceApp(
+            name: "app.name.dialinpourover",
+            iconName: "DialInPourOverIcon",
+            shortDescription: "app.description.dialinpourover",
+            appId: "id6812539084",
+            releaseDate: date(2026, 9, 22),
+            category: .lifestyle
+        ),
     ]
 
     static func getAllApps(excluding appIdToExclude: String? = nil) -> [GraceApp] {
