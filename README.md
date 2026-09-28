@@ -60,7 +60,7 @@ Use the `.graceReleaseNotes` modifier on any view. It automatically handles vers
             heroImageName: "AppIcon"
         )
     ],
-    isPaidUser: purchaseStore.isPro, // Hides CTA if true
+    isPaidUser: purchaseStore.isPro, // Hides paywall CTA if true
     tierName: "Unlimited Access",    // Custom name for premium tier
     paywallAction: {                // Action for the upgrade button
         showPaywall = true 
@@ -69,12 +69,78 @@ Use the `.graceReleaseNotes` modifier on any view. It automatically handles vers
 ```
 
 > [!TIP]
-> The CTA button will only automatically appear for the **first release note in the list that contains a paid feature** (`isPaidFeature: true`), ensuring a clean UI.
-
-> [!TIP]
+> The paywall CTA button will automatically appear for the **first release note in the list that contains a paid feature** (`isPaidFeature: true`), ensuring a clean UI.
 > This modifier handles both "Done" button and swipe-to-dismiss, ensuring users don't see the same notes twice.
 
-#### 3. Display "What's New" in Settings
+#### 3. Release Notes CTAs & Promotion Usages
+
+`ReleaseNote` supports rich action buttons (CTAs) for cross-app promotion, website links, custom actions, and paywalls:
+
+##### A. Cross-App Promotion (Sister Apps)
+Promote companion or sister apps (e.g. promoting *Dial In Pour Over* from *Dial In Espresso*) with an App Store link. Since `ctaURL` is provided, this button is displayed for all users (both free and paid):
+
+```swift
+ReleaseNote(
+    version: "1.19.0",
+    items: [
+        ReleaseNoteItem(text: "Seamless bean sharing with Dial In Pour Over!"),
+        ReleaseNoteItem(text: "Your beans now automatically sync between both apps.")
+    ],
+    heroImageName: "ReleaseNotes/DIPOBanner",
+    ctaTitle: "Get Dial In Pour Over",
+    ctaURL: URL(string: "https://apps.apple.com/app/idYOUR_APP_ID"),
+    ctaSystemImage: "arrow.down.app"
+)
+```
+
+##### B. External Website Links (Guides, Blog Posts, Documentation)
+Link users to a website, user manual, or blog post using `ctaURL` and an optional icon like `"safari"` or `"arrow.up.right"`:
+
+```swift
+ReleaseNote(
+    version: "1.18.0",
+    notes: [
+        "New brewing guide published on our website.",
+        "Detailed extraction ratios and grinder calibration charts."
+    ],
+    ctaTitle: "Read the Brewing Guide",
+    ctaURL: URL(string: "https://ujiapps.com/guides/dial-in-espresso"),
+    ctaSystemImage: "safari"
+)
+```
+
+##### C. In-Text Markdown Links
+Each `ReleaseNoteItem.text` is a SwiftUI `LocalizedStringKey`. You can place clickable Markdown links directly in bullet points:
+
+```swift
+ReleaseNote(
+    version: "1.17.0",
+    notes: [
+        "Check out our [Web Companion](https://ujiapps.com) for bean analytics.",
+        "Join our community discussion on [Discord](https://discord.gg/example)."
+    ]
+)
+```
+
+##### D. Custom Action with Free/Paid Targeting
+You can supply a custom closure with `ctaAction`. By default:
+- Notes with `isPaidFeature: true` items hide the CTA for paid users (`isPaidUser == true`).
+- Notes with free items show the CTA to all users.
+- You can explicitly override this with `ctaRequiresUnpaidUser`:
+
+```swift
+ReleaseNote(
+    version: "1.16.0",
+    notes: ["Exclusive launch discount for free users."],
+    ctaTitle: "Claim Special Offer",
+    ctaRequiresUnpaidUser: true, // Only visible when isPaidUser == false
+    ctaAction: {
+        showSpecialOfferSheet = true
+    }
+)
+```
+
+#### 4. Display "What's New" in Settings
 If you want to allow users to manually trigger the Release Notes view (e.g., from a Settings screen):
 
 ```swift
@@ -88,7 +154,7 @@ WhatIsNewView(releaseNotes: [
 
 This view provides a simple button with a sparkles icon that pops up the release notes when clicked.
 
-#### 4. Emoji Input Support
+#### 5. Emoji Input Support
 Use `EmojiTextField` to provide a focused emoji selection experience. It automatically forces the emoji keyboard and restricts input to a single character.
 
 ```swift
@@ -103,7 +169,7 @@ EmojiTextField(
 .frame(height: 80)
 ```
 
-#### 5. Show FAQs
+#### 6. Show FAQs
 Use `FAQNavigationView` to easily add a Frequently Asked Questions section to your app:
 
 ```swift
@@ -118,7 +184,7 @@ FAQNavigationView(sections: [
 ])
 ```
 
-#### 6. About App Section
+#### 7. About App Section
 Use `AboutAppSectionView` to add a ready-made "About" section to your Settings screen. It displays the current app version, a "What's New" button, a link to rate the app, and a share sheet for the App Store page — all without any additional dependencies.
 
 **Parameters**
@@ -152,14 +218,14 @@ AboutAppSectionView(
 > [!TIP]
 > The "Share This App" row uses SwiftUI's native `ShareLink`, which requires **iOS 16+**. Make sure your deployment target is set accordingly.
 
-#### 7. Language Setting Link
+#### 8. Language Setting Link
 Use `LanguageSettingLinkView` to provide a direct link to the app's settings in the System Settings app, allowing users to quickly change the app's language. It displays the current preferred language as a badge (iOS 15+) or trailing text (iOS 14).
 
 ```swift
 LanguageSettingLinkView()
 ```
 
-#### 8. Help & Support Section
+#### 9. Help & Support Section
 Use `HelpSupportSectionView` to provide a unified help section in your Settings screen. It can optionally show FAQs, a link to "Sources & References", and a feedback link.
 
 ```swift
@@ -171,7 +237,7 @@ HelpSupportSectionView(
 )
 ```
 
-#### 9. About Developer Section
+#### 10. About Developer Section
 Use `AboutDeveloperSectionView` to add a ready-made "About the App Developer" section to your Settings screen. It provides a navigation link to the developer's other apps.
 
 ```swift
@@ -180,7 +246,7 @@ AboutDeveloperSectionView(
 )
 ```
 
-#### 10. Review Prompt Manager
+#### 11. Review Prompt Manager
 Use `ReviewPromptManager` to politely prompt users for App Store reviews while directing unhappy users to feedback channels instead of leaving negative App Store ratings.
 
 It features a 2-step pre-filter dialog (*"Are you enjoying [AppName]?"*):

@@ -17,7 +17,7 @@ public struct ReleaseNotesView: View {
     }
     
     public var body: some View {
-        let firstPaidNoteId = releaseNotes.first(where: { $0.items.contains(where: { $0.isPaidFeature }) })?.id
+        let firstPaidNoteId = releaseNotes.first(where: { $0.hasPaidFeature && !$0.hasCustomCTA })?.id
         
         NavigationView {
                 ScrollView {
@@ -28,7 +28,7 @@ public struct ReleaseNotesView: View {
                             isPaidUser: isPaidUser,
                             tierName: tierName,
                             paywallAction: paywallAction,
-                            showCTA: note.id == firstPaidNoteId
+                            isFirstPaidNote: note.id == firstPaidNoteId
                         )
                         if note.id != releaseNotes.last?.id {
                             Divider()
@@ -68,9 +68,7 @@ struct ReleaseNoteCard: View {
     let isPaidUser: Bool
     let tierName: LocalizedStringKey
     let paywallAction: (() -> Void)?
-    let showCTA: Bool
-
-
+    let isFirstPaidNote: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -155,25 +153,40 @@ struct ReleaseNoteCard: View {
                     }
                 }
                 
-                if showCTA && !isPaidUser {
-                    let action = note.ctaAction ?? paywallAction
-                    if let action = action {
-                        Button(action: action) {
-                        Group {
-                            if let ctaTitle = note.ctaTitle {
-                                Text(ctaTitle)
-                            } else {
-                                Text("release_notes.upgrade_to \(Text(tierName))", bundle: .module)
+                // MARK: - Call To Action (Custom CTA or Paywall)
+                if note.hasCustomCTA {
+                    let shouldShow = !note.effectiveRequiresUnpaidUser || !isPaidUser
+                    if shouldShow, let ctaTitle = note.ctaTitle {
+                        if let url = note.ctaURL, note.ctaAction == nil {
+                            Link(destination: url) {
+                                ctaButtonLabel(title: ctaTitle, systemImage: note.ctaSystemImage)
                             }
+                            .padding(.top, 8)
+                        } else {
+                            Button(action: {
+                                note.ctaAction?()
+                                if let url = note.ctaURL {
+                                    UIApplication.shared.open(url)
+                                }
+                            }) {
+                                ctaButtonLabel(title: ctaTitle, systemImage: note.ctaSystemImage)
+                            }
+                            .padding(.top, 8)
                         }
-                        .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.accentColor)
-                            .cornerRadius(10)
                     }
-                    .padding(.top, 8)
+                } else if isFirstPaidNote && !isPaidUser {
+                    if let action = paywallAction {
+                        Button(action: action) {
+                            Text("release_notes.upgrade_to \(Text(tierName))", bundle: .module)
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.accentColor)
+                                .cornerRadius(10)
+                        }
+                        .padding(.top, 8)
+                    }
                 }
             }
         }
@@ -181,7 +194,23 @@ struct ReleaseNoteCard: View {
         .padding(.horizontal, 20)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-}
+    
+    @ViewBuilder
+    private func ctaButtonLabel(title: LocalizedStringKey, systemImage: String?) -> some View {
+        HStack(spacing: 8) {
+            if let systemImage = systemImage {
+                Image(systemName: systemImage)
+                    .font(.headline)
+            }
+            Text(title)
+                .font(.headline)
+        }
+        .foregroundColor(.white)
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color.accentColor)
+        .cornerRadius(10)
+    }
 }
 
 #Preview("Free User") {
@@ -220,6 +249,35 @@ struct ReleaseNoteCard: View {
                 heroImageName: "FastingLadyIcon",
                 ctaTitle: "Upgrade to Pro",
                 ctaAction: {}
+            )
+        ],
+        isPaidUser: true,
+        tierName: "Unlimited Access",
+        onDismiss: {}
+    )
+}
+
+#Preview("Website & Cross Promotion") {
+    ReleaseNotesView(
+        releaseNotes: [
+            ReleaseNote(
+                version: "2.1.0",
+                notes: [
+                    "Introducing cross-app sync with our companion app Dial In Pour Over!",
+                    "Seamlessly share your coffee beans between espresso and pour over."
+                ],
+                ctaTitle: "Get Dial In Pour Over",
+                ctaURL: URL(string: "https://apps.apple.com"),
+                ctaSystemImage: "arrow.down.app"
+            ),
+            ReleaseNote(
+                version: "2.0.0",
+                notes: [
+                    "New detailed coffee guide available on our website."
+                ],
+                ctaTitle: "Read the Brewing Guide",
+                ctaURL: URL(string: "https://ujiapps.com"),
+                ctaSystemImage: "safari"
             )
         ],
         isPaidUser: true,
