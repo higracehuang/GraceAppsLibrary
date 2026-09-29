@@ -87,6 +87,7 @@ ReleaseNote(
         ReleaseNoteItem(text: "Your beans now automatically sync between both apps.")
     ],
     heroImageName: "ReleaseNotes/DIPOBanner",
+    heroImageURL: URL(string: "https://apps.apple.com/app/idYOUR_APP_ID"), // Optional: taps on the hero image open this URL (defaults to ctaURL)
     ctaTitle: "Get Dial In Pourovers",
     ctaURL: URL(string: "https://apps.apple.com/app/idYOUR_APP_ID"),
     ctaSystemImage: "arrow.down.app"

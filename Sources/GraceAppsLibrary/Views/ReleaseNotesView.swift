@@ -53,10 +53,14 @@ public struct ReleaseNotesView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: onDismiss) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title2)
+                        Image(systemName: "xmark")
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.secondary)
+                            .frame(width: 30, height: 30)
+                            .background(Color(UIColor.tertiarySystemFill))
+                            .clipShape(Circle())
                     }
+                    .accessibilityLabel(Text("Close"))
                 }
             }
         }
@@ -81,11 +85,22 @@ struct ReleaseNoteCard: View {
                     }
                 }()
                 
-                image
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: .infinity)
+                if let url = note.effectiveHeroImageURL {
+                    Link(destination: url) {
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(PlainButtonStyle())
                     .padding(.bottom, 16)
+                } else {
+                    image
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity)
+                        .padding(.bottom, 16)
+                }
             }
             
             VStack(alignment: .leading, spacing: 14) {

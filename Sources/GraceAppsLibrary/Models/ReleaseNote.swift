@@ -24,12 +24,19 @@ public struct ReleaseNote: Identifiable, Hashable {
     public let version: String
     public let items: [ReleaseNoteItem]
     public let heroImageName: String?
+    public let heroImageURL: URL?
     
     public let ctaTitle: LocalizedStringKey?
     public let ctaURL: URL?
     public let ctaSystemImage: String?
     public let ctaAction: (() -> Void)?
     public let ctaRequiresUnpaidUser: Bool?
+    
+    /// Effective URL opened when tapping the hero image.
+    /// Returns `heroImageURL` if explicitly set, or falls back to `ctaURL`.
+    public var effectiveHeroImageURL: URL? {
+        heroImageURL ?? ctaURL
+    }
     
     /// Indicates whether this release note specifies a custom CTA (website URL, App Store link, or custom action).
     public var hasCustomCTA: Bool {
@@ -60,6 +67,7 @@ public struct ReleaseNote: Identifiable, Hashable {
         version: String,
         items: [ReleaseNoteItem],
         heroImageName: String? = nil,
+        heroImageURL: URL? = nil,
         ctaTitle: LocalizedStringKey? = nil,
         ctaURL: URL? = nil,
         ctaSystemImage: String? = nil,
@@ -69,6 +77,7 @@ public struct ReleaseNote: Identifiable, Hashable {
         self.version = version
         self.items = items
         self.heroImageName = heroImageName
+        self.heroImageURL = heroImageURL
         self.ctaTitle = ctaTitle
         self.ctaURL = ctaURL
         self.ctaSystemImage = ctaSystemImage
@@ -88,6 +97,7 @@ public struct ReleaseNote: Identifiable, Hashable {
             version: version,
             items: items,
             heroImageName: heroImageName,
+            heroImageURL: nil,
             ctaTitle: ctaTitle,
             ctaURL: nil,
             ctaSystemImage: nil,
@@ -101,6 +111,7 @@ public struct ReleaseNote: Identifiable, Hashable {
         version: String,
         notes: [LocalizedStringKey],
         heroImageName: String? = nil,
+        heroImageURL: URL? = nil,
         ctaTitle: LocalizedStringKey? = nil,
         ctaURL: URL? = nil,
         ctaSystemImage: String? = nil,
@@ -111,6 +122,7 @@ public struct ReleaseNote: Identifiable, Hashable {
             version: version,
             items: notes.map { ReleaseNoteItem(text: $0) },
             heroImageName: heroImageName,
+            heroImageURL: heroImageURL,
             ctaTitle: ctaTitle,
             ctaURL: ctaURL,
             ctaSystemImage: ctaSystemImage,

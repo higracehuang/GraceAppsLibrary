@@ -90,6 +90,20 @@ final class ReleaseNotesTests: XCTestCase {
         XCTAssertEqual(note.ctaURL, appStoreURL)
         XCTAssertEqual(note.ctaSystemImage, "arrow.down.app")
         XCTAssertEqual(note.heroImageName, "ReleaseNotes/DIPOBanner")
+        XCTAssertEqual(note.effectiveHeroImageURL, appStoreURL)
+    }
+    
+    func testReleaseNoteExplicitHeroImageURL() {
+        let heroURL = URL(string: "https://example.com/hero")!
+        let note = ReleaseNote(
+            version: "1.20.0",
+            notes: ["Test note"],
+            heroImageName: "ReleaseNotes/Hero",
+            heroImageURL: heroURL
+        )
+        
+        XCTAssertEqual(note.heroImageURL, heroURL)
+        XCTAssertEqual(note.effectiveHeroImageURL, heroURL)
     }
     
     func testReleaseNotePaywallActionDefaults() {
