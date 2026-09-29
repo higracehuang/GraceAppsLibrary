@@ -54,11 +54,6 @@ public struct ReleaseNotesView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: onDismiss) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.secondary)
-                            .frame(width: 30, height: 30)
-                            .background(Color(UIColor.tertiarySystemFill))
-                            .clipShape(Circle())
                     }
                     .accessibilityLabel(Text("Close"))
                 }
