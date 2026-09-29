@@ -196,12 +196,12 @@ public class ReviewPromptManager {
         return lastVersionPrompted == currentVersion
     }
 
-    public static func getReviewURL(appStoreId: String) -> URL? {
+    nonisolated public static func getReviewURL(appStoreId: String) -> URL? {
         let cleanId = appStoreId.hasPrefix("id") ? appStoreId : "id\(appStoreId)"
         return URL(string: "https://apps.apple.com/app/\(cleanId)?action=write-review")
     }
 
-    public static func getShareURL(appStoreId: String) -> URL? {
+    nonisolated public static func getShareURL(appStoreId: String) -> URL? {
         let cleanId = appStoreId.hasPrefix("id") ? appStoreId : "id\(appStoreId)"
         return URL(string: "https://apps.apple.com/app/\(cleanId)")
     }

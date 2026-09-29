@@ -75,11 +75,11 @@ final class ReleaseNotesTests: XCTestCase {
         let note = ReleaseNote(
             version: "1.19.0",
             items: [
-                ReleaseNoteItem(text: "Sync with Dial In Pour Over!"),
+                ReleaseNoteItem(text: "Sync with Dial In Pourovers!"),
                 ReleaseNoteItem(text: "Beans automatically share across apps.")
             ],
             heroImageName: "ReleaseNotes/DIPOBanner",
-            ctaTitle: "Get Dial In Pour Over",
+            ctaTitle: "Get Dial In Pourovers",
             ctaURL: appStoreURL,
             ctaSystemImage: "arrow.down.app"
         )
@@ -200,7 +200,7 @@ final class ReleaseNotesTests: XCTestCase {
     func testFirstPaidNoteResolutionInMixedList() {
         let note1CrossPromo = ReleaseNote(
             version: "1.3.0",
-            notes: ["Try our companion app Dial In Pour Over!"],
+            notes: ["Try our companion app Dial In Pourovers!"],
             ctaTitle: "Get DIPO",
             ctaURL: URL(string: "https://apps.apple.com"),
             ctaSystemImage: "arrow.down.app"

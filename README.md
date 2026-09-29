@@ -77,17 +77,17 @@ Use the `.graceReleaseNotes` modifier on any view. It automatically handles vers
 `ReleaseNote` supports rich action buttons (CTAs) for cross-app promotion, website links, custom actions, and paywalls:
 
 ##### A. Cross-App Promotion (Sister Apps)
-Promote companion or sister apps (e.g. promoting *Dial In Pour Over* from *Dial In Espresso*) with an App Store link. Since `ctaURL` is provided, this button is displayed for all users (both free and paid):
+Promote companion or sister apps (e.g. promoting *Dial In Pourovers* from *Dial In Espresso*) with an App Store link. Since `ctaURL` is provided, this button is displayed for all users (both free and paid):
 
 ```swift
 ReleaseNote(
     version: "1.19.0",
     items: [
-        ReleaseNoteItem(text: "Seamless bean sharing with Dial In Pour Over!"),
+        ReleaseNoteItem(text: "Seamless bean sharing with Dial In Pourovers!"),
         ReleaseNoteItem(text: "Your beans now automatically sync between both apps.")
     ],
     heroImageName: "ReleaseNotes/DIPOBanner",
-    ctaTitle: "Get Dial In Pour Over",
+    ctaTitle: "Get Dial In Pourovers",
     ctaURL: URL(string: "https://apps.apple.com/app/idYOUR_APP_ID"),
     ctaSystemImage: "arrow.down.app"
 )

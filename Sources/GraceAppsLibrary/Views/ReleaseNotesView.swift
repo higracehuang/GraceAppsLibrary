@@ -263,10 +263,10 @@ struct ReleaseNoteCard: View {
             ReleaseNote(
                 version: "2.1.0",
                 notes: [
-                    "Introducing cross-app sync with our companion app Dial In Pour Over!",
+                    "Introducing cross-app sync with our companion app Dial In Pourovers!",
                     "Seamlessly share your coffee beans between espresso and pour over."
                 ],
-                ctaTitle: "Get Dial In Pour Over",
+                ctaTitle: "Get Dial In Pourovers",
                 ctaURL: URL(string: "https://apps.apple.com"),
                 ctaSystemImage: "arrow.down.app"
             ),
