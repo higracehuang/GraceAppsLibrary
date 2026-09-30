@@ -137,6 +137,26 @@ final class ReviewPromptManagerTests: XCTestCase {
         XCTAssertEqual(customCount, 1)
     }
     
+    func testReviewPromptSuppressedIfReleaseNotesShownThisSession() {
+        let manager = ReviewPromptManager(checkpointCount: 1)
+        
+        // When release notes have been presented in this session
+        ReleaseNotesManager.hasShownReleaseNotesThisSession = true
+        
+        // 1. requestReviewIfNecessary should be suppressed
+        XCTAssertFalse(manager.requestReviewIfNecessary(), "Review prompt should be suppressed if release notes were already shown this session")
+        
+        // 2. recordPositiveValueMoment should also be suppressed
+        let momentPrompted = manager.recordPositiveValueMoment("milestone_event")
+        XCTAssertFalse(momentPrompted, "Positive value moment prompt should be suppressed if release notes were shown this session")
+        
+        // When session resets (e.g. new session)
+        ReleaseNotesManager.hasShownReleaseNotesThisSession = false
+        
+        // Then review prompt can be evaluated normally
+        XCTAssertTrue(manager.recordPositiveValueMoment("milestone_event_new_session"), "Positive value moment should prompt once new session has no release notes")
+    }
+    
     func testAllLanguagesHaveReviewPromptKeys() {
         let locales = ["en", "de", "ja", "zh-Hans", "es"]
         let reviewKeys = [

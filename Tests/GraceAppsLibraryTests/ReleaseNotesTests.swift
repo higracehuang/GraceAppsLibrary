@@ -18,26 +18,110 @@ final class ReleaseNotesTests: XCTestCase {
         super.tearDown()
     }
     
-    func testShouldShowReleaseNotes() {
+    // MARK: - Fresh Install & Upgrade Lifecycle Tests
+    
+    func testFreshInstallSuppressesReleaseNotesByDefault() {
         let releaseNotes = [
             ReleaseNote(version: "1.0.0", notes: ["Initial release"]),
             ReleaseNote(version: "2.0.0", notes: ["Big update"])
         ]
         
-        // Test with version that has release notes
-        XCTAssertTrue(manager.shouldShowReleaseNotes(currentVersion: "2.0.0", releaseNotes: releaseNotes))
+        // Given a fresh install (no prior version viewed)
+        XCTAssertTrue(manager.isFirstInstall)
+        XCTAssertNil(manager.lastViewedVersion)
         
-        // Test with version that DOES NOT have release notes
-        XCTAssertFalse(manager.shouldShowReleaseNotes(currentVersion: "1.5.0", releaseNotes: releaseNotes))
+        // When checking for version 1.0.0 on a fresh install
+        let shouldShow = manager.shouldShowReleaseNotes(currentVersion: "1.0.0", releaseNotes: releaseNotes)
         
-        // Test after marking as viewed
+        // Then it should SUPPRESS release notes (return false)
+        XCTAssertFalse(shouldShow, "Fresh install should suppress release notes to not disrupt onboarding")
+        
+        // And it should have automatically recorded current version as viewed
+        XCTAssertFalse(manager.isFirstInstall)
+        XCTAssertEqual(manager.lastViewedVersion, "1.0.0")
+        
+        // Subsequent checks on the same version 1.0.0 should also return false
+        XCTAssertFalse(manager.shouldShowReleaseNotes(currentVersion: "1.0.0", releaseNotes: releaseNotes))
+    }
+    
+    func testAppUpgradeShowsReleaseNotes() {
+        let releaseNotes = [
+            ReleaseNote(version: "1.0.0", notes: ["Initial release"]),
+            ReleaseNote(version: "2.0.0", notes: ["Big update"]),
+            ReleaseNote(version: "3.0.0", notes: ["Even bigger update"])
+        ]
+        
+        // Given an existing user who previously had version 1.0.0 installed
+        manager.markAsViewed(version: "1.0.0")
+        XCTAssertFalse(manager.isFirstInstall)
+        XCTAssertEqual(manager.lastViewedVersion, "1.0.0")
+        
+        // When the user updates to version 2.0.0
+        let shouldShow = manager.shouldShowReleaseNotes(currentVersion: "2.0.0", releaseNotes: releaseNotes)
+        
+        // Then it should SHOW release notes for the upgrade
+        XCTAssertTrue(shouldShow, "Existing user upgrading to a new version should see release notes")
+        
+        // After user views / dismisses the release notes
         manager.markAsViewed(version: "2.0.0")
+        XCTAssertEqual(manager.lastViewedVersion, "2.0.0")
+        
+        // Checking again on version 2.0.0 should return false
         XCTAssertFalse(manager.shouldShowReleaseNotes(currentVersion: "2.0.0", releaseNotes: releaseNotes))
         
-        // Test after update to new version
-        XCTAssertTrue(manager.shouldShowReleaseNotes(currentVersion: "3.0.0", releaseNotes: [
-            ReleaseNote(version: "3.0.0", notes: ["Newer update"])
-        ]))
+        // When updating again to version 3.0.0
+        XCTAssertTrue(manager.shouldShowReleaseNotes(currentVersion: "3.0.0", releaseNotes: releaseNotes))
+    }
+    
+    func testAppUpgradeWithoutReleaseNoteForCurrentVersion() {
+        let releaseNotes = [
+            ReleaseNote(version: "1.0.0", notes: ["Initial release"]),
+            ReleaseNote(version: "2.0.0", notes: ["Big update"])
+        ]
+        
+        // Given an existing user on version 1.0.0
+        manager.markAsViewed(version: "1.0.0")
+        
+        // When upgrading to version 1.5.0 which has no release note entry
+        let shouldShow = manager.shouldShowReleaseNotes(currentVersion: "1.5.0", releaseNotes: releaseNotes)
+        
+        // Then it should return false
+        XCTAssertFalse(shouldShow, "Should not show release notes if current version is not listed in notes")
+    }
+    
+    func testFreshInstallWithSuppressionDisabled() {
+        let releaseNotes = [
+            ReleaseNote(version: "1.0.0", notes: ["Initial release"])
+        ]
+        
+        // When suppressOnFirstInstall is explicitly false on fresh install
+        let shouldShow = manager.shouldShowReleaseNotes(
+            currentVersion: "1.0.0",
+            releaseNotes: releaseNotes,
+            suppressOnFirstInstall: false
+        )
+        
+        // Then it should show release notes
+        XCTAssertTrue(shouldShow, "When suppression is disabled, fresh install should show release notes")
+    }
+    
+    func testEmptyReleaseNotesListNeverShows() {
+        // Fresh install with empty notes
+        XCTAssertFalse(manager.shouldShowReleaseNotes(currentVersion: "1.0.0", releaseNotes: []))
+        
+        // Upgraded user with empty notes
+        manager.markAsViewed(version: "1.0.0")
+        XCTAssertFalse(manager.shouldShowReleaseNotes(currentVersion: "2.0.0", releaseNotes: []))
+    }
+    
+    func testResetReleaseNotesState() {
+        manager.markAsViewed(version: "1.0.0")
+        XCTAssertFalse(manager.isFirstInstall)
+        XCTAssertEqual(manager.lastViewedVersion, "1.0.0")
+        
+        manager.resetReleaseNotesState()
+        XCTAssertTrue(manager.isFirstInstall)
+        XCTAssertNil(manager.lastViewedVersion)
     }
     
     func testPersistence() {
@@ -46,6 +130,8 @@ final class ReleaseNotesTests: XCTestCase {
         
         // Create a new manager with same user defaults to test persistence
         let newManager = ReleaseNotesManager(userDefaults: userDefaults)
+        XCTAssertFalse(newManager.isFirstInstall)
+        XCTAssertEqual(newManager.lastViewedVersion, version)
         XCTAssertFalse(newManager.shouldShowReleaseNotes(currentVersion: version, releaseNotes: [
             ReleaseNote(version: version, notes: ["Test"])
         ]))

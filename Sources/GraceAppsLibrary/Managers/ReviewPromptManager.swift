@@ -59,6 +59,10 @@ public class ReviewPromptManager {
     }
 
     private func shouldPrompt() -> Bool {
+        guard !ReleaseNotesManager.hasShownReleaseNotesThisSession else {
+            GraceLogger.info("Release notes were already shown in this session. Suppressing review prompt.", category: .review)
+            return false
+        }
         let count = recordEngagement()
         let alreadyPrompted = hasPromptYet()
         let result = count >= checkpointCount && !alreadyPrompted
@@ -107,7 +111,7 @@ public class ReviewPromptManager {
     }
 
     /// Records a positive value moment by string event identifier (defaults to "positive_value_moment").
-    /// Prompts for App Store review if the current version has not been prompted yet.
+    /// Prompts for App Store review if the current version has not been prompted yet and no release notes were shown this session.
     /// Never gates app features or provides rewards/incentives for ratings.
     @discardableResult
     public func recordPositiveValueMoment(
@@ -119,6 +123,11 @@ public class ReviewPromptManager {
         let key = "GraceApps_Review_EventCount_\(eventName)"
         let newCount = UserDefaults.standard.integer(forKey: key) + 1
         UserDefaults.standard.set(newCount, forKey: key)
+
+        guard !ReleaseNotesManager.hasShownReleaseNotesThisSession else {
+            GraceLogger.info("Positive value moment '\(eventName)' recorded, but release notes were already shown in this session. Suppressing review prompt.", category: .review)
+            return false
+        }
 
         guard !hasPromptYet() else {
             GraceLogger.info("Positive value moment '\(eventName)' recorded, but version '\(releaseVersionNumber)' was already prompted. Skipping prompt.", category: .review)
@@ -166,6 +175,7 @@ public class ReviewPromptManager {
     }
 
     public static func debugResetReviewState() {
+        ReleaseNotesManager.hasShownReleaseNotesThisSession = false
         UserDefaults.standard.set(0, forKey: SettingKeys.engagementCounterKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastVersionPromptedForReviewKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastEngagementDateKey)
