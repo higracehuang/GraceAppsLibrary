@@ -10,6 +10,7 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 - Option to exclude specific apps from the list
 - iOS 14+ support
 - Built-in views for displaying apps, feedback, release notes, FAQs, and emoji input
+- Shared Onboarding framework (`OnboardingContainer`, `OnboardingSlideLayout`, `OnboardingCoordinator`)
 - Smart review prompting (`ReviewPromptManager`) with 2-step pre-filter & feedback redirection
 
 ## Installation
@@ -275,6 +276,90 @@ ReviewPromptManager.shared.requestDirectNativeReview()
 
 > [!NOTE]
 > `ReviewPromptManager` automatically tracks per-version review prompts and engagement counters in `UserDefaults`, ensuring users are never nagged repeatedly on the same app version.
+
+#### 12. Shared Onboarding System
+Use the Onboarding system to build multi-step carousel flows with customizable hero cards, animated capsule page indicators, safe action trays, and step coordination.
+
+##### Components:
+* **`OnboardingContainer`**: Paging shell that wraps slides, provides an animated capsule page indicator, and maintains a stable bottom action tray to prevent layout jumping.
+* **`OnboardingSlideLayout`**: Standard hero card (with custom content & optional trailing badge) paired with a bottom narrative section (Title + Subtitle) and dynamic type accessibility protection.
+* **`OnboardingPrimaryButton`**: Full-width primary CTA button with built-in loading spinner support (`isLoading`).
+* **`OnboardingSecondaryButton`**: Secondary text button for "Skip for now" with built-in translations in English, Spanish, Simplified Chinese, German, and Japanese.
+* **`OnboardingCoordinator`**: Step coordinator tracking `currentStep`, `totalSteps`, `progress`, navigation (`next()`, `previous()`, `goTo()`, `skip()`, `complete()`), and lifecycle callbacks (`onStepChange`, `onComplete`, `onSkip`).
+* **`OnboardingManager`**: Persistence and version-based onboarding presentation checker (`shouldShowOnboarding(forVersion:)`).
+
+##### Example Usage:
+
+```swift
+import SwiftUI
+import GraceAppsLibrary
+
+struct AppOnboardingView: View {
+    @StateObject private var coordinator = OnboardingCoordinator(totalSteps: 3)
+    @AppStorage("has_completed_onboarding") private var hasCompletedOnboarding: Bool = false
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        OnboardingContainer(
+            coordinator: coordinator,
+            backgroundColor: Color(.systemBackground),
+            indicatorActiveColor: .primary
+        ) {
+            // Slide 0: Welcome
+            OnboardingSlideLayout(
+                cardTitle: "Welcome",
+                narrativeTitle: "Track Your Daily Rhythm",
+                narrativeSubtitle: "Understand your progress with clear, beautiful trends."
+            ) {
+                MyWelcomeHeroView()
+            }
+            .tag(0)
+            
+            // Slide 1: Feature Highlights / Quiz
+            OnboardingSlideLayout(
+                cardTitle: "Personalize",
+                narrativeTitle: "Choose Your Focus",
+                narrativeSubtitle: "Tailor the experience to your daily routine."
+            ) {
+                MyGoalSelectionView()
+            }
+            .tag(1)
+            
+            // Slide 2: Ready / Sync
+            OnboardingSlideLayout(
+                cardTitle: "Summary",
+                narrativeTitle: "You're All Set!",
+                narrativeSubtitle: "Let's begin your first session."
+            ) {
+                MySummaryCardView()
+            }
+            .tag(2)
+        } bottomActions: {
+            OnboardingPrimaryButton(
+                title: coordinator.isLastStep ? "Get Started" : "Continue",
+                backgroundColor: .primary
+            ) {
+                if coordinator.isLastStep {
+                    hasCompletedOnboarding = true
+                    dismiss()
+                } else {
+                    withAnimation {
+                        coordinator.next()
+                    }
+                }
+            }
+            
+            if !coordinator.isLastStep {
+                OnboardingSecondaryButton {
+                    withAnimation {
+                        coordinator.next()
+                    }
+                }
+            }
+        }
+    }
+}
+```
 
 ## Development
 

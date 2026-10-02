@@ -40,5 +40,7 @@ public enum Constants {
         public static let reviewPromptPositive = "Yes, I am 🥰"
         public static let reviewPromptNegative = "Not really"
         public static let reviewPromptRateThisApp = "Leave a Rating"
+        
+        public static let onboardingSkip = "onboarding.skip"
     }
 }
