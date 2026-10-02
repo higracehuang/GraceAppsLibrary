@@ -86,7 +86,7 @@ public struct OnboardingSlideLayout<CardContent: View, TrailingHeader: View>: Vi
     
     public var body: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: 8)
+            Spacer(minLength: 12)
             
             // Hero Card
             Group {
@@ -100,7 +100,7 @@ public struct OnboardingSlideLayout<CardContent: View, TrailingHeader: View>: Vi
             }
             .padding(.horizontal, 20)
             
-            Spacer(minLength: 8)
+            Spacer(minLength: 18)
             
             // Narrative section (Title + Subtitle)
             VStack(spacing: 8) {
@@ -119,7 +119,7 @@ public struct OnboardingSlideLayout<CardContent: View, TrailingHeader: View>: Vi
                     .padding(.horizontal, 28)
                     .frame(minHeight: 40, alignment: .top)
             }
-            .padding(.bottom, 4)
+            .padding(.bottom, 6)
             .accessibilityElement(children: .combine)
         }
     }

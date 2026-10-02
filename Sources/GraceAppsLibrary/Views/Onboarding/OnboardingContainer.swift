@@ -125,8 +125,8 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
                         activeColor: indicatorActiveColor,
                         inactiveColor: indicatorInactiveColor
                     )
-                    .padding(.top, 4)
-                    .padding(.bottom, 12)
+                    .padding(.top, 8)
+                    .padding(.bottom, 16)
                 }
                 
                 // Bottom Action Tray (with fixed height to prevent layout jumps)
