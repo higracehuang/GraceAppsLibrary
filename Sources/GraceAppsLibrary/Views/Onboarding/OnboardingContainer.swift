@@ -1,5 +1,111 @@
 import SwiftUI
 
+/// Indicator style options for onboarding progress visualization.
+public enum OnboardingIndicatorStyle: Equatable {
+    /// Traditional animated capsule page dots at the bottom of the slides.
+    case dots
+    /// Continuous smooth progress bar rendered at the top of the container.
+    case progressBar(height: CGFloat = 4, cornerRadius: CGFloat = 2)
+    /// Segmented progress bar (one bar per step) rendered at the top of the container.
+    case segmentedProgressBar(height: CGFloat = 4, spacing: CGFloat = 4, cornerRadius: CGFloat = 2)
+    /// No progress indicator rendered.
+    case none
+}
+
+/// Continuous animated progress bar for onboarding flows with accessibility and reduced motion support.
+public struct OnboardingProgressBar: View {
+    public let progress: Double // 0.0 ... 1.0
+    public let activeColor: Color
+    public let trackColor: Color
+    public let height: CGFloat
+    public let cornerRadius: CGFloat
+    
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    
+    public init(
+        progress: Double,
+        activeColor: Color = .primary,
+        trackColor: Color = Color.primary.opacity(0.15),
+        height: CGFloat = 4,
+        cornerRadius: CGFloat = 2
+    ) {
+        self.progress = max(0.0, min(1.0, progress))
+        self.activeColor = activeColor
+        self.trackColor = trackColor
+        self.height = height
+        self.cornerRadius = cornerRadius
+    }
+    
+    public var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(trackColor)
+                    .frame(height: height)
+                
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(activeColor)
+                    .frame(width: max(0, geometry.size.width * CGFloat(progress)), height: height)
+                    .animation(
+                        reduceMotion ? .none : .spring(response: 0.35, dampingFraction: 0.8),
+                        value: progress
+                    )
+            }
+        }
+        .frame(height: height)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Progress: \(Int(progress * 100)) percent"))
+    }
+}
+
+/// Segmented progress bar (one bar segment per step) for onboarding flows.
+public struct OnboardingSegmentedProgressBar: View {
+    public let totalSteps: Int
+    public let currentStep: Int // 0..<totalSteps
+    public let activeColor: Color
+    public let trackColor: Color
+    public let height: CGFloat
+    public let spacing: CGFloat
+    public let cornerRadius: CGFloat
+    
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    
+    public init(
+        totalSteps: Int,
+        currentStep: Int,
+        activeColor: Color = .primary,
+        trackColor: Color = Color.primary.opacity(0.15),
+        height: CGFloat = 4,
+        spacing: CGFloat = 4,
+        cornerRadius: CGFloat = 2
+    ) {
+        self.totalSteps = max(1, totalSteps)
+        self.currentStep = max(0, min(currentStep, totalSteps - 1))
+        self.activeColor = activeColor
+        self.trackColor = trackColor
+        self.height = height
+        self.spacing = spacing
+        self.cornerRadius = cornerRadius
+    }
+    
+    public var body: some View {
+        HStack(spacing: spacing) {
+            ForEach(0..<totalSteps, id: \.self) { index in
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(index <= currentStep ? activeColor : trackColor)
+                    .frame(height: height)
+                    .animation(
+                        reduceMotion ? .none : .easeInOut(duration: 0.25),
+                        value: currentStep
+                    )
+            }
+        }
+        .frame(height: height)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Step \(currentStep + 1) of \(totalSteps)"))
+    }
+}
+
 /// Animated capsule page indicator for onboarding carousels with accessibility and reduced motion support.
 public struct OnboardingPageIndicator: View {
     public let totalCount: Int
@@ -50,10 +156,11 @@ public struct OnboardingPageIndicator: View {
     }
 }
 
-/// The master Onboarding shell coordinating slide pages, the animated indicator, and a stable bottom action tray.
+/// The master Onboarding shell coordinating slide pages, the animated indicator / progress bar, and a stable bottom action tray.
 public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: View {
     @Binding public var currentStep: Int
     public let totalSteps: Int
+    public let indicatorStyle: OnboardingIndicatorStyle
     public let backgroundColor: Color
     public let indicatorActiveColor: Color
     public let indicatorInactiveColor: Color
@@ -64,6 +171,7 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
     public init(
         currentStep: Binding<Int>,
         totalSteps: Int,
+        indicatorStyle: OnboardingIndicatorStyle = .dots,
         backgroundColor: Color = Color(.systemBackground),
         indicatorActiveColor: Color = .primary,
         indicatorInactiveColor: Color = Color.primary.opacity(0.2),
@@ -73,6 +181,7 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
     ) {
         self._currentStep = currentStep
         self.totalSteps = totalSteps
+        self.indicatorStyle = indicatorStyle
         self.backgroundColor = backgroundColor
         self.indicatorActiveColor = indicatorActiveColor
         self.indicatorInactiveColor = indicatorInactiveColor
@@ -83,6 +192,7 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
     
     public init(
         coordinator: OnboardingCoordinator,
+        indicatorStyle: OnboardingIndicatorStyle = .dots,
         backgroundColor: Color = Color(.systemBackground),
         indicatorActiveColor: Color = .primary,
         indicatorInactiveColor: Color = Color.primary.opacity(0.2),
@@ -96,6 +206,7 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
                 set: { coordinator.currentStep = $0 }
             ),
             totalSteps: coordinator.totalSteps,
+            indicatorStyle: indicatorStyle,
             backgroundColor: backgroundColor,
             indicatorActiveColor: indicatorActiveColor,
             indicatorInactiveColor: indicatorInactiveColor,
@@ -111,14 +222,48 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
+                // Top Progress Bar (if configured)
+                if totalSteps > 1 {
+                    switch indicatorStyle {
+                    case .progressBar(let height, let cornerRadius):
+                        OnboardingProgressBar(
+                            progress: Double(currentStep + 1) / Double(max(1, totalSteps)),
+                            activeColor: indicatorActiveColor,
+                            trackColor: indicatorInactiveColor,
+                            height: height,
+                            cornerRadius: cornerRadius
+                        )
+                        .padding(.horizontal, 24)
+                        .padding(.top, 8)
+                        .padding(.bottom, 6)
+                        
+                    case .segmentedProgressBar(let height, let spacing, let cornerRadius):
+                        OnboardingSegmentedProgressBar(
+                            totalSteps: totalSteps,
+                            currentStep: currentStep,
+                            activeColor: indicatorActiveColor,
+                            trackColor: indicatorInactiveColor,
+                            height: height,
+                            spacing: spacing,
+                            cornerRadius: cornerRadius
+                        )
+                        .padding(.horizontal, 24)
+                        .padding(.top, 8)
+                        .padding(.bottom, 6)
+                        
+                    case .dots, .none:
+                        EmptyView()
+                    }
+                }
+                
                 // Main Slide Carousel
                 TabView(selection: $currentStep) {
                     slides()
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 
-                // Page Indicator
-                if totalSteps > 1 {
+                // Bottom Page Indicator (if dots style)
+                if totalSteps > 1 && indicatorStyle == .dots {
                     OnboardingPageIndicator(
                         totalCount: totalSteps,
                         currentIndex: currentStep,

@@ -225,4 +225,30 @@ final class OnboardingTests: XCTestCase {
         )
         XCTAssertEqual(outOfBoundsIndicator.currentIndex, 2)
     }
+    
+    func testProgressBarClamping() {
+        let normalBar = OnboardingProgressBar(progress: 0.5)
+        XCTAssertEqual(normalBar.progress, 0.5, accuracy: 0.001)
+        
+        let overBar = OnboardingProgressBar(progress: 1.5)
+        XCTAssertEqual(overBar.progress, 1.0, accuracy: 0.001)
+        
+        let underBar = OnboardingProgressBar(progress: -0.2)
+        XCTAssertEqual(underBar.progress, 0.0, accuracy: 0.001)
+    }
+    
+    func testSegmentedProgressBarClamping() {
+        let segmentedBar = OnboardingSegmentedProgressBar(
+            totalSteps: 5,
+            currentStep: 2
+        )
+        XCTAssertEqual(segmentedBar.totalSteps, 5)
+        XCTAssertEqual(segmentedBar.currentStep, 2)
+        
+        let outOfBoundsSegmented = OnboardingSegmentedProgressBar(
+            totalSteps: 3,
+            currentStep: 10
+        )
+        XCTAssertEqual(outOfBoundsSegmented.currentStep, 2)
+    }
 }

@@ -281,7 +281,9 @@ ReviewPromptManager.shared.requestDirectNativeReview()
 Use the Onboarding system to build multi-step carousel flows with customizable hero cards, animated capsule page indicators, safe action trays, and step coordination.
 
 ##### Components:
-* **`OnboardingContainer`**: Paging shell that wraps slides, provides an animated capsule page indicator, and maintains a stable bottom action tray to prevent layout jumping.
+* **`OnboardingContainer`**: Paging shell that wraps slides, provides configurable top progress bars or animated capsule page indicators (`indicatorStyle: .progressBar`, `.segmentedProgressBar`, `.dots`), and maintains a stable bottom action tray to prevent layout jumping.
+* **`OnboardingProgressBar`**: Continuous smooth progress bar with spring animations and reduced motion accessibility.
+* **`OnboardingSegmentedProgressBar`**: Segmented progress bar reflecting individual steps.
 * **`OnboardingSlideLayout`**: Standard hero card (with custom content & optional trailing badge) paired with a bottom narrative section (Title + Subtitle) and dynamic type accessibility protection.
 * **`OnboardingPrimaryButton`**: Full-width primary CTA button with built-in loading spinner support (`isLoading`).
 * **`OnboardingSecondaryButton`**: Secondary text button for "Skip for now" with built-in translations in English, Spanish, Simplified Chinese, German, and Japanese.
