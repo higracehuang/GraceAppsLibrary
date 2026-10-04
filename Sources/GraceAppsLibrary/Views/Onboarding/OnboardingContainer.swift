@@ -278,7 +278,7 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
                 VStack(spacing: 8) {
                     bottomActions()
                 }
-                .frame(minHeight: bottomTrayHeight > 0 ? bottomTrayHeight : nil, alignment: .top)
+                .frame(height: bottomTrayHeight > 0 ? bottomTrayHeight : nil, alignment: .bottom)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
             }
