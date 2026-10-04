@@ -103,8 +103,10 @@ public struct OnboardingSlideLayout<CardContent: View, TrailingHeader: View>: Vi
             case .titleFirst:
                 // 1. Narrative Section (Title + Subtitle) at top
                 narrativeSection
-                    .padding(.top, 8)
-                    .padding(.bottom, 12)
+                    .padding(.top, 18)
+                    .padding(.bottom, 6)
+                
+                Spacer(minLength: 12)
                 
                 // 2. Content / Card in the center
                 Group {
@@ -118,7 +120,7 @@ public struct OnboardingSlideLayout<CardContent: View, TrailingHeader: View>: Vi
                 }
                 .padding(.horizontal, 20)
                 
-                Spacer(minLength: 8)
+                Spacer(minLength: 16)
                 
             case .contentFirst:
                 Spacer(minLength: 12)
@@ -169,9 +171,11 @@ public struct OnboardingSlideLayout<CardContent: View, TrailingHeader: View>: Vi
             cardContent()
         }
         .padding(cardPadding)
-        .background(cardBackgroundColor)
-        .cornerRadius(cardCornerRadius)
-        .shadow(color: cardShadowColor, radius: cardShadowRadius, x: 0, y: 2)
+        .background(
+            RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
+                .fill(cardBackgroundColor)
+                .shadow(color: cardShadowColor, radius: cardShadowRadius, x: 0, y: 2)
+        )
     }
 }
 

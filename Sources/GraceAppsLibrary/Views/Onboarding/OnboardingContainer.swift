@@ -175,7 +175,7 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
         backgroundColor: Color = Color(.systemBackground),
         indicatorActiveColor: Color = .primary,
         indicatorInactiveColor: Color = Color.primary.opacity(0.2),
-        bottomTrayHeight: CGFloat = 90,
+        bottomTrayHeight: CGFloat = 0,
         @ViewBuilder slides: @escaping () -> SlidesContent,
         @ViewBuilder bottomActions: @escaping () -> BottomContent
     ) {
@@ -196,7 +196,7 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
         backgroundColor: Color = Color(.systemBackground),
         indicatorActiveColor: Color = .primary,
         indicatorInactiveColor: Color = Color.primary.opacity(0.2),
-        bottomTrayHeight: CGFloat = 90,
+        bottomTrayHeight: CGFloat = 0,
         @ViewBuilder slides: @escaping () -> SlidesContent,
         @ViewBuilder bottomActions: @escaping () -> BottomContent
     ) {
@@ -234,8 +234,8 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
                             cornerRadius: cornerRadius
                         )
                         .padding(.horizontal, 24)
-                        .padding(.top, 8)
-                        .padding(.bottom, 6)
+                        .padding(.top, 12)
+                        .padding(.bottom, 12)
                         
                     case .segmentedProgressBar(let height, let spacing, let cornerRadius):
                         OnboardingSegmentedProgressBar(
@@ -248,8 +248,8 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
                             cornerRadius: cornerRadius
                         )
                         .padding(.horizontal, 24)
-                        .padding(.top, 8)
-                        .padding(.bottom, 6)
+                        .padding(.top, 12)
+                        .padding(.bottom, 12)
                         
                     case .dots, .none:
                         EmptyView()
@@ -274,11 +274,11 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
                     .padding(.bottom, 16)
                 }
                 
-                // Bottom Action Tray (with fixed height to prevent layout jumps)
+                // Bottom Action Tray
                 VStack(spacing: 8) {
                     bottomActions()
                 }
-                .frame(minHeight: bottomTrayHeight, alignment: .top)
+                .frame(minHeight: bottomTrayHeight > 0 ? bottomTrayHeight : nil, alignment: .top)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
             }
