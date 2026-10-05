@@ -251,4 +251,61 @@ final class OnboardingTests: XCTestCase {
         )
         XCTAssertEqual(outOfBoundsSegmented.currentStep, 2)
     }
+    
+    // MARK: - OnboardingTracker Tests
+    
+    final class MockAnalyticsProvider: OnboardingAnalyticsProvider, @unchecked Sendable {
+        var recordedEvents: [(event: String, parameters: [String: String])] = []
+        
+        func track(event: String, parameters: [String: String]) {
+            recordedEvents.append((event, parameters))
+        }
+    }
+    
+    func testOnboardingTrackerFlow() {
+        let tracker = OnboardingTracker()
+        let mock = MockAnalyticsProvider()
+        tracker.configure(provider: mock)
+        
+        // 1. Start flow
+        tracker.trackStarted(appVersion: "1.0.0", entryPoint: "first_install")
+        XCTAssertEqual(mock.recordedEvents.count, 1)
+        XCTAssertEqual(mock.recordedEvents.first?.event, "onboarding_started")
+        XCTAssertEqual(mock.recordedEvents.first?.parameters["app_version"], "1.0.0")
+        XCTAssertEqual(mock.recordedEvents.first?.parameters["entry_point"], "first_install")
+        
+        // 2. Step 1 View
+        tracker.trackStepViewed(index: 0, name: "Welcome")
+        XCTAssertEqual(mock.recordedEvents.count, 2)
+        XCTAssertEqual(mock.recordedEvents[1].event, "onboarding_step_viewed")
+        XCTAssertEqual(mock.recordedEvents[1].parameters["step_index"], "0")
+        XCTAssertEqual(mock.recordedEvents[1].parameters["step_name"], "Welcome")
+        
+        // 3. Micro-commitment
+        tracker.trackMicroCommitment(type: "pledge_tapped", value: "daily_brew")
+        XCTAssertEqual(mock.recordedEvents.count, 3)
+        XCTAssertEqual(mock.recordedEvents[2].event, "onboarding_micro_commitment")
+        XCTAssertEqual(mock.recordedEvents[2].parameters["commitment_type"], "pledge_tapped")
+        XCTAssertEqual(mock.recordedEvents[2].parameters["commitment_value"], "daily_brew")
+        
+        // 4. Step 2 Skip
+        tracker.trackStepSkipped(index: 1, name: "Preferences")
+        XCTAssertEqual(mock.recordedEvents.count, 4)
+        XCTAssertEqual(mock.recordedEvents[3].event, "onboarding_step_skipped")
+        XCTAssertEqual(mock.recordedEvents[3].parameters["step_index"], "1")
+        
+        // 5. Paywall View
+        tracker.trackPaywallViewed(source: "onboarding_flow", offeringId: "pro_annual")
+        XCTAssertEqual(mock.recordedEvents.count, 5)
+        XCTAssertEqual(mock.recordedEvents[4].event, "onboarding_paywall_viewed")
+        XCTAssertEqual(mock.recordedEvents[4].parameters["offering_id"], "pro_annual")
+        
+        // 6. Complete
+        tracker.trackCompleted(didPerformAction: true, finalStepIndex: 2)
+        XCTAssertEqual(mock.recordedEvents.count, 6)
+        XCTAssertEqual(mock.recordedEvents[5].event, "onboarding_completed")
+        XCTAssertEqual(mock.recordedEvents[5].parameters["did_perform_action"], "true")
+        XCTAssertEqual(mock.recordedEvents[5].parameters["final_step_index"], "2")
+    }
 }
+
