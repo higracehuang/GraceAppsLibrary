@@ -58,4 +58,16 @@ final class DebugViewsTests: XCTestCase {
         let loaded = await menuView.loadOfferings?()
         XCTAssertEqual(loaded, expectedOfferings)
     }
+    
+    func testDebugSectionView() {
+        let sectionView = DebugSectionView(
+            sectionHeader: "Dev Tools",
+            title: "Debug Options"
+        ) {
+            Text("Section Item")
+        }
+        
+        XCTAssertEqual(sectionView.title, "Debug Options")
+        XCTAssertNil(sectionView.onboardingView)
+    }
 }

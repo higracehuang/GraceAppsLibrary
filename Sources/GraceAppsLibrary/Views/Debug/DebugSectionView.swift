@@ -1,24 +1,18 @@
 import SwiftUI
 
-/// A ready-to-use NavigationLink row for Settings views that pushes `DebugMenuView`.
+/// A self-contained settings Section that houses `DebugNavigationView` and automatically
+/// compiles to `EmptyView()` in Release builds.
 ///
-/// Example without onboarding:
+/// Usage in SettingsView (no `#if DEBUG` needed):
 /// ```swift
-/// #if DEBUG
-/// Section("Developer") {
-///     DebugNavigationView(
-///         unlimitedAccess: $hasPurchasedUnlimitedAccess,
-///         loadOfferings: { await purchaseManager.fetchOfferingIDs() },
-///         onSelectOffering: { offeringId in showPaywall(offeringId) }
-///     ) {
-///         Section("Danger Zone") {
-///             Button("Clear Data") { ... }
-///         }
-///     }
-/// }
-/// #endif
+/// DebugSectionView(
+///     unlimitedAccess: $hasPurchasedUnlimitedAccess,
+///     loadOfferings: { await purchaseManager.fetchOfferingIDs() },
+///     onSelectOffering: { offeringId in showPaywall(offeringId) }
+/// )
 /// ```
-public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>: View {
+public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: View {
+    public let sectionHeader: LocalizedStringKey
     public let title: LocalizedStringKey
     public let systemImage: String
     public let includeReviews: Bool
@@ -32,6 +26,7 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
     public let customContent: CustomContent
 
     public init(
+        sectionHeader: LocalizedStringKey = "Developer",
         title: LocalizedStringKey = "Debug Menu",
         systemImage: String = "ladybug",
         includeReviews: Bool = true,
@@ -44,6 +39,7 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
         onboardingView: (() -> OnboardingContent)? = nil,
         @ViewBuilder customContent: () -> CustomContent = { EmptyView() }
     ) {
+        self.sectionHeader = sectionHeader
         self.title = title
         self.systemImage = systemImage
         self.includeReviews = includeReviews
@@ -59,19 +55,20 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
 
     public var body: some View {
         #if DEBUG
-        NavigationLink(destination: DebugMenuView(
-            navigationTitle: title,
-            includeReviews: includeReviews,
-            unlimitedAccess: unlimitedAccess,
-            tierName: tierName,
-            paywallAction: paywallAction,
-            loadOfferings: loadOfferings,
-            onSelectOffering: onSelectOffering,
-            onboardingStorageKey: onboardingStorageKey,
-            onboardingView: onboardingView,
-            customContent: { customContent }
-        )) {
-            Label(title, systemImage: systemImage)
+        Section(header: Text(sectionHeader)) {
+            DebugNavigationView(
+                title: title,
+                systemImage: systemImage,
+                includeReviews: includeReviews,
+                unlimitedAccess: unlimitedAccess,
+                tierName: tierName,
+                paywallAction: paywallAction,
+                loadOfferings: loadOfferings,
+                onSelectOffering: onSelectOffering,
+                onboardingStorageKey: onboardingStorageKey,
+                onboardingView: onboardingView,
+                customContent: { customContent }
+            )
         }
         #endif
     }
@@ -79,8 +76,9 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
 
 // MARK: - Initializer for Apps Without Onboarding
 
-extension DebugNavigationView where OnboardingContent == EmptyView {
+extension DebugSectionView where OnboardingContent == EmptyView {
     public init(
+        sectionHeader: LocalizedStringKey = "Developer",
         title: LocalizedStringKey = "Debug Menu",
         systemImage: String = "ladybug",
         includeReviews: Bool = true,
@@ -89,9 +87,10 @@ extension DebugNavigationView where OnboardingContent == EmptyView {
         paywallAction: (() -> Void)? = nil,
         loadOfferings: (() async -> [String])? = nil,
         onSelectOffering: ((String?) -> Void)? = nil,
-        @ViewBuilder customContent: @escaping () -> CustomContent = { EmptyView() }
+        @ViewBuilder customContent: () -> CustomContent = { EmptyView() }
     ) {
         self.init(
+            sectionHeader: sectionHeader,
             title: title,
             systemImage: systemImage,
             includeReviews: includeReviews,

@@ -363,38 +363,37 @@ struct AppOnboardingView: View {
 }
 ```
 
-#### 8. Developer Debug Navigation (`DebugNavigationView`)
+#### 8. Developer Debug Section (`DebugSectionView` / `DebugNavigationView`)
 
-GAL provides a drop-in developer & QA debug suite (`DebugNavigationView` and `DebugMenuView`) that standardizes review prompt resetting, paywall entitlement toggling, RevenueCat dynamic offering previewing, and onboarding reset/relaunching.
+GAL provides a drop-in developer & QA debug suite that standardizes review prompt resetting, paywall entitlement toggling, RevenueCat dynamic offering previewing, and onboarding reset/relaunching.
+
+Using `DebugSectionView` automatically handles the `#if DEBUG` condition internally, producing `EmptyView()` in Release builds with zero extra code:
 
 ```swift
-#if DEBUG
-Section("Developer") {
-    DebugNavigationView(
-        unlimitedAccess: $hasPurchasedUnlimitedAccess, // Optional: binds directly to your Pro/Unlimited state
-        tierName: "Unlimited Access",                  // Optional: custom tier name
-        paywallAction: { showPaywall = true },         // Optional: trigger paywall sheet
-        loadOfferings: {                               // Optional: fetch offerings dynamically
-            let offerings = await PurchaseManager.shared.fetchAvailableOfferings()
-            return offerings.map { $0.identifier }
-        },
-        onSelectOffering: { offeringId in              // Optional: test a specific offering's paywall
-            selectedOffering = offeringId
-            showPaywall = true
-        },
-        onboardingView: {                              // Optional: omit if your app has no onboarding!
-            OnboardingView()
-        }
-    ) {
-        // App-specific debug tools (mock data, sister apps, danger zone)
-        Section("Danger Zone") {
-            Button("Clear All Data", role: .destructive) {
-                clearDatabase()
-            }
+// No #if DEBUG needed in your SettingsView!
+DebugSectionView(
+    unlimitedAccess: $hasPurchasedUnlimitedAccess, // Optional: binds directly to your Pro/Unlimited state
+    tierName: "Unlimited Access",                  // Optional: custom tier name
+    paywallAction: { showPaywall = true },         // Optional: trigger paywall sheet
+    loadOfferings: {                               // Optional: fetch offerings dynamically
+        let offerings = await PurchaseManager.shared.fetchAvailableOfferings()
+        return offerings.map { $0.identifier }
+    },
+    onSelectOffering: { offeringId in              // Optional: test a specific offering's paywall
+        selectedOffering = offeringId
+        showPaywall = true
+    },
+    onboardingView: {                              // Optional: omit if your app has no onboarding!
+        OnboardingView()
+    }
+) {
+    // App-specific debug tools (mock data, sister apps, danger zone)
+    Section("Danger Zone") {
+        Button("Clear All Data", role: .destructive) {
+            clearDatabase()
         }
     }
 }
-#endif
 ```
 
 ## Development
