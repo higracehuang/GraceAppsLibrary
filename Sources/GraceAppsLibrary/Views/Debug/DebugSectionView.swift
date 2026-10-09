@@ -17,7 +17,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
     public let systemImage: String
     public let includeReviews: Bool
     public let unlimitedAccess: Binding<Bool>?
-    public let tierName: LocalizedStringKey
+    public let tierName: String
     public let paywallAction: (() -> Void)?
     public let loadOfferings: (() async -> [String])?
     public let onSelectOffering: ((String?) -> Void)?
@@ -31,7 +31,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
         systemImage: String = "ladybug",
         includeReviews: Bool = true,
         unlimitedAccess: Binding<Bool>? = nil,
-        tierName: LocalizedStringKey = "Unlimited Access",
+        tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
         loadOfferings: (() async -> [String])? = nil,
         onSelectOffering: ((String?) -> Void)? = nil,
@@ -83,7 +83,7 @@ extension DebugSectionView where OnboardingContent == EmptyView {
         systemImage: String = "ladybug",
         includeReviews: Bool = true,
         unlimitedAccess: Binding<Bool>? = nil,
-        tierName: LocalizedStringKey = "Unlimited Access",
+        tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
         loadOfferings: (() async -> [String])? = nil,
         onSelectOffering: ((String?) -> Void)? = nil,

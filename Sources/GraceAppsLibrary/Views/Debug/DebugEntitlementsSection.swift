@@ -3,12 +3,12 @@ import SwiftUI
 /// A reusable debug section for viewing and toggling Unlimited Access / Pro entitlements.
 public struct DebugEntitlementsSection: View {
     @Binding public var unlimitedAccess: Bool
-    public let tierName: LocalizedStringKey
+    public let tierName: String
     public let paywallAction: (() -> Void)?
     
     public init(
         unlimitedAccess: Binding<Bool>,
-        tierName: LocalizedStringKey = "Unlimited Access",
+        tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil
     ) {
         self._unlimitedAccess = unlimitedAccess

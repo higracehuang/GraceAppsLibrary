@@ -110,6 +110,17 @@ public class ReviewPromptManager {
         showNativeReviewPrompt()
     }
 
+    /// Directly presents the GAL 2-step review prompt (alert) for testing and QA.
+    public func debugPresentReviewPrompt(onNegativeFeedback: (() -> Void)? = nil) {
+        GraceLogger.info("Debug forced GAL 2-step review prompt presentation.", category: .debug)
+        askForReview(onPositive: showNativeReviewPrompt, onNegative: onNegativeFeedback)
+    }
+
+    /// Static helper to directly present the GAL 2-step review prompt.
+    public static func debugPresentReviewPrompt(onNegativeFeedback: (() -> Void)? = nil) {
+        shared.debugPresentReviewPrompt(onNegativeFeedback: onNegativeFeedback)
+    }
+
     /// Records a positive value moment by string event identifier (defaults to "positive_value_moment").
     /// Prompts for App Store review if the current version has not been prompted yet and no release notes were shown this session.
     /// Never gates app features or provides rewards/incentives for ratings.

@@ -6,7 +6,7 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
     public let navigationTitle: LocalizedStringKey
     public let includeReviews: Bool
     public let unlimitedAccess: Binding<Bool>?
-    public let tierName: LocalizedStringKey
+    public let tierName: String
     public let paywallAction: (() -> Void)?
     public let loadOfferings: (() async -> [String])?
     public let onSelectOffering: ((String?) -> Void)?
@@ -18,7 +18,7 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
         navigationTitle: LocalizedStringKey = "Debug Menu",
         includeReviews: Bool = true,
         unlimitedAccess: Binding<Bool>? = nil,
-        tierName: LocalizedStringKey = "Unlimited Access",
+        tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
         loadOfferings: (() async -> [String])? = nil,
         onSelectOffering: ((String?) -> Void)? = nil,
@@ -85,7 +85,7 @@ extension DebugMenuView where OnboardingContent == EmptyView {
         navigationTitle: LocalizedStringKey = "Debug Menu",
         includeReviews: Bool = true,
         unlimitedAccess: Binding<Bool>? = nil,
-        tierName: LocalizedStringKey = "Unlimited Access",
+        tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
         loadOfferings: (() async -> [String])? = nil,
         onSelectOffering: ((String?) -> Void)? = nil,
