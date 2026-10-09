@@ -1,5 +1,4 @@
 import Foundation
-import TelemetryDeck
 
 /// Defines a provider capable of logging or sending onboarding telemetry events.
 public protocol OnboardingAnalyticsProvider: Sendable {
@@ -7,17 +6,8 @@ public protocol OnboardingAnalyticsProvider: Sendable {
     func track(event: String, parameters: [String: String])
 }
 
-/// Built-in TelemetryDeck provider for Grace Apps.
-public final class TelemetryDeckAnalyticsProvider: OnboardingAnalyticsProvider, Sendable {
-    public init() {}
-    
-    public func track(event: String, parameters: [String: String]) {
-        TelemetryDeck.signal(event, parameters: parameters)
-    }
-}
-
 /// A privacy-first, lightweight telemetry tracker for onboarding funnel metrics.
-/// Supports plugging in TelemetryDeck, local debugging loggers, or other privacy-preserving backends.
+/// Supports plugging in TelemetryDeck, local debugging loggers, or other privacy-preserving backends via `OnboardingAnalyticsProvider`.
 public final class OnboardingTracker: @unchecked Sendable {
     public static let shared = OnboardingTracker()
     
@@ -34,13 +24,6 @@ public final class OnboardingTracker: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         self.provider = provider
-    }
-    
-    /// Convenience initializer to configure TelemetryDeck directly.
-    public func configureWithTelemetryDeck(appID: String) {
-        let config = TelemetryDeck.Config(appID: appID)
-        TelemetryDeck.initialize(config: config)
-        configure(provider: TelemetryDeckAnalyticsProvider())
     }
     
     /// Tracks when the onboarding flow starts.

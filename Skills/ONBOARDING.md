@@ -124,19 +124,30 @@ Grace Apps implements a **100% privacy-preserving, zero-PII event tracking stand
 | `onboarding_paywall_viewed` | `source`, `offering_id`, `total_elapsed_sec` | Tracks bridge between onboarding completion and monetization |
 | `onboarding_completed` | `total_duration_sec`, `did_perform_action`, `final_step_index` | Base metric for funnel completion |
 
-### 2. Built-in TelemetryDeck Integration
+### 2. Analytics Provider Integration
 
-`GraceAppsLibrary` directly bundles `TelemetryDeck`. Any Grace App can initialize it with a single line during app launch:
+`GraceAppsLibrary` is completely dependency-free and uses a pluggable protocol: `OnboardingAnalyticsProvider`.
+If your app uses [TelemetryDeck](https://telemetrydeck.com) (or any other analytics backend), create an adapter and register it during app launch:
 
 ```swift
 import SwiftUI
 import GraceAppsLibrary
+import TelemetryDeck // Add via Swift Package Manager to your app if using telemetry
+
+final class TelemetryDeckAnalyticsProvider: OnboardingAnalyticsProvider, Sendable {
+    func track(event: String, parameters: [String: String]) {
+        TelemetryDeck.signal(event, parameters: parameters)
+    }
+}
 
 @main
 struct YourApp: App {
     init() {
-        // Automatically initializes TelemetryDeck & binds OnboardingTracker
-        OnboardingTracker.shared.configureWithTelemetryDeck(appID: "YOUR-TELEMETRYDECK-APP-ID")
+        // 1. Initialize TelemetryDeck
+        TelemetryDeck.initialize(config: .init(appID: "YOUR-TELEMETRYDECK-APP-ID"))
+        
+        // 2. Bind to OnboardingTracker
+        OnboardingTracker.shared.configure(provider: TelemetryDeckAnalyticsProvider())
     }
     
     var body: some Scene {
@@ -147,7 +158,7 @@ struct YourApp: App {
 }
 ```
 
-*(Optional)* If you wish to use a custom logger or other analytics provider, you can conform to `OnboardingAnalyticsProvider` and call `OnboardingTracker.shared.configure(provider: MyCustomProvider())`.
+If your app does not use analytics (e.g. ChartyBee), no action is required—telemetry events are silently ignored with zero overhead and zero third-party dependencies bundled into your app.
 
 ### 3. Key Conversion Ratios & Target Benchmarks
 
