@@ -365,7 +365,7 @@ struct AppOnboardingView: View {
 
 #### 8. Developer Debug Section (`DebugSectionView` / `DebugNavigationView`)
 
-GAL provides a drop-in developer & QA debug suite that standardizes review prompt resetting, paywall entitlement toggling, RevenueCat dynamic offering previewing, and onboarding reset/relaunching.
+GAL provides a drop-in developer & QA debug suite that standardizes review prompt resetting, paywall entitlement toggling, Light/Dark appearance mode simulation, RevenueCat dynamic offering previewing, and onboarding reset/relaunching.
 
 Using `DebugSectionView` automatically handles the `#if DEBUG` condition internally, producing `EmptyView()` in Release builds with zero extra code:
 

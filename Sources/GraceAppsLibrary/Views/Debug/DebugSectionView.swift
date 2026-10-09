@@ -16,6 +16,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
     public let title: LocalizedStringKey
     public let systemImage: String
     public let includeReviews: Bool
+    public let includeAppearance: Bool
     public let unlimitedAccess: Binding<Bool>?
     public let tierName: String
     public let paywallAction: (() -> Void)?
@@ -30,6 +31,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
         title: LocalizedStringKey = "Debug Menu",
         systemImage: String = "ladybug",
         includeReviews: Bool = true,
+        includeAppearance: Bool = true,
         unlimitedAccess: Binding<Bool>? = nil,
         tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
@@ -43,6 +45,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
         self.title = title
         self.systemImage = systemImage
         self.includeReviews = includeReviews
+        self.includeAppearance = includeAppearance
         self.unlimitedAccess = unlimitedAccess
         self.tierName = tierName
         self.paywallAction = paywallAction
@@ -60,6 +63,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
                 title: title,
                 systemImage: systemImage,
                 includeReviews: includeReviews,
+                includeAppearance: includeAppearance,
                 unlimitedAccess: unlimitedAccess,
                 tierName: tierName,
                 paywallAction: paywallAction,
@@ -82,6 +86,7 @@ extension DebugSectionView where OnboardingContent == EmptyView {
         title: LocalizedStringKey = "Debug Menu",
         systemImage: String = "ladybug",
         includeReviews: Bool = true,
+        includeAppearance: Bool = true,
         unlimitedAccess: Binding<Bool>? = nil,
         tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
@@ -94,6 +99,7 @@ extension DebugSectionView where OnboardingContent == EmptyView {
             title: title,
             systemImage: systemImage,
             includeReviews: includeReviews,
+            includeAppearance: includeAppearance,
             unlimitedAccess: unlimitedAccess,
             tierName: tierName,
             paywallAction: paywallAction,

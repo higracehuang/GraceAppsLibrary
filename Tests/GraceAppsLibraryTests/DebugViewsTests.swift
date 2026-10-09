@@ -68,6 +68,21 @@ final class DebugViewsTests: XCTestCase {
         }
         
         XCTAssertEqual(sectionView.title, "Debug Options")
+        XCTAssertTrue(sectionView.includeAppearance)
         XCTAssertNil(sectionView.onboardingView)
+    }
+
+    @MainActor
+    func testDebugAppearanceManager() {
+        XCTAssertEqual(DebugAppearanceManager.Mode.system.uiUserInterfaceStyle, .unspecified)
+        XCTAssertEqual(DebugAppearanceManager.Mode.light.uiUserInterfaceStyle, .light)
+        XCTAssertEqual(DebugAppearanceManager.Mode.dark.uiUserInterfaceStyle, .dark)
+
+        DebugAppearanceManager.apply(mode: .light)
+        DebugAppearanceManager.apply(mode: .dark)
+        DebugAppearanceManager.apply(mode: .system)
+
+        let section = DebugAppearanceSection()
+        XCTAssertNotNil(section)
     }
 }

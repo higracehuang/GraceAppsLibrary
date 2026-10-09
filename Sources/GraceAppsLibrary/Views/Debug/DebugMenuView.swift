@@ -5,6 +5,7 @@ import SwiftUI
 public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View {
     public let navigationTitle: LocalizedStringKey
     public let includeReviews: Bool
+    public let includeAppearance: Bool
     public let unlimitedAccess: Binding<Bool>?
     public let tierName: String
     public let paywallAction: (() -> Void)?
@@ -17,6 +18,7 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
     public init(
         navigationTitle: LocalizedStringKey = "Debug Menu",
         includeReviews: Bool = true,
+        includeAppearance: Bool = true,
         unlimitedAccess: Binding<Bool>? = nil,
         tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
@@ -28,6 +30,7 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
     ) {
         self.navigationTitle = navigationTitle
         self.includeReviews = includeReviews
+        self.includeAppearance = includeAppearance
         self.unlimitedAccess = unlimitedAccess
         self.tierName = tierName
         self.paywallAction = paywallAction
@@ -57,6 +60,11 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
                 )
             }
 
+            // MARK: - Appearance (Light / Dark Mode)
+            if includeAppearance {
+                DebugAppearanceSection()
+            }
+
             // MARK: - App Reviews
             if includeReviews {
                 DebugReviewPromptSection()
@@ -84,6 +92,7 @@ extension DebugMenuView where OnboardingContent == EmptyView {
     public init(
         navigationTitle: LocalizedStringKey = "Debug Menu",
         includeReviews: Bool = true,
+        includeAppearance: Bool = true,
         unlimitedAccess: Binding<Bool>? = nil,
         tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
@@ -94,6 +103,7 @@ extension DebugMenuView where OnboardingContent == EmptyView {
         self.init(
             navigationTitle: navigationTitle,
             includeReviews: includeReviews,
+            includeAppearance: includeAppearance,
             unlimitedAccess: unlimitedAccess,
             tierName: tierName,
             paywallAction: paywallAction,
