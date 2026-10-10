@@ -2,15 +2,6 @@ import SwiftUI
 
 /// A self-contained settings Section that houses `DebugNavigationView` and automatically
 /// compiles to `EmptyView()` in Release builds.
-///
-/// Usage in SettingsView (no `#if DEBUG` needed):
-/// ```swift
-/// DebugSectionView(
-///     unlimitedAccess: $hasPurchasedUnlimitedAccess,
-///     loadOfferings: { await purchaseManager.fetchOfferingIDs() },
-///     onSelectOffering: { offeringId in showPaywall(offeringId) }
-/// )
-/// ```
 public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: View {
     public let sectionHeader: LocalizedStringKey
     public let title: LocalizedStringKey
@@ -18,6 +9,8 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
     public let includeReviews: Bool
     public let includeAppearance: Bool
     public let includeResetOverrides: Bool
+    public let entitlementOverride: Binding<DebugEntitlementOverride>?
+    public let effectiveIsPro: Bool?
     public let unlimitedAccess: Binding<Bool>?
     public let tierName: String
     public let paywallAction: (() -> Void)?
@@ -35,6 +28,8 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
         includeReviews: Bool = true,
         includeAppearance: Bool = true,
         includeResetOverrides: Bool = true,
+        entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
+        effectiveIsPro: Bool? = nil,
         unlimitedAccess: Binding<Bool>? = nil,
         tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
@@ -51,6 +46,8 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
         self.includeReviews = includeReviews
         self.includeAppearance = includeAppearance
         self.includeResetOverrides = includeResetOverrides
+        self.entitlementOverride = entitlementOverride
+        self.effectiveIsPro = effectiveIsPro
         self.unlimitedAccess = unlimitedAccess
         self.tierName = tierName
         self.paywallAction = paywallAction
@@ -71,6 +68,8 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
                 includeReviews: includeReviews,
                 includeAppearance: includeAppearance,
                 includeResetOverrides: includeResetOverrides,
+                entitlementOverride: entitlementOverride,
+                effectiveIsPro: effectiveIsPro,
                 unlimitedAccess: unlimitedAccess,
                 tierName: tierName,
                 paywallAction: paywallAction,
@@ -96,6 +95,8 @@ extension DebugSectionView where OnboardingContent == EmptyView {
         includeReviews: Bool = true,
         includeAppearance: Bool = true,
         includeResetOverrides: Bool = true,
+        entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
+        effectiveIsPro: Bool? = nil,
         unlimitedAccess: Binding<Bool>? = nil,
         tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
@@ -111,6 +112,8 @@ extension DebugSectionView where OnboardingContent == EmptyView {
             includeReviews: includeReviews,
             includeAppearance: includeAppearance,
             includeResetOverrides: includeResetOverrides,
+            entitlementOverride: entitlementOverride,
+            effectiveIsPro: effectiveIsPro,
             unlimitedAccess: unlimitedAccess,
             tierName: tierName,
             paywallAction: paywallAction,

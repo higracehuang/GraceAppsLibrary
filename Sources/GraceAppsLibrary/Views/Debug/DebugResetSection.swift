@@ -2,6 +2,7 @@ import SwiftUI
 
 /// A reusable debug section for resetting all GAL and app-specific debug overrides to defaults.
 public struct DebugResetSection: View {
+    public let entitlementOverride: Binding<DebugEntitlementOverride>?
     public let unlimitedAccess: Binding<Bool>?
     public let onReset: (() -> Void)?
 
@@ -9,9 +10,11 @@ public struct DebugResetSection: View {
     @State private var showingSuccessAlert = false
 
     public init(
+        entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
         unlimitedAccess: Binding<Bool>? = nil,
         onReset: (() -> Void)? = nil
     ) {
+        self.entitlementOverride = entitlementOverride
         self.unlimitedAccess = unlimitedAccess
         self.onReset = onReset
     }
@@ -49,6 +52,7 @@ public struct DebugResetSection: View {
     }
 
     private func performReset() {
+        entitlementOverride?.wrappedValue = .automatic
         unlimitedAccess?.wrappedValue = false
         DebugAppearanceManager.apply(mode: .system)
         ReviewPromptManager.debugResetReviewState()

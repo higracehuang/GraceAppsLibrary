@@ -13,14 +13,15 @@ final class DebugViewsTests: XCTestCase {
     }
     
     func testDebugNavigationViewWithoutOnboarding() {
-        var unlimited = false
-        let binding = Binding(get: { unlimited }, set: { unlimited = $0 })
+        var override = DebugEntitlementOverride.automatic
+        let binding = Binding(get: { override }, set: { override = $0 })
         
         let navView = DebugNavigationView(
             title: "Dev Tools",
             systemImage: "wrench",
             includeReviews: true,
-            unlimitedAccess: binding,
+            entitlementOverride: binding,
+            effectiveIsPro: true,
             tierName: "Pro Tier"
         ) {
             Text("Custom Dev Section")
@@ -28,6 +29,7 @@ final class DebugViewsTests: XCTestCase {
         
         XCTAssertEqual(navView.systemImage, "wrench")
         XCTAssertEqual(navView.includeReviews, true)
+        XCTAssertEqual(navView.effectiveIsPro, true)
         XCTAssertNil(navView.onboardingView)
     }
     
@@ -87,13 +89,31 @@ final class DebugViewsTests: XCTestCase {
         XCTAssertNotNil(section)
     }
 
+    func testDebugEntitlementsSectionThreeWay() {
+        var override = DebugEntitlementOverride.automatic
+        let binding = Binding(get: { override }, set: { override = $0 })
+
+        let section = DebugEntitlementsSection(
+            override: binding,
+            effectiveIsPro: true,
+            tierName: "Pro Tier"
+        )
+        XCTAssertNotNil(section)
+
+        override = .forcePro
+        XCTAssertEqual(override, .forcePro)
+
+        override = .forceFree
+        XCTAssertEqual(override, .forceFree)
+    }
+
     func testDebugResetSection() {
         var didResetCustom = false
-        var unlimited = true
-        let binding = Binding(get: { unlimited }, set: { unlimited = $0 })
+        var override = DebugEntitlementOverride.forcePro
+        let binding = Binding(get: { override }, set: { override = $0 })
 
         let resetSection = DebugResetSection(
-            unlimitedAccess: binding,
+            entitlementOverride: binding,
             onReset: {
                 didResetCustom = true
             }
@@ -102,7 +122,7 @@ final class DebugViewsTests: XCTestCase {
 
         let menuView = DebugMenuView(
             includeResetOverrides: true,
-            unlimitedAccess: binding,
+            entitlementOverride: binding,
             onResetOverrides: {
                 didResetCustom = true
             }
