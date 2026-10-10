@@ -69,6 +69,7 @@ final class DebugViewsTests: XCTestCase {
         
         XCTAssertEqual(sectionView.title, "Debug Options")
         XCTAssertTrue(sectionView.includeAppearance)
+        XCTAssertTrue(sectionView.includeResetOverrides)
         XCTAssertNil(sectionView.onboardingView)
     }
 
@@ -84,5 +85,31 @@ final class DebugViewsTests: XCTestCase {
 
         let section = DebugAppearanceSection()
         XCTAssertNotNil(section)
+    }
+
+    func testDebugResetSection() {
+        var didResetCustom = false
+        var unlimited = true
+        let binding = Binding(get: { unlimited }, set: { unlimited = $0 })
+
+        let resetSection = DebugResetSection(
+            unlimitedAccess: binding,
+            onReset: {
+                didResetCustom = true
+            }
+        )
+        XCTAssertNotNil(resetSection)
+
+        let menuView = DebugMenuView(
+            includeResetOverrides: true,
+            unlimitedAccess: binding,
+            onResetOverrides: {
+                didResetCustom = true
+            }
+        )
+        XCTAssertTrue(menuView.includeResetOverrides)
+        XCTAssertNotNil(menuView.onResetOverrides)
+        menuView.onResetOverrides?()
+        XCTAssertTrue(didResetCustom)
     }
 }

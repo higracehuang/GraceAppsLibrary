@@ -385,6 +385,10 @@ DebugSectionView(
     },
     onboardingView: {                              // Optional: omit if your app has no onboarding!
         OnboardingView()
+    },
+    onResetOverrides: {                            // Optional: reset custom app-specific debug flags
+        hasDismissedBanner = false
+        simulateZeroData = false
     }
 ) {
     // App-specific debug tools (mock data, sister apps, danger zone)

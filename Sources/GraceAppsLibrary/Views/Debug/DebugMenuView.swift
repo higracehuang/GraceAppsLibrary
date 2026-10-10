@@ -6,6 +6,7 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
     public let navigationTitle: LocalizedStringKey
     public let includeReviews: Bool
     public let includeAppearance: Bool
+    public let includeResetOverrides: Bool
     public let unlimitedAccess: Binding<Bool>?
     public let tierName: String
     public let paywallAction: (() -> Void)?
@@ -13,12 +14,14 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
     public let onSelectOffering: ((String?) -> Void)?
     public let onboardingStorageKey: String
     public let onboardingView: (() -> OnboardingContent)?
+    public let onResetOverrides: (() -> Void)?
     public let customContent: CustomContent
 
     public init(
         navigationTitle: LocalizedStringKey = "Debug Menu",
         includeReviews: Bool = true,
         includeAppearance: Bool = true,
+        includeResetOverrides: Bool = true,
         unlimitedAccess: Binding<Bool>? = nil,
         tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
@@ -26,11 +29,13 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
         onSelectOffering: ((String?) -> Void)? = nil,
         onboardingStorageKey: String = OnboardingManager.defaultStorageKey,
         onboardingView: (() -> OnboardingContent)? = nil,
+        onResetOverrides: (() -> Void)? = nil,
         @ViewBuilder customContent: () -> CustomContent = { EmptyView() }
     ) {
         self.navigationTitle = navigationTitle
         self.includeReviews = includeReviews
         self.includeAppearance = includeAppearance
+        self.includeResetOverrides = includeResetOverrides
         self.unlimitedAccess = unlimitedAccess
         self.tierName = tierName
         self.paywallAction = paywallAction
@@ -38,6 +43,7 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
         self.onSelectOffering = onSelectOffering
         self.onboardingStorageKey = onboardingStorageKey
         self.onboardingView = onboardingView
+        self.onResetOverrides = onResetOverrides
         self.customContent = customContent()
     }
 
@@ -80,6 +86,14 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
 
             // MARK: - App-Specific Custom Content
             customContent
+
+            // MARK: - Reset All Overrides
+            if includeResetOverrides {
+                DebugResetSection(
+                    unlimitedAccess: unlimitedAccess,
+                    onReset: onResetOverrides
+                )
+            }
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -93,17 +107,20 @@ extension DebugMenuView where OnboardingContent == EmptyView {
         navigationTitle: LocalizedStringKey = "Debug Menu",
         includeReviews: Bool = true,
         includeAppearance: Bool = true,
+        includeResetOverrides: Bool = true,
         unlimitedAccess: Binding<Bool>? = nil,
         tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
         loadOfferings: (() async -> [String])? = nil,
         onSelectOffering: ((String?) -> Void)? = nil,
+        onResetOverrides: (() -> Void)? = nil,
         @ViewBuilder customContent: @escaping () -> CustomContent = { EmptyView() }
     ) {
         self.init(
             navigationTitle: navigationTitle,
             includeReviews: includeReviews,
             includeAppearance: includeAppearance,
+            includeResetOverrides: includeResetOverrides,
             unlimitedAccess: unlimitedAccess,
             tierName: tierName,
             paywallAction: paywallAction,
@@ -111,6 +128,7 @@ extension DebugMenuView where OnboardingContent == EmptyView {
             onSelectOffering: onSelectOffering,
             onboardingStorageKey: OnboardingManager.defaultStorageKey,
             onboardingView: nil,
+            onResetOverrides: onResetOverrides,
             customContent: customContent
         )
     }

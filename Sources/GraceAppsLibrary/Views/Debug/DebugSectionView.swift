@@ -17,6 +17,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
     public let systemImage: String
     public let includeReviews: Bool
     public let includeAppearance: Bool
+    public let includeResetOverrides: Bool
     public let unlimitedAccess: Binding<Bool>?
     public let tierName: String
     public let paywallAction: (() -> Void)?
@@ -24,6 +25,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
     public let onSelectOffering: ((String?) -> Void)?
     public let onboardingStorageKey: String
     public let onboardingView: (() -> OnboardingContent)?
+    public let onResetOverrides: (() -> Void)?
     public let customContent: CustomContent
 
     public init(
@@ -32,6 +34,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
         systemImage: String = "ladybug",
         includeReviews: Bool = true,
         includeAppearance: Bool = true,
+        includeResetOverrides: Bool = true,
         unlimitedAccess: Binding<Bool>? = nil,
         tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
@@ -39,6 +42,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
         onSelectOffering: ((String?) -> Void)? = nil,
         onboardingStorageKey: String = OnboardingManager.defaultStorageKey,
         onboardingView: (() -> OnboardingContent)? = nil,
+        onResetOverrides: (() -> Void)? = nil,
         @ViewBuilder customContent: () -> CustomContent = { EmptyView() }
     ) {
         self.sectionHeader = sectionHeader
@@ -46,6 +50,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
         self.systemImage = systemImage
         self.includeReviews = includeReviews
         self.includeAppearance = includeAppearance
+        self.includeResetOverrides = includeResetOverrides
         self.unlimitedAccess = unlimitedAccess
         self.tierName = tierName
         self.paywallAction = paywallAction
@@ -53,6 +58,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
         self.onSelectOffering = onSelectOffering
         self.onboardingStorageKey = onboardingStorageKey
         self.onboardingView = onboardingView
+        self.onResetOverrides = onResetOverrides
         self.customContent = customContent()
     }
 
@@ -64,6 +70,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
                 systemImage: systemImage,
                 includeReviews: includeReviews,
                 includeAppearance: includeAppearance,
+                includeResetOverrides: includeResetOverrides,
                 unlimitedAccess: unlimitedAccess,
                 tierName: tierName,
                 paywallAction: paywallAction,
@@ -71,6 +78,7 @@ public struct DebugSectionView<CustomContent: View, OnboardingContent: View>: Vi
                 onSelectOffering: onSelectOffering,
                 onboardingStorageKey: onboardingStorageKey,
                 onboardingView: onboardingView,
+                onResetOverrides: onResetOverrides,
                 customContent: { customContent }
             )
         }
@@ -87,11 +95,13 @@ extension DebugSectionView where OnboardingContent == EmptyView {
         systemImage: String = "ladybug",
         includeReviews: Bool = true,
         includeAppearance: Bool = true,
+        includeResetOverrides: Bool = true,
         unlimitedAccess: Binding<Bool>? = nil,
         tierName: String = "Unlimited Access",
         paywallAction: (() -> Void)? = nil,
         loadOfferings: (() async -> [String])? = nil,
         onSelectOffering: ((String?) -> Void)? = nil,
+        onResetOverrides: (() -> Void)? = nil,
         @ViewBuilder customContent: () -> CustomContent = { EmptyView() }
     ) {
         self.init(
@@ -100,6 +110,7 @@ extension DebugSectionView where OnboardingContent == EmptyView {
             systemImage: systemImage,
             includeReviews: includeReviews,
             includeAppearance: includeAppearance,
+            includeResetOverrides: includeResetOverrides,
             unlimitedAccess: unlimitedAccess,
             tierName: tierName,
             paywallAction: paywallAction,
@@ -107,6 +118,7 @@ extension DebugSectionView where OnboardingContent == EmptyView {
             onSelectOffering: onSelectOffering,
             onboardingStorageKey: OnboardingManager.defaultStorageKey,
             onboardingView: nil,
+            onResetOverrides: onResetOverrides,
             customContent: customContent
         )
     }
