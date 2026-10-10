@@ -410,3 +410,18 @@ python3 scripts/check_translations.py
 ```
 
 This check is also automatically performed when running `scripts/build.sh`.
+
+### Track Apps Using GAL & Their Versions
+To see all applications in your workspace using GraceAppsLibrary, their pinned versions, SPM dependency requirements, and update status relative to the latest release:
+
+```bash
+python3 scripts/list_apps_using_gal.py
+```
+
+Options:
+- `--md` / `--markdown`: Format output as GitHub-flavored Markdown.
+- `--output <FILE>`: Save output directly to a file (e.g. `APPS_USING_GAL.md`).
+- `--outdated`: Show only apps behind the latest release.
+- `--json` / `-j`: Output structured JSON for automation.
+- `--dir <PATH>` / `-d <PATH>`: Scan a custom directory instead of sibling projects.
+
