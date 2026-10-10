@@ -7,6 +7,29 @@ public enum DebugEntitlementOverride: String, CaseIterable, Identifiable {
     case forceFree = "Force Free"
 
     public var id: String { rawValue }
+
+    /// Resolves the effective pro/unlimited entitlement status based on this override and the actual store/cache status.
+    /// In DEBUG builds: applies `.forcePro` (true), `.forceFree` (false), or falls back to `storeStatus` (`.automatic`).
+    /// In non-DEBUG (Release) builds: always returns `storeStatus`.
+    public func resolve(storeStatus: Bool) -> Bool {
+        #if DEBUG
+        switch self {
+        case .forcePro:
+            return true
+        case .forceFree:
+            return false
+        case .automatic:
+            return storeStatus
+        }
+        #else
+        return storeStatus
+        #endif
+    }
+
+    /// Helper to resolve effective status when the override may be nil or optional.
+    public static func resolve(override: DebugEntitlementOverride?, storeStatus: Bool) -> Bool {
+        override?.resolve(storeStatus: storeStatus) ?? storeStatus
+    }
 }
 
 /// A reusable debug section for viewing and toggling Unlimited Access / Pro entitlements.

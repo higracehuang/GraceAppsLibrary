@@ -107,6 +107,22 @@ final class DebugViewsTests: XCTestCase {
         XCTAssertEqual(override, .forceFree)
     }
 
+    func testDebugEntitlementOverrideResolve() {
+        XCTAssertEqual(DebugEntitlementOverride.automatic.resolve(storeStatus: true), true)
+        XCTAssertEqual(DebugEntitlementOverride.automatic.resolve(storeStatus: false), false)
+
+        XCTAssertEqual(DebugEntitlementOverride.forcePro.resolve(storeStatus: false), true)
+        XCTAssertEqual(DebugEntitlementOverride.forcePro.resolve(storeStatus: true), true)
+
+        XCTAssertEqual(DebugEntitlementOverride.forceFree.resolve(storeStatus: true), false)
+        XCTAssertEqual(DebugEntitlementOverride.forceFree.resolve(storeStatus: false), false)
+
+        XCTAssertEqual(DebugEntitlementOverride.resolve(override: nil, storeStatus: true), true)
+        XCTAssertEqual(DebugEntitlementOverride.resolve(override: nil, storeStatus: false), false)
+        XCTAssertEqual(DebugEntitlementOverride.resolve(override: .forcePro, storeStatus: false), true)
+        XCTAssertEqual(DebugEntitlementOverride.resolve(override: .forceFree, storeStatus: true), false)
+    }
+
     func testDebugResetSection() {
         var didResetCustom = false
         var override = DebugEntitlementOverride.forcePro
