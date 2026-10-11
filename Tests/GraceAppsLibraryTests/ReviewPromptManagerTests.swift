@@ -183,4 +183,33 @@ final class ReviewPromptManagerTests: XCTestCase {
             }
         }
     }
+
+    func testRequestDirectReviewIfEligible() {
+        let manager = ReviewPromptManager.shared
+
+        // 1. Below threshold -> false
+        let belowThreshold = manager.requestDirectReviewIfEligible(currentCount: 1, threshold: 2, delay: 0)
+        XCTAssertFalse(belowThreshold)
+
+        // 2. Modal is presented -> false
+        let modalPresented = manager.requestDirectReviewIfEligible(currentCount: 2, threshold: 2, isModalPresented: true, delay: 0)
+        XCTAssertFalse(modalPresented)
+
+        // 3. Release notes presented -> false
+        ReleaseNotesManager.hasShownReleaseNotesThisSession = true
+        let releaseNotesShown = manager.requestDirectReviewIfEligible(currentCount: 2, threshold: 2, delay: 0)
+        XCTAssertFalse(releaseNotesShown)
+        ReleaseNotesManager.hasShownReleaseNotesThisSession = false
+
+        // 4. Eligible -> true
+        let eligible = manager.requestDirectReviewIfEligible(currentCount: 2, threshold: 2, delay: 0)
+        XCTAssertTrue(eligible)
+
+        // 5. Once version is prompted -> false
+        let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        UserDefaults.standard.set(currentVersion, forKey: lastVersionKey)
+        let alreadyPrompted = manager.requestDirectReviewIfEligible(currentCount: 5, threshold: 2, delay: 0)
+        XCTAssertFalse(alreadyPrompted)
+    }
 }
+

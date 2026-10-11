@@ -110,6 +110,66 @@ public class ReviewPromptManager {
         showNativeReviewPrompt()
     }
 
+    /// Evaluates eligibility and presents direct native StoreKit review prompt after a short delay.
+    ///
+    /// - Parameters:
+    ///   - currentCount: The current count of positive engagements or data points.
+    ///   - threshold: Target threshold count to qualify (defaults to 2).
+    ///   - isModalPresented: Optional flag to suppress prompting if a modal (e.g. paywall) is currently visible.
+    ///   - delay: Seconds to delay before presenting StoreKit prompt to allow transitions to settle (default is 0.6s).
+    @discardableResult
+    public func requestDirectReviewIfEligible(
+        currentCount: Int,
+        threshold: Int = 2,
+        isModalPresented: Bool = false,
+        delay: Double = 0.6
+    ) -> Bool {
+        guard !isModalPresented else {
+            GraceLogger.info("Direct review skipped: modal is currently presented.", category: .review)
+            return false
+        }
+        guard !ReleaseNotesManager.hasShownReleaseNotesThisSession else {
+            GraceLogger.info("Direct review skipped: release notes already shown this session.", category: .review)
+            return false
+        }
+        guard !hasPromptYet() else {
+            GraceLogger.info("Direct review skipped: current version already prompted.", category: .review)
+            return false
+        }
+        guard currentCount >= threshold else {
+            GraceLogger.info("Direct review skipped: count (\(currentCount)) below threshold (\(threshold)).", category: .review)
+            return false
+        }
+
+        GraceLogger.success("Direct review eligible (count=\(currentCount), threshold=\(threshold)). Scheduling in \(delay)s...", category: .review)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self else { return }
+            guard !self.hasPromptYet() else { return }
+            guard !ReleaseNotesManager.hasShownReleaseNotesThisSession else { return }
+
+            self.requestDirectNativeReview()
+        }
+
+        return true
+    }
+
+    /// Static helper to evaluate eligibility and present direct native StoreKit review prompt.
+    @discardableResult
+    public static func requestDirectReviewIfEligible(
+        currentCount: Int,
+        threshold: Int = 2,
+        isModalPresented: Bool = false,
+        delay: Double = 0.6
+    ) -> Bool {
+        shared.requestDirectReviewIfEligible(
+            currentCount: currentCount,
+            threshold: threshold,
+            isModalPresented: isModalPresented,
+            delay: delay
+        )
+    }
+
     /// Directly presents the GAL 2-step review prompt (alert) for testing and QA.
     public func debugPresentReviewPrompt(onNegativeFeedback: (() -> Void)? = nil) {
         GraceLogger.info("Debug forced GAL 2-step review prompt presentation.", category: .debug)
