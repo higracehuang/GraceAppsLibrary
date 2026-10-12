@@ -101,13 +101,17 @@ public class ReleaseNotesManager {
     }
     
     /// Resets the release notes viewed state in UserDefaults (for debug / testing).
+    @MainActor
     public func resetReleaseNotesState() {
         GraceLogger.info("Resetting release notes state.", category: .debug)
+        Self.hasShownReleaseNotesThisSession = false
         userDefaults.removeObject(forKey: lastViewedVersionKey)
     }
     
     /// Static helper to reset release notes state in standard UserDefaults.
+    @MainActor
     public static func debugResetReleaseNotesState(userDefaults: UserDefaults = .standard) {
+        hasShownReleaseNotesThisSession = false
         userDefaults.removeObject(forKey: "GraceAppsLibrary_LastViewedReleaseNotesVersion")
     }
 }

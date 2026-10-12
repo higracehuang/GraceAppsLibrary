@@ -114,6 +114,7 @@ final class ReleaseNotesTests: XCTestCase {
         XCTAssertFalse(manager.shouldShowReleaseNotes(currentVersion: "2.0.0", releaseNotes: []))
     }
     
+    @MainActor
     func testResetReleaseNotesState() {
         manager.markAsViewed(version: "1.0.0")
         XCTAssertFalse(manager.isFirstInstall)

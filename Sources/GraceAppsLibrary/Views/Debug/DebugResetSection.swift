@@ -8,6 +8,7 @@ public struct DebugResetSection: View {
 
     @State private var showingConfirmation = false
     @State private var showingSuccessAlert = false
+    @State private var showingReleaseNotesResetAlert = false
 
     public init(
         entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
@@ -21,8 +22,15 @@ public struct DebugResetSection: View {
 
     public var body: some View {
         Section(
-            footer: Text("Restores all entitlements, appearance, review counters, and app-specific debug overrides to default behavior.")
+            footer: Text("Restores all entitlements, appearance, review counters, release notes, and app-specific debug overrides to default behavior.")
         ) {
+            Button {
+                ReleaseNotesManager.shared.resetReleaseNotesState()
+                showingReleaseNotesResetAlert = true
+            } label: {
+                Label("Reset Release Notes State", systemImage: "sparkles")
+            }
+
             Button(action: {
                 showingConfirmation = true
             }) {
@@ -33,7 +41,7 @@ public struct DebugResetSection: View {
         .actionSheet(isPresented: $showingConfirmation) {
             ActionSheet(
                 title: Text("Reset All Overrides?"),
-                message: Text("All subscription, appearance, review counters, and custom debug overrides will be reset to defaults."),
+                message: Text("All subscription, appearance, review counters, release notes, and custom debug overrides will be reset to defaults."),
                 buttons: [
                     .destructive(Text("Reset to Defaults")) {
                         performReset()
@@ -49,6 +57,13 @@ public struct DebugResetSection: View {
                 dismissButton: .default(Text("OK"))
             )
         }
+        .alert(isPresented: $showingReleaseNotesResetAlert) {
+            Alert(
+                title: Text("Release Notes Reset"),
+                message: Text("Release notes viewed history and session state have been cleared."),
+                dismissButton: .default(Text("OK"))
+            )
+        }
     }
 
     private func performReset() {
@@ -56,6 +71,7 @@ public struct DebugResetSection: View {
         unlimitedAccess?.wrappedValue = false
         DebugAppearanceManager.apply(mode: .system)
         ReviewPromptManager.debugResetReviewState()
+        ReleaseNotesManager.shared.resetReleaseNotesState()
         onReset?()
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         showingSuccessAlert = true
