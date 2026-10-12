@@ -108,10 +108,4 @@ public class ReleaseNotesManager {
         userDefaults.removeObject(forKey: lastViewedVersionKey)
     }
     
-    /// Static helper to reset release notes state in standard UserDefaults.
-    @MainActor
-    public static func debugResetReleaseNotesState(userDefaults: UserDefaults = .standard) {
-        hasShownReleaseNotesThisSession = false
-        userDefaults.removeObject(forKey: "GraceAppsLibrary_LastViewedReleaseNotesVersion")
-    }
 }

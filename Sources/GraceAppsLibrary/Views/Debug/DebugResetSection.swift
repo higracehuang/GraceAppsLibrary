@@ -4,6 +4,7 @@ import SwiftUI
 public struct DebugResetSection: View {
     public let entitlementOverride: Binding<DebugEntitlementOverride>?
     public let unlimitedAccess: Binding<Bool>?
+    public let includeReleaseNotes: Bool
     public let onReset: (() -> Void)?
 
     @State private var showingConfirmation = false
@@ -13,22 +14,26 @@ public struct DebugResetSection: View {
     public init(
         entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
         unlimitedAccess: Binding<Bool>? = nil,
+        includeReleaseNotes: Bool = true,
         onReset: (() -> Void)? = nil
     ) {
         self.entitlementOverride = entitlementOverride
         self.unlimitedAccess = unlimitedAccess
+        self.includeReleaseNotes = includeReleaseNotes
         self.onReset = onReset
     }
 
     public var body: some View {
         Section(
-            footer: Text("Restores all entitlements, appearance, review counters, release notes, and app-specific debug overrides to default behavior.")
+            footer: Text(includeReleaseNotes ? "Restores all entitlements, appearance, review counters, release notes, and app-specific debug overrides to default behavior." : "Restores all entitlements, appearance, review counters, and app-specific debug overrides to default behavior.")
         ) {
-            Button {
-                ReleaseNotesManager.shared.resetReleaseNotesState()
-                showingReleaseNotesResetAlert = true
-            } label: {
-                Label("Reset Release Notes State", systemImage: "sparkles")
+            if includeReleaseNotes {
+                Button {
+                    ReleaseNotesManager.shared.resetReleaseNotesState()
+                    showingReleaseNotesResetAlert = true
+                } label: {
+                    Label("Reset Release Notes State", systemImage: "sparkles")
+                }
             }
 
             Button(action: {
@@ -41,7 +46,7 @@ public struct DebugResetSection: View {
         .actionSheet(isPresented: $showingConfirmation) {
             ActionSheet(
                 title: Text("Reset All Overrides?"),
-                message: Text("All subscription, appearance, review counters, release notes, and custom debug overrides will be reset to defaults."),
+                message: Text(includeReleaseNotes ? "All subscription, appearance, review counters, release notes, and custom debug overrides will be reset to defaults." : "All subscription, appearance, review counters, and custom debug overrides will be reset to defaults."),
                 buttons: [
                     .destructive(Text("Reset to Defaults")) {
                         performReset()
