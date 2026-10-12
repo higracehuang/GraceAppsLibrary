@@ -7,6 +7,7 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
     public let includeReviews: Bool
     public let includeAppearance: Bool
     public let includeReleaseNotes: Bool
+    public let releaseNotes: [ReleaseNote]?
     public let includeResetOverrides: Bool
     public let entitlementOverride: Binding<DebugEntitlementOverride>?
     public let effectiveIsPro: Bool?
@@ -25,6 +26,7 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
         includeReviews: Bool = true,
         includeAppearance: Bool = true,
         includeReleaseNotes: Bool = true,
+        releaseNotes: [ReleaseNote]? = nil,
         includeResetOverrides: Bool = true,
         entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
         effectiveIsPro: Bool? = nil,
@@ -42,6 +44,7 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
         self.includeReviews = includeReviews
         self.includeAppearance = includeAppearance
         self.includeReleaseNotes = includeReleaseNotes
+        self.releaseNotes = releaseNotes
         self.includeResetOverrides = includeResetOverrides
         self.entitlementOverride = entitlementOverride
         self.effectiveIsPro = effectiveIsPro
@@ -92,6 +95,16 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
                 DebugReviewPromptSection()
             }
 
+            // MARK: - Release Notes
+            if includeReleaseNotes {
+                DebugReleaseNotesSection(
+                    releaseNotes: releaseNotes,
+                    isPaidUser: effectiveIsPro ?? unlimitedAccess?.wrappedValue ?? false,
+                    tierName: LocalizedStringKey(tierName),
+                    paywallAction: paywallAction
+                )
+            }
+
             // MARK: - Onboarding
             if let onboardingView = onboardingView {
                 DebugOnboardingSection(
@@ -108,7 +121,6 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
                 DebugResetSection(
                     entitlementOverride: entitlementOverride,
                     unlimitedAccess: unlimitedAccess,
-                    includeReleaseNotes: includeReleaseNotes,
                     onReset: onResetOverrides
                 )
             }
@@ -126,6 +138,7 @@ extension DebugMenuView where OnboardingContent == EmptyView {
         includeReviews: Bool = true,
         includeAppearance: Bool = true,
         includeReleaseNotes: Bool = true,
+        releaseNotes: [ReleaseNote]? = nil,
         includeResetOverrides: Bool = true,
         entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
         effectiveIsPro: Bool? = nil,
@@ -142,6 +155,7 @@ extension DebugMenuView where OnboardingContent == EmptyView {
             includeReviews: includeReviews,
             includeAppearance: includeAppearance,
             includeReleaseNotes: includeReleaseNotes,
+            releaseNotes: releaseNotes,
             includeResetOverrides: includeResetOverrides,
             entitlementOverride: entitlementOverride,
             effectiveIsPro: effectiveIsPro,

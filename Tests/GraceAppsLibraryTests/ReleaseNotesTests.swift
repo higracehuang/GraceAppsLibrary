@@ -409,4 +409,18 @@ final class ReleaseNotesTests: XCTestCase {
         )
         XCTAssertNotNil(paidUserView.body)
     }
+    
+    @MainActor
+    func testDebugReleaseNotesSectionBodyRendering() {
+        let section = DebugReleaseNotesSection(releaseNotes: [])
+        XCTAssertNotNil(section.body)
+        
+        let sectionWithNotes = DebugReleaseNotesSection(
+            releaseNotes: [ReleaseNote(version: "1.0.0", notes: ["New"])],
+            isPaidUser: true,
+            tierName: "Pro Tier",
+            paywallAction: {}
+        )
+        XCTAssertNotNil(sectionWithNotes.body)
+    }
 }

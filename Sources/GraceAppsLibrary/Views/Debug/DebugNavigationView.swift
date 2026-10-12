@@ -7,6 +7,7 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
     public let includeReviews: Bool
     public let includeAppearance: Bool
     public let includeReleaseNotes: Bool
+    public let releaseNotes: [ReleaseNote]?
     public let includeResetOverrides: Bool
     public let entitlementOverride: Binding<DebugEntitlementOverride>?
     public let effectiveIsPro: Bool?
@@ -26,6 +27,7 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
         includeReviews: Bool = true,
         includeAppearance: Bool = true,
         includeReleaseNotes: Bool = true,
+        releaseNotes: [ReleaseNote]? = nil,
         includeResetOverrides: Bool = true,
         entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
         effectiveIsPro: Bool? = nil,
@@ -44,6 +46,7 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
         self.includeReviews = includeReviews
         self.includeAppearance = includeAppearance
         self.includeReleaseNotes = includeReleaseNotes
+        self.releaseNotes = releaseNotes
         self.includeResetOverrides = includeResetOverrides
         self.entitlementOverride = entitlementOverride
         self.effectiveIsPro = effectiveIsPro
@@ -65,6 +68,7 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
             includeReviews: includeReviews,
             includeAppearance: includeAppearance,
             includeReleaseNotes: includeReleaseNotes,
+            releaseNotes: releaseNotes,
             includeResetOverrides: includeResetOverrides,
             entitlementOverride: entitlementOverride,
             effectiveIsPro: effectiveIsPro,
@@ -93,6 +97,7 @@ extension DebugNavigationView where OnboardingContent == EmptyView {
         includeReviews: Bool = true,
         includeAppearance: Bool = true,
         includeReleaseNotes: Bool = true,
+        releaseNotes: [ReleaseNote]? = nil,
         includeResetOverrides: Bool = true,
         entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
         effectiveIsPro: Bool? = nil,
@@ -110,6 +115,7 @@ extension DebugNavigationView where OnboardingContent == EmptyView {
             includeReviews: includeReviews,
             includeAppearance: includeAppearance,
             includeReleaseNotes: includeReleaseNotes,
+            releaseNotes: releaseNotes,
             includeResetOverrides: includeResetOverrides,
             entitlementOverride: entitlementOverride,
             effectiveIsPro: effectiveIsPro,
