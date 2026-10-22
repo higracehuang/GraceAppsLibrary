@@ -158,7 +158,7 @@ final class ReviewPromptManagerTests: XCTestCase {
     }
     
     func testAllLanguagesHaveReviewPromptKeys() {
-        let locales = ["en", "de", "ja", "zh-Hans", "es"]
+        let locales = ["en", "de", "ja", "zh-Hans", "es", "fr"]
         let reviewKeys = [
             Constants.StringKeys.reviewPromptTitleFormat,
             Constants.StringKeys.reviewPromptMessage,

@@ -78,6 +78,13 @@ final class GraceAppsLibraryTests: XCTestCase {
         XCTAssertTrue(tallyCoin.localizedDescription(for: esLocale).contains("registro de las tareas del hogar y las recompensas"))
         XCTAssertEqual(chartyBee.localizedName(for: esLocale), "ChartyBee")
         XCTAssertTrue(chartyBee.localizedDescription(for: esLocale).contains("pequeña app para llevar un registro"))
+
+        // Test French
+        let frLocale = Locale(identifier: "fr")
+        XCTAssertEqual(tallyCoin.localizedName(for: frLocale), "TallyCoin")
+        XCTAssertTrue(tallyCoin.localizedDescription(for: frLocale).contains("suivre les corvées et les récompenses"))
+        XCTAssertEqual(chartyBee.localizedName(for: frLocale), "ChartyBee")
+        XCTAssertTrue(chartyBee.localizedDescription(for: frLocale).contains("petits riens du quotidien"))
         
         // Test Dial In Espresso
         let dialInEspresso = try XCTUnwrap(apps.first { $0.appId == "id6752831404" })
@@ -85,6 +92,8 @@ final class GraceAppsLibraryTests: XCTestCase {
         XCTAssertTrue(dialInEspresso.localizedDescription(for: deLocale).contains("Einfache App"))
         XCTAssertEqual(dialInEspresso.localizedName(for: esLocale), "Dial In Espresso")
         XCTAssertTrue(dialInEspresso.localizedDescription(for: esLocale).contains("granos y extracciones"))
+        XCTAssertEqual(dialInEspresso.localizedName(for: frLocale), "Dial In Espresso")
+        XCTAssertTrue(dialInEspresso.localizedDescription(for: frLocale).contains("grains et vos expressos"))
         
         // Test Dial In Pourovers
         let dialInPourOver = try XCTUnwrap(apps.first { $0.appId == "id6812539084" })
@@ -92,11 +101,13 @@ final class GraceAppsLibraryTests: XCTestCase {
         XCTAssertTrue(dialInPourOver.localizedDescription(for: deLocale).contains("Brühjournal"))
         XCTAssertEqual(dialInPourOver.localizedName(for: esLocale), "Dial In Pourovers")
         XCTAssertTrue(dialInPourOver.localizedDescription(for: esLocale).contains("Diario privado"))
+        XCTAssertEqual(dialInPourOver.localizedName(for: frLocale), "Dial In Pourovers")
+        XCTAssertTrue(dialInPourOver.localizedDescription(for: frLocale).contains("Carnet d'infusion privé"))
     }
     
     func testAllAppsHaveAllLocalizations() {
         let apps = GraceAppsManager.getAllApps()
-        let locales = ["en", "de", "ja", "zh-Hans", "es"]
+        let locales = ["en", "de", "ja", "zh-Hans", "es", "fr"]
         
         let sharedKeys = [
             Constants.StringKeys.feedbackMessage,

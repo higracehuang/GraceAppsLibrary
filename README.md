@@ -1,6 +1,6 @@
 # GraceAppsLibrary
 
-A Swift package that provides information about Grace Apps' iOS applications, including names, descriptions, and App Store links. Supports multiple languages including English, Japanese, Simplified Chinese, and German.
+A Swift package that provides information about Grace Apps' iOS applications, including names, descriptions, and App Store links. Supports multiple languages including English, Japanese, Simplified Chinese, German, Spanish, and French.
 
 ## Features
 
@@ -286,7 +286,7 @@ Use the Onboarding system to build multi-step carousel flows with customizable h
 * **`OnboardingSegmentedProgressBar`**: Segmented progress bar reflecting individual steps.
 * **`OnboardingSlideLayout`**: Standard hero card (with custom content & optional trailing badge) paired with a bottom narrative section (Title + Subtitle) and dynamic type accessibility protection.
 * **`OnboardingPrimaryButton`**: Full-width primary CTA button with built-in loading spinner support (`isLoading`).
-* **`OnboardingSecondaryButton`**: Secondary text button for "Skip for now" with built-in translations in English, Spanish, Simplified Chinese, German, and Japanese.
+* **`OnboardingSecondaryButton`**: Secondary text button for "Skip for now" with built-in translations in English, Spanish, French, Simplified Chinese, German, and Japanese.
 * **`OnboardingCoordinator`**: Step coordinator tracking `currentStep`, `totalSteps`, `progress`, navigation (`next()`, `previous()`, `goTo()`, `skip()`, `complete()`), and lifecycle callbacks (`onStepChange`, `onComplete`, `onSkip`).
 * **`OnboardingManager`**: Persistence and version-based onboarding presentation checker (`shouldShowOnboarding(forVersion:)`).
 
@@ -410,4 +410,7 @@ python3 scripts/check_translations.py
 ```
 
 This check is also automatically performed when running `scripts/build.sh`.
+
+### Versioning
+See [VERSIONING.md](VERSIONING.md) for semantic versioning rules and release conventions.
 

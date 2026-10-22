@@ -1,0 +1,83 @@
+"app.name.tallycoin" = "TallyCoin";
+"app.description.tallycoin" = "L'application idéale pour suivre les corvées et les récompenses, pensée pour toute la famille.";
+
+"app.name.readingclock" = "ReadingClock";
+"app.description.readingclock" = "Application simple pour suivre votre temps de lecture quotidien et votre progression.";
+
+"app.name.stemcards" = "Stem Cards";
+"app.description.stemcards" = "Un moyen simple et amusant d'apprendre les racines, préfixes et suffixes de mots en anglais.";
+
+"app.name.quizmeai" = "QuizMe.AI";
+"app.description.quizmeai" = "Application de quiz avec IA qui vous permet de créer des quiz sur n'importe quel sujet à partir de n'importe quel contenu.";
+
+"app.name.localspeaks" = "LocalSpeaks";
+"app.description.localspeaks" = "Guide de conversation pour apprendre et pratiquer des expressions authentiques dans plusieurs langues. Idéal pour les voyageurs et les apprenants.";
+
+"app.name.itemizeai" = "Itemize AI";
+"app.description.itemizeai" = "Application alimentée par l'IA qui analyse tout texte, en extrait les points clés et le résume pour vous. Conçue pour les lecteurs visuels.";
+
+"app.name.snapprogress" = "SnapProgress";
+"app.description.snapprogress" = "Un moyen visuel de suivre vos progrès en photos.";
+
+"label.new" = "NOUVEAU";
+"label.get" = "OBTENIR";
+
+"app.name.stitchtally" = "StitchTally";
+"app.description.stitchtally" = "Un moyen simple de suivre vos projets de tricot et de crochet.";
+
+"app.name.chartybee" = "ChartyBee";
+"app.description.chartybee" = "Petite application de suivi pour consigner les petits riens du quotidien : pages lues, cafés bus ou qualité du sommeil.";
+
+"app.name.dialinespresso" = "Dial In Espresso";
+"app.description.dialinespresso" = "Application simple pour suivre vos grains et vos expressos. Consignez, expérimentez et ajustez pour réussir chaque tasse.";
+
+"app.name.fastinglady" = "FastingLady";
+"app.description.fastinglady" = "Suivi de jeûne simple conçu pour les femmes, pour jeûner en harmonie avec son cycle menstruel.";
+
+"app.name.herweigh" = "HerWeigh";
+"app.description.herweigh" = "Suivi de poids simple pour les femmes, qui prend en compte le cycle menstruel.";
+
+"app.name.dialinpourover" = "Dial In Pourovers";
+"app.description.dialinpourover" = "Carnet d'infusion privé pour consigner chaque paramètre, reproduire vos meilleures recettes et perfectionner chaque tasse.";
+
+"feedback.message" = "J'aimerais beaucoup connaître votre avis sincère ! Qu'il s'agisse d'une idée de fonctionnalité, d'un bug ou simplement pour me dire ce qui fonctionne (ou pas) — vos retours m'aident à m'améliorer. Écrivez-moi à :";
+"feedback.appreciation" = "Merci de m'aider à m'améliorer ! ❤️";
+"feedback.signature" = "Grace";
+"feedback.title" = "Partager votre avis";
+
+"other.apps.by.grace" = "Autres applications de Grace";
+"other.apps.built.by.grace" = "Autres applications créées par Grace";
+"apps.introduction" = "Inspirée par le quotidien, Grace crée des applications simples qu'elle et ses proches utilisent et aiment vraiment. Voici ses applications :";
+"feedback.footnote" = "J'aimerais beaucoup avoir votre avis, positif ou négatif ! Contactez-moi à %@";
+"faq.title" = "FAQ";
+"legal.section" = "Mentions légales";
+"legal.privacy_policy" = "Politique de confidentialité";
+"legal.terms_of_use" = "Conditions d'utilisation";
+
+"release_notes.title" = "Nouveautés";
+"release_notes.version_prefix" = "Version";
+"release_notes.tier_prefix" = "Inclus avec";
+"release_notes.tier_suffix" = "";
+"release_notes.upgrade_to %@" = "Passer à %@";
+
+"about.section.title" = "À propos de %@";
+"about.version" = "Version";
+"about.rate_this_app" = "Laisser un avis";
+"about.share_this_app" = "Partager cette application";
+"about.app_fallback" = "Application";
+"settings.language" = "Langue";
+
+"support.section.title" = "Aide et assistance";
+"support.sources_references" = "Sources et références";
+"support.disclaimer" = "Avertissement";
+
+"developer.section.title" = "À propos de la développeuse";
+
+/* Solicit Review */
+"Are you enjoying %@?" = "Appréciez-vous %@ ?";
+"Tell us what you think" = "Donnez-nous votre avis";
+"Yes, I am 🥰" = "Oui, beaucoup 🥰";
+"Not really" = "Pas vraiment";
+"Leave a Rating" = "Laisser un avis";
+
+"onboarding.skip" = "Passer pour l'instant";
