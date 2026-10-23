@@ -79,10 +79,10 @@ public enum StandardScreenshotPreset: String, CaseIterable, Identifiable, Screen
     public var targetTabIndex: Int? {
         switch self {
         case .slot1Benefit: return 0
-        case .slot2Feature: return 2
-        case .slot3SecondFeature: return 1
-        case .slot4Result, .slot4Celebration: return 2
-        case .slot5Customization, .slot5Settings: return 3
+        case .slot2Feature: return 1
+        case .slot3SecondFeature: return 2
+        case .slot4Result, .slot4Celebration: return 3
+        case .slot5Customization, .slot5Settings: return 4
         }
     }
 

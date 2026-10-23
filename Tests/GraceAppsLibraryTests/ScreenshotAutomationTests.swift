@@ -135,9 +135,10 @@ final class ScreenshotAutomationTests: XCTestCase {
         XCTAssertEqual(StandardScreenshotPreset.from(token: "4b"), .slot4Celebration)
         XCTAssertEqual(StandardScreenshotPreset.from(token: "celebration"), .slot4Celebration)
         XCTAssertEqual(StandardScreenshotPreset.slot1Benefit.targetTabIndex, 0)
-        XCTAssertEqual(StandardScreenshotPreset.slot3SecondFeature.targetTabIndex, 1)
-        XCTAssertEqual(StandardScreenshotPreset.slot2Feature.targetTabIndex, 2)
-        XCTAssertEqual(StandardScreenshotPreset.slot5Settings.targetTabIndex, 3)
+        XCTAssertEqual(StandardScreenshotPreset.slot2Feature.targetTabIndex, 1)
+        XCTAssertEqual(StandardScreenshotPreset.slot3SecondFeature.targetTabIndex, 2)
+        XCTAssertEqual(StandardScreenshotPreset.slot4Result.targetTabIndex, 3)
+        XCTAssertEqual(StandardScreenshotPreset.slot5Settings.targetTabIndex, 4)
     }
 
     @MainActor
@@ -159,8 +160,11 @@ final class ScreenshotAutomationTests: XCTestCase {
 
         var selectedTab = 0
         let binding = SwiftUI.Binding(get: { selectedTab }, set: { selectedTab = $0 })
+        engine.tabIndexForPreset = { preset in
+            preset == .slot2Feature ? 99 : nil
+        }
         engine.handleAppLaunch(selectedTab: binding)
-        XCTAssertEqual(selectedTab, 2)
+        XCTAssertEqual(selectedTab, 99)
 
         engine.reset()
         XCTAssertTrue(resetCalled)

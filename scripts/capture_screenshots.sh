@@ -116,17 +116,21 @@ find_simulator() {
 }
 
 if [[ -z "${IPHONE_UDID}" ]]; then
-  IPHONE_UDID=$(find_simulator "iPhone 17 Pro \(")
-  if [[ -z "${IPHONE_UDID}" ]]; then
-    IPHONE_UDID=$(find_simulator "iPhone 16 Pro \(")
-  fi
+  for search in "iPhone 17 Pro \(" "iPhone 16 Pro \(" "iPhone 15 Pro \(" "iPhone Pro" "iPhone"; do
+    IPHONE_UDID=$(find_simulator "${search}")
+    if [[ -n "${IPHONE_UDID}" ]]; then
+      break
+    fi
+  done
 fi
 
 if [[ -z "${IPAD_UDID}" ]]; then
-  IPAD_UDID=$(find_simulator "iPad mini \(A17 Pro\)")
-  if [[ -z "${IPAD_UDID}" ]]; then
-    IPAD_UDID=$(find_simulator "iPad Pro")
-  fi
+  for search in "iPad mini \(A17 Pro\)" "iPad mini" "iPad Pro" "iPad"; do
+    IPAD_UDID=$(find_simulator "${search}")
+    if [[ -n "${IPAD_UDID}" ]]; then
+      break
+    fi
+  done
 fi
 
 # Supported languages: CODE|FOLDER_NAME|APPLE_LANG|APPLE_LOCALE
@@ -291,7 +295,7 @@ try:
         print('waiting')
 except Exception:
     print('ready')
-" "${out_file}")
+" "${out_file}" 2>/dev/null || echo "ready")
 
         if [[ "${is_ready}" == "ready" ]]; then
           break

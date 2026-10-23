@@ -51,6 +51,11 @@ public struct DebugScreenshotSection<Preset: ScreenshotPresetProvider>: View {
                     Text(lang.displayName).tag(lang)
                 }
             }
+            .onChange(of: engine.selectedLanguage) { _ in
+                if let active = engine.activePreset {
+                    applyPreset(active)
+                }
+            }
 
             // MARK: - Current Status
             if let active = engine.activePreset {
@@ -86,8 +91,12 @@ public struct DebugScreenshotSection<Preset: ScreenshotPresetProvider>: View {
 
                 if engine.activePreset != nil {
                     Button(action: {
-                        engine.reset()
-                        onReset?()
+                        if let onReset = onReset {
+                            engine.activePreset = nil
+                            onReset()
+                        } else {
+                            engine.reset()
+                        }
                     }) {
                         Text("Reset")
                             .foregroundColor(.red)
@@ -98,7 +107,11 @@ public struct DebugScreenshotSection<Preset: ScreenshotPresetProvider>: View {
     }
 
     private func applyPreset(_ preset: Preset) {
-        engine.apply(preset: preset)
-        onApplyPreset?(preset)
+        if let onApplyPreset = onApplyPreset {
+            engine.activePreset = preset
+            onApplyPreset(preset)
+        } else {
+            engine.apply(preset: preset)
+        }
     }
 }

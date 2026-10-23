@@ -32,6 +32,9 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
     /// Optional closure callback invoked when the screenshot preset is reset.
     open var onReset: (() -> Void)?
 
+    /// Optional closure mapping a preset to a root tab index. Overrides preset.targetTabIndex if non-nil.
+    open var tabIndexForPreset: ((Preset) -> Int?)?
+
     public init(
         arguments: [String] = ProcessInfo.processInfo.arguments,
         environment: [String: String] = ProcessInfo.processInfo.environment
@@ -54,11 +57,16 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
         selectedLanguage.resolved
     }
 
-    /// Automatically switches the selected tab if the active preset defines a `targetTabIndex`.
-    open func handleAppLaunch(selectedTab: Binding<Int>? = nil) {
+    /// Automatically switches the selected tab if the active preset defines a `targetTabIndex`,
+    /// and invokes `apply(preset:)` if `autoApply` is true.
+    open func handleAppLaunch(selectedTab: Binding<Int>? = nil, autoApply: Bool = true) {
         guard let preset = activePreset else { return }
-        if let targetTab = preset.targetTabIndex {
+        let targetTab = tabIndexForPreset?(preset) ?? preset.targetTabIndex
+        if let targetTab = targetTab {
             selectedTab?.wrappedValue = targetTab
+        }
+        if autoApply {
+            apply(preset: preset)
         }
     }
 
