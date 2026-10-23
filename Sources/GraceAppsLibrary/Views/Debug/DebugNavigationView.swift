@@ -18,6 +18,7 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
     public let onSelectOffering: ((String?) -> Void)?
     public let onboardingStorageKey: String
     public let onboardingView: (() -> OnboardingContent)?
+    public let screenshotSection: (() -> AnyView)?
     public let onResetOverrides: (() -> Void)?
     public let customContent: CustomContent
 
@@ -38,6 +39,7 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
         onSelectOffering: ((String?) -> Void)? = nil,
         onboardingStorageKey: String = OnboardingManager.defaultStorageKey,
         onboardingView: (() -> OnboardingContent)? = nil,
+        screenshotSection: (() -> AnyView)? = nil,
         onResetOverrides: (() -> Void)? = nil,
         @ViewBuilder customContent: () -> CustomContent = { EmptyView() }
     ) {
@@ -57,8 +59,63 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
         self.onSelectOffering = onSelectOffering
         self.onboardingStorageKey = onboardingStorageKey
         self.onboardingView = onboardingView
+        self.screenshotSection = screenshotSection
         self.onResetOverrides = onResetOverrides
         self.customContent = customContent()
+    }
+
+    public init<Preset: ScreenshotPresetProvider>(
+        title: LocalizedStringKey = "Debug Menu",
+        systemImage: String = "ladybug",
+        includeReviews: Bool = true,
+        includeAppearance: Bool = true,
+        includeReleaseNotes: Bool = true,
+        releaseNotes: [ReleaseNote]? = nil,
+        includeResetOverrides: Bool = true,
+        entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
+        effectiveIsPro: Bool? = nil,
+        unlimitedAccess: Binding<Bool>? = nil,
+        tierName: String = "Unlimited Access",
+        paywallAction: (() -> Void)? = nil,
+        loadOfferings: (() async -> [String])? = nil,
+        onSelectOffering: ((String?) -> Void)? = nil,
+        onboardingStorageKey: String = OnboardingManager.defaultStorageKey,
+        onboardingView: (() -> OnboardingContent)? = nil,
+        screenshotEngine: ScreenshotEngine<Preset>,
+        onApplyScreenshotPreset: ((Preset) -> Void)? = nil,
+        onResetScreenshotPreset: (() -> Void)? = nil,
+        onResetOverrides: (() -> Void)? = nil,
+        @ViewBuilder customContent: () -> CustomContent = { EmptyView() }
+    ) {
+        self.init(
+            title: title,
+            systemImage: systemImage,
+            includeReviews: includeReviews,
+            includeAppearance: includeAppearance,
+            includeReleaseNotes: includeReleaseNotes,
+            releaseNotes: releaseNotes,
+            includeResetOverrides: includeResetOverrides,
+            entitlementOverride: entitlementOverride,
+            effectiveIsPro: effectiveIsPro,
+            unlimitedAccess: unlimitedAccess,
+            tierName: tierName,
+            paywallAction: paywallAction,
+            loadOfferings: loadOfferings,
+            onSelectOffering: onSelectOffering,
+            onboardingStorageKey: onboardingStorageKey,
+            onboardingView: onboardingView,
+            screenshotSection: {
+                AnyView(
+                    DebugScreenshotSection(
+                        engine: screenshotEngine,
+                        onApplyPreset: onApplyScreenshotPreset,
+                        onReset: onResetScreenshotPreset
+                    )
+                )
+            },
+            onResetOverrides: onResetOverrides,
+            customContent: customContent
+        )
     }
 
     public var body: some View {
@@ -79,6 +136,7 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
             onSelectOffering: onSelectOffering,
             onboardingStorageKey: onboardingStorageKey,
             onboardingView: onboardingView,
+            screenshotSection: screenshotSection,
             onResetOverrides: onResetOverrides,
             customContent: { customContent }
         )) {
@@ -106,6 +164,7 @@ extension DebugNavigationView where OnboardingContent == EmptyView {
         paywallAction: (() -> Void)? = nil,
         loadOfferings: (() async -> [String])? = nil,
         onSelectOffering: ((String?) -> Void)? = nil,
+        screenshotSection: (() -> AnyView)? = nil,
         onResetOverrides: (() -> Void)? = nil,
         @ViewBuilder customContent: @escaping () -> CustomContent = { EmptyView() }
     ) {
@@ -126,6 +185,53 @@ extension DebugNavigationView where OnboardingContent == EmptyView {
             onSelectOffering: onSelectOffering,
             onboardingStorageKey: OnboardingManager.defaultStorageKey,
             onboardingView: nil,
+            screenshotSection: screenshotSection,
+            onResetOverrides: onResetOverrides,
+            customContent: customContent
+        )
+    }
+
+    public init<Preset: ScreenshotPresetProvider>(
+        title: LocalizedStringKey = "Debug Menu",
+        systemImage: String = "ladybug",
+        includeReviews: Bool = true,
+        includeAppearance: Bool = true,
+        includeReleaseNotes: Bool = true,
+        releaseNotes: [ReleaseNote]? = nil,
+        includeResetOverrides: Bool = true,
+        entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
+        effectiveIsPro: Bool? = nil,
+        unlimitedAccess: Binding<Bool>? = nil,
+        tierName: String = "Unlimited Access",
+        paywallAction: (() -> Void)? = nil,
+        loadOfferings: (() async -> [String])? = nil,
+        onSelectOffering: ((String?) -> Void)? = nil,
+        screenshotEngine: ScreenshotEngine<Preset>,
+        onApplyScreenshotPreset: ((Preset) -> Void)? = nil,
+        onResetScreenshotPreset: (() -> Void)? = nil,
+        onResetOverrides: (() -> Void)? = nil,
+        @ViewBuilder customContent: @escaping () -> CustomContent = { EmptyView() }
+    ) {
+        self.init(
+            title: title,
+            systemImage: systemImage,
+            includeReviews: includeReviews,
+            includeAppearance: includeAppearance,
+            includeReleaseNotes: includeReleaseNotes,
+            releaseNotes: releaseNotes,
+            includeResetOverrides: includeResetOverrides,
+            entitlementOverride: entitlementOverride,
+            effectiveIsPro: effectiveIsPro,
+            unlimitedAccess: unlimitedAccess,
+            tierName: tierName,
+            paywallAction: paywallAction,
+            loadOfferings: loadOfferings,
+            onSelectOffering: onSelectOffering,
+            onboardingStorageKey: OnboardingManager.defaultStorageKey,
+            onboardingView: nil,
+            screenshotEngine: screenshotEngine,
+            onApplyScreenshotPreset: onApplyScreenshotPreset,
+            onResetScreenshotPreset: onResetScreenshotPreset,
             onResetOverrides: onResetOverrides,
             customContent: customContent
         )
