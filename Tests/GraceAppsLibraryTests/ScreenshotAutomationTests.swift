@@ -114,4 +114,16 @@ final class ScreenshotAutomationTests: XCTestCase {
         XCTAssertFalse(engine.isScreenshotCaptureActive)
         XCTAssertNil(engine.activePreset)
     }
+
+    @MainActor
+    func testDebugMenuViewWithScreenshotEngine() {
+        let engine = ScreenshotEngine<MockPreset>(arguments: [], environment: [:])
+        let menu = DebugMenuView(
+            screenshotEngine: engine,
+            onApplyScreenshotPreset: { _ in },
+            onResetScreenshotPreset: { }
+        )
+
+        XCTAssertNotNil(menu.screenshotSection)
+    }
 }

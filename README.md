@@ -401,44 +401,232 @@ DebugSectionView(
 }
 ```
 
-#### 10. Automated App Store Screenshots
+#### 10. Automated App Store Screenshots & Marketing Presets
 
-GraceAppsLibrary provides an end-to-end framework and CLI runner for generating localized App Store screenshots across iPhone and iPad with zero blank splash screens:
+GraceAppsLibrary provides an end-to-end framework and CLI runner for generating localized, marketing-ready App Store screenshots across iPhone and iPad with zero blank splash screens and automatic Pro entitlement overrides.
+
+##### Architecture & Components
+- **`ScreenshotPresetProvider`**: Protocol defining your app's marketing presets (slot label, headline, suggested filename, system icon, CLI token parser).
+- **`ScreenshotLanguage`**: Multi-language registry (`en`, `zh`, `de`, `es`, `ja`, `fr`, `auto`) resolving Apple locale codes and folder naming conventions.
+- **`ScreenshotEngine<Preset>`**: `@MainActor` base manager that parses launch arguments (`-SCREENSHOT_PRESET`, `-SCREENSHOT_LANG`), manages active presets, forces Pro entitlement override, and coordinates mock data seeding.
+- **`DebugScreenshotSection`**: SwiftUI view section for previewing and testing presets inside the app.
+- **`DebugMenuView` Integration**: Directly embeds screenshot preset testing as a first-class section inside `DebugMenuView`.
+- **`scripts/capture_screenshots.sh`**: Universal simulator capture runner with bundle ID auto-discovery, simulator focus, cold-launch process cooldown, and Vision frame-variance splash-screen verification.
+
+##### Step-by-Step Implementation
+
+###### Step 1: Define Your App's Screenshot Presets
+Conform an enum to `ScreenshotPresetProvider`:
 
 ```swift
 import GraceAppsLibrary
 
-// 1. Define presets conforming to ScreenshotPresetProvider
-public enum AppScreenshotPreset: String, ScreenshotPresetProvider {
+public enum AppScreenshotPreset: String, CaseIterable, ScreenshotPresetProvider {
     case benefit = "1"
     case feature = "2"
+    case historyNotes = "3"
+    case calendar = "4"
     case celebration = "4b"
+    case customGoals = "5"
+    case settingsOverview = "5b"
 
-    public var slotLabel: String { ... }
-    public var title: String { ... }
-    public var suggestedFilename: String { ... }
-    public var systemImage: String { ... }
+    public var id: String { rawValue }
+
+    public var slotLabel: String {
+        switch self {
+        case .benefit: return "Slot #1 • Main Benefit"
+        case .feature: return "Slot #2 • Top Feature"
+        case .historyNotes: return "Slot #3 • Second Feature"
+        case .calendar: return "Slot #4A • Consistency Calendar"
+        case .celebration: return "Slot #4B • Streak Celebration"
+        case .customGoals: return "Slot #5A • Differentiator (Custom Goals)"
+        case .settingsOverview: return "Slot #5B • Settings Overview"
+        }
+    }
+
+    public var title: String {
+        switch self {
+        case .benefit: return "Active Timer (Goal Met)"
+        case .feature: return "Dashboard & Weekly Trends"
+        case .historyNotes: return "Reading History & Notes"
+        case .calendar: return "Monthly Calendar & Badges"
+        case .celebration: return "30-Day Milestone Celebration"
+        case .customGoals: return "Custom Daily Goals Screen"
+        case .settingsOverview: return "Settings & Pro Overview"
+        }
+    }
+
+    public var suggestedFilename: String {
+        switch self {
+        case .benefit: return "01 - Reading Timer Goal Met"
+        case .feature: return "02 - Reading Streak and Weekly Chart"
+        case .historyNotes: return "03 - Reading History and Book Notes"
+        case .calendar: return "04A - Monthly Calendar and Milestones"
+        case .celebration: return "04B - 30-Day Streak Celebration"
+        case .customGoals: return "05A - Custom Daily Reading Goals"
+        case .settingsOverview: return "05B - Settings and Pro Overview"
+        }
+    }
+
+    public var systemImage: String {
+        switch self {
+        case .benefit: return "timer"
+        case .feature: return "chart.bar.xaxis"
+        case .historyNotes: return "note.text"
+        case .calendar: return "calendar"
+        case .celebration: return "trophy.fill"
+        case .customGoals: return "slider.horizontal.3"
+        case .settingsOverview: return "gearshape.fill"
+        }
+    }
+
+    public static func from(token: String) -> AppScreenshotPreset? {
+        let normalized = token.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch normalized {
+        case "1", "timer", "benefit": return .benefit
+        case "2", "dashboard", "feature": return .feature
+        case "3", "history", "notes": return .historyNotes
+        case "4", "4a", "calendar": return .calendar
+        case "4b", "celebration": return .celebration
+        case "5", "5a", "goals": return .customGoals
+        case "5b", "settings": return .settingsOverview
+        default: return nil
+        }
+    }
 }
+```
 
-// 2. Instantiate or subclass ScreenshotEngine
+###### Step 2: Subclass or Initialize `ScreenshotEngine`
+Create a manager that overrides `apply(preset:)` to seed mock CoreData / UserDefaults and switch tabs:
+
+```swift
 @MainActor
 final class AppScreenshotManager: ScreenshotEngine<AppScreenshotPreset> {
     static let shared = AppScreenshotManager()
+
+    @Published var shouldNavigateToDailyGoal = false
+    @Published var shouldSelectTodayInCalendar = false
+
+    override func apply(preset: AppScreenshotPreset) {
+        super.apply(preset: preset) // Automatically forces Pro entitlement override
+
+        let lang = effectiveLanguage
+        
+        // 1. Seed milestones/flags BEFORE seeding CoreData items
+        UserDefaults.standard.set(["streak-7", "streak-30"], forKey: "unlocked_milestones")
+
+        // 2. Seed mock CoreData items
+        seedMockData(for: preset, language: lang)
+
+        // 3. Coordinate navigation
+        switch preset {
+        case .benefit:
+            NotificationCenter.default.post(name: .switchToTab, object: 0)
+        case .feature:
+            NotificationCenter.default.post(name: .switchToTab, object: 1)
+        case .calendar:
+            shouldSelectTodayInCalendar = true
+            NotificationCenter.default.post(name: .switchToTab, object: 1)
+        case .celebration:
+            NotificationCenter.default.post(name: .switchToTab, object: 1)
+            triggerCelebrationModal()
+        case .customGoals:
+            shouldNavigateToDailyGoal = true
+            NotificationCenter.default.post(name: .switchToTab, object: 2)
+        case .settingsOverview:
+            shouldNavigateToDailyGoal = false
+            NotificationCenter.default.post(name: .switchToTab, object: 2)
+        }
+    }
+
+    func handleAppLaunch(selectedTab: Binding<Int>) {
+        guard let preset = activePreset else { return }
+        switch preset {
+        case .benefit: selectedTab.wrappedValue = 0
+        case .feature, .calendar, .celebration: selectedTab.wrappedValue = 1
+        case .customGoals, .settingsOverview: selectedTab.wrappedValue = 2
+        case .historyNotes: selectedTab.wrappedValue = 3
+        }
+        apply(preset: preset)
+    }
 }
-
-// 3. Optional: Add DebugScreenshotSection into DebugMenuView
-DebugScreenshotSection(engine: AppScreenshotManager.shared)
 ```
 
-**Running Automated Captures via CLI**:
+###### Step 3: Embed Directly in `DebugMenuView`
+`DebugMenuView` includes built-in support for `screenshotEngine`. Simply pass your engine to the initializer:
+
+```swift
+DebugMenuView(
+    entitlementOverride: $debugOverride,
+    screenshotEngine: AppScreenshotManager.shared,
+    onApplyScreenshotPreset: { preset in
+        AppScreenshotManager.shared.apply(preset: preset)
+    },
+    onResetScreenshotPreset: {
+        AppScreenshotManager.shared.reset()
+    }
+)
+```
+
+Alternatively, you can embed [`DebugScreenshotSection`](file:///Users/lehuang/Projects/apps/GraceAppsLibrary/Sources/GraceAppsLibrary/Views/Debug/DebugScreenshotSection.swift) standalone in any custom debug view:
+
+```swift
+DebugScreenshotSection(
+    engine: AppScreenshotManager.shared,
+    onApplyPreset: { preset in
+        AppScreenshotManager.shared.apply(preset: preset)
+    }
+)
+```
+
+###### Step 4: Handle App Cold-Launch
+In your root `ContentView` or App struct, check for launch arguments when launched by the CLI runner:
+
+```swift
+#if DEBUG
+.onAppear {
+    AppScreenshotManager.shared.handleAppLaunch(selectedTab: $selectedTab)
+}
+#endif
+```
+
+###### Step 5: Automate Simulator Captures via CLI
+Run the universal runner script from `GraceAppsLibrary/scripts/capture_screenshots.sh`:
+
 ```bash
+# Capture iPhone only for all languages
 ./scripts/capture_screenshots.sh \
-  --bundle "com.yourcompany.app" \
-  --presets "1|01 - Benefit.png,2|02 - Feature.png" \
-  --languages "en,zh,de,es,ja"
+  --bundle "com.deelightfullabs.ReadingLog" \
+  --presets "1|01 - Timer.png,2|02 - Dashboard.png,4A|04A - Calendar.png,4B|04B - Celebration.png,5A|05A - Goals.png,5B|05B - Settings.png" \
+  --iphone-only
+
+# Capture specific language
+./scripts/capture_screenshots.sh \
+  --bundle "com.deelightfullabs.ReadingLog" \
+  --lang zh
 ```
 
-The script boots the simulator, launches each preset, uses an automated Vision OCR / frame-variance retry loop to verify the view has fully rendered past the splash screen, and saves verified 2x marketing screenshots in `Screenshots/Raw/<Device>/<Language>/`.
+###### Delegating from Client Apps
+In your app's repository, create a lightweight runner script (e.g. `Scripts/capture_screenshots.sh`) that resolves GAL from SPM checkouts or local checkouts:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PROJECT_NAME="$(basename "${ROOT_DIR}")"
+
+# Find GAL runner in DerivedData SPM checkouts or sibling checkout
+RUNNER=$(find ~/Library/Developer/Xcode/DerivedData -maxdepth 7 -path "*/SourcePackages/checkouts/GraceAppsLibrary/scripts/capture_screenshots.sh" 2>/dev/null | head -n 1 || true)
+if [[ -z "${RUNNER}" && -f "${ROOT_DIR}/../GraceAppsLibrary/scripts/capture_screenshots.sh" ]]; then
+  RUNNER="${ROOT_DIR}/../GraceAppsLibrary/scripts/capture_screenshots.sh"
+fi
+
+exec bash "${RUNNER}" \
+  --bundle "com.yourcompany.app" \
+  --output-dir "${ROOT_DIR}/Screenshots/Raw" \
+  "$@"
+```
 
 ## Development
 

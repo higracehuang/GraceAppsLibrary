@@ -225,8 +225,9 @@ capture_device() {
 
       echo "  📸 Capturing preset [${preset_id}] -> ${filename}..."
 
-      # Terminate any running instance
+      # Terminate any running instance and wait for process cleanup
       xcrun simctl terminate "${udid}" "${BUNDLE_ID}" 2>/dev/null || true
+      sleep 1.0
 
       # Launch with screenshot preset and language override
       xcrun simctl launch "${udid}" "${BUNDLE_ID}" \
@@ -256,9 +257,9 @@ try:
     bot_std = arr[-200:-50, :].std()
     top_std = arr[60:180, :].std()
     # Launch screen has <= 1800 colors and solid uniform top & bottom areas
-    if colors > 2500 and (bot_std > 2.0 or top_std > 2.0 or '${preset_id}' == '4b'):
+    if colors > 2000 and (bot_std > 2.0 or top_std > 2.0 or '${preset_id}' == '4b'):
         print('ready')
-    elif colors > 3500:
+    elif colors > 3000:
         print('ready')
     else:
         print('waiting')
