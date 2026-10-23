@@ -7,13 +7,16 @@
 
 import Foundation
 import SwiftUI
+#if canImport(CoreData)
+import CoreData
+#endif
 
 /// Base coordinator engine for App Store screenshot automation and in-app QA preview.
 ///
 /// Subclass or instantiate inside your app's debug setup:
 /// ```swift
 /// @MainActor
-/// final class AppScreenshotManager: ScreenshotEngine<AppScreenshotPreset> {
+/// final class AppScreenshotManager: ScreenshotEngine<StandardScreenshotPreset> {
 ///     static let shared = AppScreenshotManager()
 /// }
 /// ```
@@ -22,6 +25,12 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
 
     @Published open var activePreset: Preset?
     @Published open var selectedLanguage: ScreenshotLanguage = .auto
+
+    /// Optional closure callback invoked when a preset is applied.
+    open var onApply: ((Preset) -> Void)?
+
+    /// Optional closure callback invoked when the screenshot preset is reset.
+    open var onReset: (() -> Void)?
 
     public init(
         arguments: [String] = ProcessInfo.processInfo.arguments,
@@ -43,6 +52,14 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
     /// The effective language for demo data and copy.
     open var effectiveLanguage: ScreenshotLanguage {
         selectedLanguage.resolved
+    }
+
+    /// Automatically switches the selected tab if the active preset defines a `targetTabIndex`.
+    open func handleAppLaunch(selectedTab: Binding<Int>? = nil) {
+        guard let preset = activePreset else { return }
+        if let targetTab = preset.targetTabIndex {
+            selectedTab?.wrappedValue = targetTab
+        }
     }
 
     /// Parses the preset flag (`-SCREENSHOT_PRESET <token>` or environment variable).
@@ -67,13 +84,28 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
         entitlementOverride?.wrappedValue = .forcePro
     }
 
-    /// Applies a preset. Subclasses can override to populate app-specific mock data.
+    /// Applies a preset. Subclasses or `onApply` closures can populate app-specific mock data.
     open func apply(preset: Preset) {
         self.activePreset = preset
+        onApply?(preset)
     }
 
     /// Resets screenshot state to default normal launch.
     open func reset() {
         self.activePreset = nil
+        onReset?()
     }
 }
+
+#if canImport(CoreData)
+extension ScreenshotEngine {
+    /// Verifies that the managed object context is backed by an in-memory or /dev/null store.
+    /// Prevents screenshot demo data seeders from mutating persistent user production SQLite databases.
+    public nonisolated static func isInMemoryStore(context: NSManagedObjectContext) -> Bool {
+        guard let stores = context.persistentStoreCoordinator?.persistentStores, !stores.isEmpty else {
+            return false
+        }
+        return stores.allSatisfy { $0.url?.path == "/dev/null" || $0.type == NSInMemoryStoreType }
+    }
+}
+#endif

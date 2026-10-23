@@ -415,8 +415,10 @@ GraceAppsLibrary provides an end-to-end framework and CLI runner for generating 
 
 ##### Step-by-Step Implementation
 
-###### Step 1: Define Your App's Screenshot Presets
-Conform an enum to `ScreenshotPresetProvider`:
+###### Step 1: Define Presets (or Use Built-in `StandardScreenshotPreset`)
+If your app follows standard App Store slots (Benefit, Top Feature, Secondary Feature, Results Calendar, Milestone Celebration, Customization, Settings), simply use `StandardScreenshotPreset`.
+
+If you prefer custom slots, conform an enum to `ScreenshotPresetProvider`:
 
 ```swift
 import GraceAppsLibrary
@@ -431,6 +433,16 @@ public enum AppScreenshotPreset: String, CaseIterable, ScreenshotPresetProvider 
     case settingsOverview = "5b"
 
     public var id: String { rawValue }
+
+    // Optional: Auto-navigates root tabs on launch
+    public var targetTabIndex: Int? {
+        switch self {
+        case .benefit: return 0
+        case .feature, .calendar, .celebration: return 1
+        case .customGoals, .settingsOverview: return 2
+        case .historyNotes: return 3
+        }
+    }
 
     public var slotLabel: String {
         switch self {
@@ -496,8 +508,25 @@ public enum AppScreenshotPreset: String, CaseIterable, ScreenshotPresetProvider 
 }
 ```
 
-###### Step 2: Subclass or Initialize `ScreenshotEngine`
-Create a manager that overrides `apply(preset:)` to seed mock CoreData / UserDefaults and switch tabs:
+###### Step 2: Initialize `ScreenshotEngine` (Subclass or Closure Delegation)
+You can instantiate `ScreenshotEngine` directly and attach closures:
+
+```swift
+@MainActor
+final class AppScreenshotManager {
+    static let shared = ScreenshotEngine<StandardScreenshotPreset>()
+
+    static func configure() {
+        shared.onApply = { preset in
+            // Safety guard: ensure CoreData is running in-memory
+            guard ScreenshotEngine.isInMemoryStore(context: PersistenceController.shared.container.viewContext) else { return }
+            seedMockData(for: preset, language: shared.effectiveLanguage)
+        }
+    }
+}
+```
+
+Or subclass `ScreenshotEngine<Preset>` if you prefer overriding `apply(preset:)`:
 
 ```swift
 @MainActor
@@ -594,16 +623,16 @@ In your root `ContentView` or App struct, check for launch arguments when launch
 Run the universal runner script from `GraceAppsLibrary/scripts/capture_screenshots.sh`:
 
 ```bash
-# Capture iPhone only for all languages
+# Capture iPhone only (automatically detects supported languages from .app bundle)
 ./scripts/capture_screenshots.sh \
   --bundle "com.deelightfullabs.ReadingLog" \
   --presets "1|01 - Timer.png,2|02 - Dashboard.png,4A|04A - Calendar.png,4B|04B - Celebration.png,5A|05A - Goals.png,5B|05B - Settings.png" \
   --iphone-only
 
-# Capture specific language
+# Capture specific language(s)
 ./scripts/capture_screenshots.sh \
   --bundle "com.deelightfullabs.ReadingLog" \
-  --lang zh
+  --lang zh,en
 ```
 
 ###### Delegating from Client Apps

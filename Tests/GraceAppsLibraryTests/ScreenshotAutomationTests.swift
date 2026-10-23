@@ -6,6 +6,8 @@
 //
 
 import XCTest
+import SwiftUI
+import CoreData
 @testable import GraceAppsLibrary
 
 private enum MockPreset: String, ScreenshotPresetProvider {
@@ -125,5 +127,54 @@ final class ScreenshotAutomationTests: XCTestCase {
         )
 
         XCTAssertNotNil(menu.screenshotSection)
+    }
+
+    func testStandardScreenshotPreset() {
+        XCTAssertEqual(StandardScreenshotPreset.allCases.count, 7)
+        XCTAssertEqual(StandardScreenshotPreset.from(token: "1"), .slot1Benefit)
+        XCTAssertEqual(StandardScreenshotPreset.from(token: "4b"), .slot4Celebration)
+        XCTAssertEqual(StandardScreenshotPreset.from(token: "celebration"), .slot4Celebration)
+        XCTAssertEqual(StandardScreenshotPreset.slot1Benefit.targetTabIndex, 0)
+        XCTAssertEqual(StandardScreenshotPreset.slot3SecondFeature.targetTabIndex, 1)
+        XCTAssertEqual(StandardScreenshotPreset.slot2Feature.targetTabIndex, 2)
+        XCTAssertEqual(StandardScreenshotPreset.slot5Settings.targetTabIndex, 3)
+    }
+
+    @MainActor
+    func testEngineClosureCallbacksAndAutoTab() {
+        let engine = ScreenshotEngine<StandardScreenshotPreset>(arguments: [], environment: [:])
+        var appliedPreset: StandardScreenshotPreset?
+        var resetCalled = false
+
+        engine.onApply = { preset in
+            appliedPreset = preset
+        }
+        engine.onReset = {
+            resetCalled = true
+        }
+
+        engine.apply(preset: .slot2Feature)
+        XCTAssertEqual(appliedPreset, .slot2Feature)
+        XCTAssertEqual(engine.activePreset, .slot2Feature)
+
+        var selectedTab = 0
+        let binding = SwiftUI.Binding(get: { selectedTab }, set: { selectedTab = $0 })
+        engine.handleAppLaunch(selectedTab: binding)
+        XCTAssertEqual(selectedTab, 2)
+
+        engine.reset()
+        XCTAssertTrue(resetCalled)
+        XCTAssertNil(engine.activePreset)
+    }
+
+    func testCoreDataInMemoryStoreSafetyCheck() {
+        let model = NSManagedObjectModel()
+        let coordinator = NSPersistentStoreCoordinator(managedObjectModel: model)
+        _ = try? coordinator.addPersistentStore(ofType: NSInMemoryStoreType, configurationName: nil, at: nil, options: nil)
+
+        let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        context.persistentStoreCoordinator = coordinator
+
+        XCTAssertTrue(ScreenshotEngine<StandardScreenshotPreset>.isInMemoryStore(context: context))
     }
 }

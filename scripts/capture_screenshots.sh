@@ -15,7 +15,7 @@
 #   --iphone-only          Capture iPhone only
 #   --ipad-only            Capture iPad only
 #   --both                 Capture both iPhone and iPad (default)
-#   --lang <code>          Language code: en, zh, de, es, ja, fr, or all (default: all)
+#   --lang <code>          Language: auto (detect from app bundle, default), all, or specific code(s) (en, zh, de, es, ja, fr)
 #   --presets "<list>"     Custom preset list formatted as "ID|Filename.png,ID2|Filename2.png"
 #
 
@@ -28,7 +28,7 @@ IPHONE_UDID=""
 IPAD_UDID=""
 RUN_IPHONE=true
 RUN_IPAD=true
-SELECTED_LANG="all"
+SELECTED_LANG="auto"
 CUSTOM_PRESETS=""
 
 while [[ $# -gt 0 ]]; do
@@ -142,13 +142,39 @@ declare -a ALL_LANGUAGES=(
 declare -a LANGUAGES=()
 if [[ "${SELECTED_LANG}" == "all" ]]; then
   LANGUAGES=("${ALL_LANGUAGES[@]}")
-else
+elif [[ "${SELECTED_LANG}" == "auto" || "${SELECTED_LANG}" == "detect" ]]; then
   for lang_entry in "${ALL_LANGUAGES[@]}"; do
     IFS='|' read -r code name aloc acode <<< "${lang_entry}"
-    if [[ "${code}" == "${SELECTED_LANG}" ]]; then
-      LANGUAGES=("${lang_entry}")
-      break
+    if [[ -d "${APP_PATH}/${aloc}.lproj" || -d "${APP_PATH}/${code}.lproj" ]]; then
+      LANGUAGES+=("${lang_entry}")
     fi
+  done
+  if [[ ${#LANGUAGES[@]} -eq 0 ]]; then
+    # Fallback to English if no lproj directories matched
+    for lang_entry in "${ALL_LANGUAGES[@]}"; do
+      IFS='|' read -r code name aloc acode <<< "${lang_entry}"
+      if [[ "${code}" == "en" ]]; then
+        LANGUAGES+=("${lang_entry}")
+        break
+      fi
+    done
+  fi
+  echo "🌐 Auto-detected ${#LANGUAGES[@]} supported localizations in ${APP_PATH##*/}:"
+  for lang_entry in "${LANGUAGES[@]}"; do
+    IFS='|' read -r code name aloc acode <<< "${lang_entry}"
+    echo "   • ${name} (${code})"
+  done
+else
+  IFS=',' read -ra REQ_LANGS <<< "${SELECTED_LANG}"
+  for req in "${REQ_LANGS[@]}"; do
+    req_trimmed=$(echo "${req}" | xargs)
+    for lang_entry in "${ALL_LANGUAGES[@]}"; do
+      IFS='|' read -r code name aloc acode <<< "${lang_entry}"
+      if [[ "${code}" == "${req_trimmed}" || "${name}" == "${req_trimmed}" ]]; then
+        LANGUAGES+=("${lang_entry}")
+        break
+      fi
+    done
   done
 fi
 

@@ -28,12 +28,14 @@ public protocol ScreenshotPresetProvider: Identifiable, CaseIterable, RawReprese
     var suggestedFilename: String { get }
     var systemImage: String { get }
     var cliArgumentExample: String { get }
+    var targetTabIndex: Int? { get }
 
     static func from(token: String) -> Self?
 }
 
 public extension ScreenshotPresetProvider {
     var id: String { rawValue }
+    var targetTabIndex: Int? { nil }
 
     var cliArgumentExample: String {
         "-SCREENSHOT_PRESET \(rawValue)"
