@@ -88,9 +88,17 @@ if [[ -z "${BUNDLE_ID}" ]]; then
   exit 1
 fi
 
-# Auto-locate app bundle in DerivedData if not passed
+# Auto-locate app bundle in DerivedData by matching CFBundleIdentifier if not passed
 if [[ -z "${APP_PATH}" ]]; then
-  APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData/*/Build/Products/Debug-iphonesimulator -name "*.app" -maxdepth 1 2>/dev/null | grep -v "GraceApps" | head -n 1 || true)
+  for candidate in $(find ~/Library/Developer/Xcode/DerivedData/*/Build/Products/Debug-iphonesimulator -name "*.app" -maxdepth 1 2>/dev/null); do
+    if [[ -f "${candidate}/Info.plist" ]]; then
+      candidate_bid=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "${candidate}/Info.plist" 2>/dev/null || true)
+      if [[ "${candidate_bid}" == "${BUNDLE_ID}" ]]; then
+        APP_PATH="${candidate}"
+        break
+      fi
+    fi
+  done
 fi
 
 if [[ -z "${APP_PATH}" || ! -d "${APP_PATH}" ]]; then
