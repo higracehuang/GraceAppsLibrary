@@ -12,6 +12,7 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 - Built-in views for displaying apps, feedback, release notes, FAQs, and emoji input
 - Shared Onboarding framework (`OnboardingContainer`, `OnboardingSlideLayout`, `OnboardingCoordinator`)
 - Smart review prompting (`ReviewPromptManager`) with 2-step pre-filter & feedback redirection
+- Automated App Store Screenshot framework (`ScreenshotPresetProvider`, `ScreenshotEngine`, `DebugScreenshotSection`, and CLI runner script)
 
 ## Installation
 
@@ -399,6 +400,45 @@ DebugSectionView(
     }
 }
 ```
+
+#### 10. Automated App Store Screenshots
+
+GraceAppsLibrary provides an end-to-end framework and CLI runner for generating localized App Store screenshots across iPhone and iPad with zero blank splash screens:
+
+```swift
+import GraceAppsLibrary
+
+// 1. Define presets conforming to ScreenshotPresetProvider
+public enum AppScreenshotPreset: String, ScreenshotPresetProvider {
+    case benefit = "1"
+    case feature = "2"
+    case celebration = "4b"
+
+    public var slotLabel: String { ... }
+    public var title: String { ... }
+    public var suggestedFilename: String { ... }
+    public var systemImage: String { ... }
+}
+
+// 2. Instantiate or subclass ScreenshotEngine
+@MainActor
+final class AppScreenshotManager: ScreenshotEngine<AppScreenshotPreset> {
+    static let shared = AppScreenshotManager()
+}
+
+// 3. Optional: Add DebugScreenshotSection into DebugMenuView
+DebugScreenshotSection(engine: AppScreenshotManager.shared)
+```
+
+**Running Automated Captures via CLI**:
+```bash
+./scripts/capture_screenshots.sh \
+  --bundle "com.yourcompany.app" \
+  --presets "1|01 - Benefit.png,2|02 - Feature.png" \
+  --languages "en,zh,de,es,ja"
+```
+
+The script boots the simulator, launches each preset, uses an automated Vision OCR / frame-variance retry loop to verify the view has fully rendered past the splash screen, and saves verified 2x marketing screenshots in `Screenshots/Raw/<Device>/<Language>/`.
 
 ## Development
 
