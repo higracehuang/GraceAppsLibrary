@@ -405,6 +405,16 @@ DebugSectionView(
 
 GraceAppsLibrary provides an end-to-end framework and CLI runner for generating localized, marketing-ready App Store screenshots across iPhone and iPad with zero blank splash screens and automatic Pro entitlement overrides.
 
+##### The 5–6 Screen Framework
+Every App Store screenshot set across Grace Apps collects 5–6 screens showing:
+1. **Your app’s main benefit** — The primary transformation or core value hook that solves the user's immediate problem.
+2. **Its most important feature** — The flagship interaction or primary tool the user interacts with daily.
+3. **A second useful feature** — A supporting capability that deepens engagement (e.g. search, notes, history, or recipe logs).
+4. **A realistic example of the result users get** — Proof of progress and consistency over time (e.g. monthly consistency calendar, milestone celebration, earned badge collection).
+5. **Customization or another differentiator** — Personalization options, custom goals, pro perks, or unique controls that separate the app from generic alternatives.
+
+See [Skills/SCREENSHOTS.md](Skills/SCREENSHOTS.md) for the complete screenshot design playbook and caption guidelines.
+
 ##### Architecture & Components
 - **`ScreenshotPresetProvider`**: Protocol defining your app's marketing presets (slot label, headline, suggested filename, system icon, CLI token parser).
 - **`ScreenshotLanguage`**: Multi-language registry (`en`, `zh`, `de`, `es`, `ja`, `fr`, `auto`) resolving Apple locale codes and folder naming conventions.
