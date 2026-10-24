@@ -327,7 +327,7 @@ capture_device() {
         -AppleLocale "${apple_locale}" >/dev/null
 
       # Initial wait for cold-launch, view animation and seeding
-      sleep 4.5
+      sleep 6.0
 
       # Verification loop: ensure the app has transitioned off the splash/launch screen
       local max_retries=6
