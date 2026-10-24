@@ -125,7 +125,7 @@ if [[ -z "${IPHONE_UDID}" ]]; then
 fi
 
 if [[ -z "${IPAD_UDID}" ]]; then
-  for search in "iPad mini \(A17 Pro\)" "iPad mini" "iPad Pro" "iPad"; do
+  for search in "iPad Pro 11-inch" "iPad Pro \(11-inch\)" "iPad Pro" "iPad mini \(A17 Pro\)" "iPad mini" "iPad"; do
     IPAD_UDID=$(find_simulator "${search}")
     if [[ -n "${IPAD_UDID}" ]]; then
       break
