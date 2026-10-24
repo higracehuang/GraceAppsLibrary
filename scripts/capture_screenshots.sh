@@ -317,10 +317,12 @@ capture_device() {
       xcrun simctl terminate "${udid}" "${BUNDLE_ID}" 2>/dev/null || true
       sleep 1.0
 
-      # Launch with screenshot preset and language override
+      # Launch with screenshot preset and language override (forced Pro for marketing)
       xcrun simctl launch "${udid}" "${BUNDLE_ID}" \
         -SCREENSHOT_PRESET "${preset_id}" \
         -SCREENSHOT_LANG "${lang_code}" \
+        -FORCE_PRO 1 \
+        -DEBUG_ENTITLEMENT_OVERRIDE forcePro \
         -AppleLanguages "(${apple_lang})" \
         -AppleLocale "${apple_locale}" >/dev/null
 

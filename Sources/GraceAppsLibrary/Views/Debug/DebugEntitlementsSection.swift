@@ -8,10 +8,38 @@ public enum DebugEntitlementOverride: String, CaseIterable, Identifiable {
 
     public var id: String { rawValue }
 
+    /// Returns true if screenshot capture is active based on launch arguments or environment variables.
+    public static func isScreenshotCaptureActive(
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> Bool {
+        #if DEBUG
+        if arguments.contains("-SCREENSHOT_PRESET") ||
+           arguments.contains("-screenshotPreset") ||
+           arguments.contains("-SCREENSHOT_CAPTURE") ||
+           arguments.contains("-FORCE_PRO") ||
+           arguments.contains("-screenshotForcePro") {
+            return true
+        }
+        if let val = environment["SCREENSHOT_PRESET"], !val.isEmpty { return true }
+        if let val = environment["IS_SCREENSHOT_ACTIVE"], !val.isEmpty { return true }
+        if let val = environment["FORCE_PRO"], !val.isEmpty { return true }
+        return false
+        #else
+        return false
+        #endif
+    }
+
     /// Resolves the effective pro/unlimited entitlement status based on this override and the actual store/cache status.
-    /// In DEBUG builds: applies `.forcePro` (true), `.forceFree` (false), or falls back to `storeStatus` (`.automatic`).
+    /// In DEBUG builds:
+    /// - When taking screenshots, automatically assumes forced pro (`true`) unless explicitly set to `.forceFree`.
+    /// - Otherwise applies `.forcePro` (true), `.forceFree` (false), or falls back to `storeStatus` (`.automatic`).
     /// In non-DEBUG (Release) builds: always returns `storeStatus`.
-    public func resolve(storeStatus: Bool) -> Bool {
+    public func resolve(
+        storeStatus: Bool,
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> Bool {
         #if DEBUG
         switch self {
         case .forcePro:
@@ -19,6 +47,9 @@ public enum DebugEntitlementOverride: String, CaseIterable, Identifiable {
         case .forceFree:
             return false
         case .automatic:
+            if Self.isScreenshotCaptureActive(arguments: arguments, environment: environment) {
+                return true
+            }
             return storeStatus
         }
         #else
@@ -27,8 +58,23 @@ public enum DebugEntitlementOverride: String, CaseIterable, Identifiable {
     }
 
     /// Helper to resolve effective status when the override may be nil or optional.
-    public static func resolve(override: DebugEntitlementOverride?, storeStatus: Bool) -> Bool {
-        override?.resolve(storeStatus: storeStatus) ?? storeStatus
+    public static func resolve(
+        override: DebugEntitlementOverride?,
+        storeStatus: Bool,
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> Bool {
+        #if DEBUG
+        if let override = override {
+            return override.resolve(storeStatus: storeStatus, arguments: arguments, environment: environment)
+        }
+        if isScreenshotCaptureActive(arguments: arguments, environment: environment) {
+            return true
+        }
+        return storeStatus
+        #else
+        return storeStatus
+        #endif
     }
 }
 

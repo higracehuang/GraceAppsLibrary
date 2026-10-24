@@ -181,4 +181,38 @@ final class ScreenshotAutomationTests: XCTestCase {
 
         XCTAssertTrue(ScreenshotEngine<StandardScreenshotPreset>.isInMemoryStore(context: context))
     }
+
+    func testAssumedForcedProWhenTakingScreenshots() {
+        let screenshotArgs = ["MyApp", "-SCREENSHOT_PRESET", "1"]
+        let normalArgs = ["MyApp"]
+
+        XCTAssertTrue(DebugEntitlementOverride.isScreenshotCaptureActive(arguments: screenshotArgs, environment: [:]))
+        XCTAssertFalse(DebugEntitlementOverride.isScreenshotCaptureActive(arguments: normalArgs, environment: [:]))
+
+        // Normal launch: Automatic reflects storeStatus
+        XCTAssertFalse(DebugEntitlementOverride.automatic.resolve(storeStatus: false, arguments: normalArgs, environment: [:]))
+        XCTAssertTrue(DebugEntitlementOverride.automatic.resolve(storeStatus: true, arguments: normalArgs, environment: [:]))
+
+        // Screenshot capture: Automatic assumes forced Pro
+        XCTAssertTrue(DebugEntitlementOverride.automatic.resolve(storeStatus: false, arguments: screenshotArgs, environment: [:]))
+
+        // Explicit forceFree still honors forceFree even if screenshots are active
+        XCTAssertFalse(DebugEntitlementOverride.forceFree.resolve(storeStatus: true, arguments: screenshotArgs, environment: [:]))
+
+        // Static helper with nil override assumes Pro during screenshots
+        XCTAssertTrue(DebugEntitlementOverride.resolve(override: nil, storeStatus: false, arguments: screenshotArgs, environment: [:]))
+        XCTAssertFalse(DebugEntitlementOverride.resolve(override: nil, storeStatus: false, arguments: normalArgs, environment: [:]))
+    }
+
+    @MainActor
+    func testEngineConfiguresMarketingEntitlementOnLaunch() {
+        let screenshotArgs = ["MyApp", "-SCREENSHOT_PRESET", "1"]
+        let engine = ScreenshotEngine<StandardScreenshotPreset>(arguments: screenshotArgs, environment: [:])
+
+        var override = DebugEntitlementOverride.automatic
+        let binding = SwiftUI.Binding(get: { override }, set: { override = $0 })
+
+        engine.handleAppLaunch(entitlementOverride: binding)
+        XCTAssertEqual(override, .forcePro)
+    }
 }

@@ -49,8 +49,19 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
 
     /// Whether the app is currently running under an automated screenshot capture run.
     open var isScreenshotCaptureActive: Bool {
-        activePreset != nil
+        activePreset != nil || Self.isScreenshotCaptureActive()
     }
+
+    /// Whether screenshot capture is currently active in the process environment.
+    public static func isScreenshotCaptureActive(
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> Bool {
+        DebugEntitlementOverride.isScreenshotCaptureActive(arguments: arguments, environment: environment)
+    }
+
+    /// When taking screenshots, automatically assumes forced Pro status for marketing captures.
+    open var assumeForcedPro: Bool = true
 
     /// The effective language for demo data and copy.
     open var effectiveLanguage: ScreenshotLanguage {
@@ -63,8 +74,15 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
     }
 
     /// Automatically switches the selected tab if the active preset defines a `targetTabIndex`,
-    /// and invokes `apply(preset:)` if `autoApply` is true.
-    open func handleAppLaunch(selectedTab: Binding<Int>? = nil, autoApply: Bool = true) {
+    /// configures Pro entitlement if `assumeForcedPro` is enabled, and invokes `apply(preset:)` if `autoApply` is true.
+    open func handleAppLaunch(
+        selectedTab: Binding<Int>? = nil,
+        entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
+        autoApply: Bool = true
+    ) {
+        if assumeForcedPro && isScreenshotCaptureActive {
+            configureMarketingEntitlement(entitlementOverride: entitlementOverride)
+        }
         guard let preset = activePreset else { return }
         let targetTab = tabIndexForPreset?(preset) ?? preset.targetTabIndex
         if let targetTab = targetTab {
