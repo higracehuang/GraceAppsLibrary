@@ -143,27 +143,85 @@ declare -a ALL_LANGUAGES=(
   "fr|French|fr|fr_FR"
 )
 
-declare -a LANGUAGES=()
-if [[ "${SELECTED_LANG}" == "all" ]]; then
-  LANGUAGES=("${ALL_LANGUAGES[@]}")
-elif [[ "${SELECTED_LANG}" == "auto" || "${SELECTED_LANG}" == "detect" ]]; then
+# Detect project-supported localizations across bundle, Plist, pbxproj, and String Catalogs
+detect_project_languages() {
+  local bundle_locs=""
+  if [[ -d "${APP_PATH}" ]]; then
+    bundle_locs=$(swift -e '
+      import Foundation
+      if let b = Bundle(path: CommandLine.arguments[1]) {
+        print(b.localizations.joined(separator: " "))
+      }
+    ' "${APP_PATH}" 2>/dev/null || true)
+  fi
+
+  local plist_locs=""
+  if [[ -f "${APP_PATH}/Info.plist" ]]; then
+    plist_locs=$(/usr/libexec/PlistBuddy -c "Print :CFBundleLocalizations" "${APP_PATH}/Info.plist" 2>/dev/null | grep -E '^[[:space:]]+[a-zA-Z_-]+' | tr -d ' ' || true)
+  fi
+
+  local top_lproj=""
+  if [[ -d "${APP_PATH}" ]]; then
+    top_lproj=$(find "${APP_PATH}" -maxdepth 1 -name "*.lproj" 2>/dev/null | sed -E 's/.*\/([a-zA-Z_-]+)\.lproj/\1/' || true)
+  fi
+
+  local pbx_regions=""
+  local pbxproj
+  pbxproj=$(find . -maxdepth 3 -name "project.pbxproj" 2>/dev/null | head -n 1 || true)
+  if [[ -n "${pbxproj}" && -f "${pbxproj}" ]]; then
+    pbx_regions=$(awk '/knownRegions = \(/,/\);/' "${pbxproj}" | grep -E '^[[:space:]]+[a-zA-Z_-]+' | tr -d '\t ,;' || true)
+  fi
+
+  local xcstrings_locs=""
+  for xcs in $(find . -maxdepth 4 -name "*.xcstrings" 2>/dev/null); do
+    local keys
+    keys=$(grep -E '^[[:space:]]{4}"[a-zA-Z_-]+"[[:space:]]*:[[:space:]]*\{' "${xcs}" 2>/dev/null | tr -d ' "{:' || true)
+    xcstrings_locs="${xcstrings_locs} ${keys}"
+  done
+
+  local combined="${bundle_locs} ${plist_locs} ${top_lproj} ${pbx_regions} ${xcstrings_locs}"
+  combined=$(echo "${combined}" | tr ',' ' ' | tr '\n' ' ' | tr '[:upper:]' '[:lower:]')
+
+  local detected=()
   for lang_entry in "${ALL_LANGUAGES[@]}"; do
     IFS='|' read -r code name aloc acode <<< "${lang_entry}"
-    if [[ -d "${APP_PATH}/${aloc}.lproj" || -d "${APP_PATH}/${code}.lproj" ]]; then
-      LANGUAGES+=("${lang_entry}")
-    fi
-  done
-  if [[ ${#LANGUAGES[@]} -eq 0 ]]; then
-    # Fallback to English if no lproj directories matched
-    for lang_entry in "${ALL_LANGUAGES[@]}"; do
-      IFS='|' read -r code name aloc acode <<< "${lang_entry}"
-      if [[ "${code}" == "en" ]]; then
-        LANGUAGES+=("${lang_entry}")
+    local code_lower=$(echo "${code}" | tr '[:upper:]' '[:lower:]')
+    local aloc_lower=$(echo "${aloc}" | tr '[:upper:]' '[:lower:]')
+
+    local matched=false
+    for token in ${combined}; do
+      token=$(echo "${token}" | tr -d ' ' | tr '[:upper:]' '[:lower:]')
+      if [[ "${token}" == "base" || -z "${token}" ]]; then
+        continue
+      fi
+      if [[ "${token}" == "${code_lower}" || "${token}" == "${aloc_lower}" || "${token}" == "${code_lower}-"* || "${aloc_lower}" == "${token}-"* ]]; then
+        matched=true
         break
       fi
     done
+
+    if [[ "${matched}" == "true" ]]; then
+      detected+=("${lang_entry}")
+    fi
+  done
+
+  if [[ ${#detected[@]} -eq 0 ]]; then
+    # Fallback to English if no other localizations detected
+    detected+=("${ALL_LANGUAGES[0]}")
   fi
-  echo "🌐 Auto-detected ${#LANGUAGES[@]} supported localizations in ${APP_PATH##*/}:"
+
+  printf '%s\n' "${detected[@]}"
+}
+
+declare -a PROJECT_LANGUAGES=()
+while IFS= read -r line; do
+  [[ -n "${line}" ]] && PROJECT_LANGUAGES+=("${line}")
+done < <(detect_project_languages)
+
+declare -a LANGUAGES=()
+if [[ "${SELECTED_LANG}" == "all" || "${SELECTED_LANG}" == "auto" || "${SELECTED_LANG}" == "detect" ]]; then
+  LANGUAGES=("${PROJECT_LANGUAGES[@]}")
+  echo "🌐 Project supports ${#LANGUAGES[@]} localization(s) in ${APP_PATH##*/}:"
   for lang_entry in "${LANGUAGES[@]}"; do
     IFS='|' read -r code name aloc acode <<< "${lang_entry}"
     echo "   • ${name} (${code})"

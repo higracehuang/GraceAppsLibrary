@@ -87,6 +87,20 @@ public enum ScreenshotLanguage: String, CaseIterable, Identifiable {
         return nil
     }
 
+    /// Returns the languages supported by the specified bundle (defaulting to Bundle.main).
+    public static func supportedLanguages(in bundle: Bundle = .main) -> [ScreenshotLanguage] {
+        let bundleLocs = Set(bundle.localizations.map { $0.lowercased() })
+        let supported = allCases.filter { lang in
+            guard lang != .auto else { return false }
+            let code = lang.rawValue.lowercased()
+            let appleCode = lang.appleLanguageCode.lowercased()
+            return bundleLocs.contains(code) ||
+                   bundleLocs.contains(appleCode) ||
+                   bundleLocs.contains(where: { $0.hasPrefix(code) || appleCode.hasPrefix($0) })
+        }
+        return supported.isEmpty ? [.english] : supported
+    }
+
     /// Reads launch arguments or environment variables for language overrides.
     public static func fromLaunchEnvironment(
         arguments: [String] = ProcessInfo.processInfo.arguments,

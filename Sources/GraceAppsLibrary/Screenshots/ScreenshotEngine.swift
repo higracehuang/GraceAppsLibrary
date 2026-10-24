@@ -57,6 +57,11 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
         selectedLanguage.resolved
     }
 
+    /// The supported screenshot languages detected for the current application bundle.
+    open var supportedLanguages: [ScreenshotLanguage] {
+        ScreenshotLanguage.supportedLanguages(in: .main)
+    }
+
     /// Automatically switches the selected tab if the active preset defines a `targetTabIndex`,
     /// and invokes `apply(preset:)` if `autoApply` is true.
     open func handleAppLaunch(selectedTab: Binding<Int>? = nil, autoApply: Bool = true) {
