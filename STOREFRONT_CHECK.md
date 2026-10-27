@@ -80,7 +80,7 @@ Check every storefront that matters for the app, not just US:
     numbers rather than shipping them.
   - Testimonials and quotes: real, and still accurate.
   - Terminology: the same product terms in the title and the body
-    (e.g. a Chinese title using one term while its description opens
+    (e.g. a title using one product term while its description opens
     with a different, retired term).
 - **What's New / release notes.** Current for this version, localized
   wherever the description is localized, and not months stale.
@@ -111,8 +111,8 @@ Check every storefront that matters for the app, not just US:
   the usual giveaway.
 - **Counts per device per storefront.** iPhone and iPad counts must
   be consistent across storefronts; a storefront with extra or missing
-  shots (e.g. 6 iPad shots in CN vs. 4 everywhere else) means
-  something was pasted unevenly — reconcile it in Connect.
+  shots (e.g. 6 iPad shots in one storefront vs. 4 everywhere else)
+  means something was pasted unevenly — reconcile it in Connect.
 - **Order tells the story.** First shot = the main benefit; the set
   must walk through the flagship feature, a second feature, proof of
   progress, and a differentiator (see `Skills/SCREENSHOTS.md`).
@@ -196,9 +196,8 @@ Record this at the top of every check so the next one can diff it:
   illustrations, in all three localized descriptions.
 - A Japanese description claiming example sentences for an app with
   example words only.
-- A Chinese title and description contradicting each other on the
-  product's own name (retired term in the body, current term in the
-  title).
+- A title and description contradicting each other on the product's
+  own name (retired term in the body, current term in the title).
 - Screenshot counts differing by storefront (6 iPad shots in one
   storefront, 4 everywhere else) from an uneven paste.
 - Zero ratings in 6 of 9 checked storefronts while the repo's ASO
