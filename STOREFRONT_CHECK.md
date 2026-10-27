@@ -32,8 +32,9 @@ Check every storefront that matters for the app, not just US:
 
 - US, GB, CA, AU for English-language apps.
 - Every locale the app localizes metadata into (e.g. CN, JP).
-- TW and HK for any app with Chinese copy (they do not inherit CN's).
-- Any other territory where the app has meaningful ratings or sales.
+- Every territory where the app has meaningful ratings or sales, even
+  if it shares a language with another territory — localizations do
+  not automatically carry over to related territories.
 - Note the fallback: the other ~170 territories show the English copy.
   A storefront showing English is only a problem if a localization was
   supposed to exist there.
@@ -146,10 +147,7 @@ Check every storefront that matters for the app, not just US:
   metadata, the title, description, release notes, and screenshots
   should all be translated. A locale with a translated title but an
   English description (or vice versa) is a half-finished job.
-- **Traditional vs. Simplified Chinese.** TW and HK need an explicit
-  decision: add Traditional Chinese, or reuse the Simplified copy.
-  "English everywhere in TW/HK" is the default failure mode — check
-  for it, don't assume it.
+
 - **Terminology and register, per locale.** The same standardized
   terms everywhere (not a retired term surviving in one locale), and
   the register the audience expects (e.g. informal vs. formal
