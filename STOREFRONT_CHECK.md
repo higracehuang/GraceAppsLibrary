@@ -3,7 +3,7 @@
 A per-release, per-app checklist for verifying what the App Store actually
 shows — because the live storefront, not the source doc, is what users see.
 Run it every release, after any metadata paste into App Store Connect, and
-after any price or IAP change. Record the snapshot (section 9) so the next
+after any price or IAP change. Record the snapshot (section 10) so the next
 check can tell what changed.
 
 ## 0. Sources: what each one can and cannot show
@@ -173,7 +173,66 @@ Check every storefront that matters for the app, not just US:
   percentage; a storefront check mid-rollout will otherwise look
   like a stale storefront.
 
-## 9. Snapshot template
+## 9. Optimization opportunities
+
+Correctness (sections 1–8) is the floor. These are the checks that
+find growth, not just errors. Record each as an opportunity with the
+evidence behind it, not as a defect.
+
+- **Title and subtitle keyword coverage.** Is the highest-volume
+  term for the app actually in the title, where it weighs most?
+  Is the subtitle's 30 characters fully used, with no words
+  repeated from the title? A subtitle that repeats the title wastes
+  the second-highest-weighted field.
+- **Keywords field fully used.** 100 characters, comma-separated
+  with no spaces after commas, no term repeated from the title or
+  subtitle, no filler words. Every freed slot should go to a term
+  users actually search — competitor names only deliberately, since
+  they carry a small rejection risk.
+- **Description above the fold.** The first three lines (before the
+  "more" cutoff) must carry the problem and the main benefit, not
+  setup or feature lists. If the hook only appears halfway down,
+  that is the opportunity.
+- **Promo text not empty.** An empty or stale promo text wastes the
+  most visible field on the page. It should be current, within 170
+  characters, and restate the hook — it is not indexed, so write it
+  for humans, not for keywords.
+- **First screenshot carries the benefit.** Most visitors only see
+  the first one or two shots. If shot 1 shows a settings screen or
+  a generic list instead of the main benefit, reorder. Captions are
+  conversion copy, not indexed text — benefit-led captions convert,
+  keyword-stuffed ones do not.
+- **Screenshot A/B candidates.** Note anything worth testing via
+  custom product pages (product page optimization): first-shot
+  benefit vs. first-shot social proof, caption wording, shot order.
+  One candidate per check is enough; do not turn the checklist into
+  a test plan.
+- **What's New as marketing.** Release notes that only say "bug
+  fixes" waste a conversion surface. Notes for a feature release
+  should sell the new benefit in one line per locale.
+- **Review-prompt timing.** Low rating counts are an opportunity,
+  not just a metric: is the app asking at success moments
+  (delight-gated, once per version) instead of on launch or after
+  failures? Note unanswered negative reviews as replies owed.
+- **Localization as growth.** A storefront with meaningful traffic
+  but English fallback copy is a localization opportunity — as is a
+  locale whose keywords still target another market's exam or
+  vocabulary terms.
+- **Pricing and offer opportunities.** Price tier vs. the closest
+  competitors; a sale window the app is missing (seasonal moments
+  for its audience); intro offers or trials where the model supports
+  them. For lifetime-only apps, the opportunity is usually the sale
+  window, not a new product.
+- **Competitor benchmark.** Who ranks for the app's target terms,
+  and what do their titles, subtitles, and first screenshots lead
+  with? If a competitor owns a term the app should own, that is the
+  single most valuable line in the whole check.
+- **Cross-promotion surfaces.** "More from this developer", the
+  app's website Smart Banner, and in-app cross-promotion: are they
+  pointing at live pages, and do those pages route back to the
+  storefront?
+
+## 10. Snapshot template
 
 Record this at the top of every check so the next one can diff it:
 
@@ -188,7 +247,7 @@ Record this at the top of every check so the next one can diff it:
   subtitle, IAP prices, privacy details, screenshot content) with
   where to verify them.
 
-## 10. Real catches this checklist is built from
+## 11. Real catches this checklist is built from
 
 - A live description claiming "engaging visuals" for an app with no
   illustrations, in all three localized descriptions.
