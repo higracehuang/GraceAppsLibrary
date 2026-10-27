@@ -43,11 +43,13 @@ Check every storefront that matters for the app, not just US:
 - **App price, per storefront.** Free apps must show Free everywhere.
   Paid apps: the tier must be the intended one in every storefront, not
   just US.
-- **China price check.** Always check CN separately. Tier conversions
-  produce odd CNY values, and a free app can end up showing a stray
-  price in China while Free elsewhere. A free app must show ¥0 in CN.
-  (Real catch: a free app's China price was wrong and had to be fixed
-  back to ¥0.)
+- **Any price that breaks the pattern is the flag.** Compare
+  storefronts against each other, not against a single reference:
+  a price that looks weird next to the other storefronts, or
+  different from what the app itself says, is the anomaly — whichever
+  storefront it is in. This includes a free app showing a price in
+  one storefront while Free everywhere else, and tier conversions
+  that produce odd local values.
 - **IAP prices, per storefront, in App Store Connect.** Every product:
   price and currency in each storefront, not just US. Watch for a
   product priced in one storefront and missing or mis-tiered in another.
@@ -197,10 +199,11 @@ Record this at the top of every check so the next one can diff it:
 - A Chinese title and description contradicting each other on the
   product's own name (retired term in the body, current term in the
   title).
-- iPad screenshot counts differing by storefront (6 in CN, 4
-  everywhere else) from an uneven paste.
+- Screenshot counts differing by storefront (6 iPad shots in one
+  storefront, 4 everywhere else) from an uneven paste.
 - Zero ratings in 6 of 9 checked storefronts while the repo's ASO
   notes quoted the cross-storefront sum as if it were the US count.
-- A free app's China price showing a non-zero value instead of ¥0.
-- TW and HK storefronts showing full English copy for an app with
-  Simplified Chinese copy available for CN.
+- A free app's price in one storefront showing a non-zero value
+  while Free everywhere else.
+- Storefronts showing full English copy for an app with translated
+  copy available for a closely related locale.
