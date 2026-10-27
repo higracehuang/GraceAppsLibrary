@@ -415,6 +415,8 @@ Every App Store screenshot set across Grace Apps collects 5–6 screens showing:
 
 See [Skills/SCREENSHOTS.md](Skills/SCREENSHOTS.md) for the complete screenshot design playbook and caption guidelines.
 
+See [STOREFRONT_CHECK.md](STOREFRONT_CHECK.md) for the per-release storefront checklist: prices, metadata, IAP, privacy, localization, and ratings across storefronts.
+
 ##### Architecture & Components
 - **`ScreenshotPresetProvider`**: Protocol defining your app's marketing presets (slot label, headline, suggested filename, system icon, CLI token parser).
 - **`ScreenshotLanguage`**: Multi-language registry (`en`, `zh`, `de`, `es`, `ja`, `fr`, `auto`) resolving Apple locale codes and folder naming conventions.
