@@ -1,0 +1,82 @@
+"app.name.tallycoin" = "TallyCoin 勞動就打賞";
+"app.description.tallycoin" = "專為家庭設計的完美應用程式，用於追蹤家務與獎勵。";
+
+"app.name.readingclock" = "ReadingClock 讀書計時器";
+"app.description.readingclock" = "簡單好用的應用程式，用於追蹤每日閱讀時間與進度。";
+
+"app.name.stemcards" = "Stem Cards 字根卡片";
+"app.description.stemcards" = "一種有趣且輕鬆學習英語字根、字首與字尾的方式。";
+
+"app.name.quizmeai" = "QuizMe.AI";
+"app.description.quizmeai" = "AI 驅動的測驗應用程式，可從任何內容建立任何主題的測驗。";
+
+"app.name.localspeaks" = "LocalSpeaks 在地話";
+"app.description.localspeaks" = "實用短語手冊應用程式，幫助您學習並練習多種語言的道地表達。非常適合旅行者與語言學習者。";
+
+"app.name.itemizeai" = "Itemize AI";
+"app.description.itemizeai" = "AI 驅動的應用程式，可分析任何文字，將其拆解為重要重點並為您摘要。專為視覺型閱讀者設計。";
+
+"app.name.snapprogress" = "SnapProgress 拍照記錄";
+"app.description.snapprogress" = "用照片記錄成長與改變的視覺進度追蹤應用程式。";
+
+"label.new" = "新";
+"label.get" = "取得";
+
+"app.name.stitchtally" = "StitchTally 編織計數";
+"app.description.stitchtally" = "用於追蹤您的棒針與鉤針編織專案的應用程式。";
+
+"app.name.chartybee" = "ChartyBee 圖表小蜜蜂";
+"app.description.chartybee" = "精緻小巧的記錄工具，幫你追蹤生活中的點滴日常：讀了多少頁書、喝了幾杯咖啡，或是昨晚睡得好不好。";
+
+"app.name.dialinespresso" = "Dial In Espresso";
+"app.description.dialinespresso" = "簡潔的義式咖啡記錄工具，用於追蹤咖啡豆與萃取參數，記錄心得、持續調整，助你穩定沖煮出最佳風味。";
+
+"app.name.fastinglady" = "FastingLady 週期斷食";
+"app.description.fastinglady" = "專為女性設計的簡約斷食追蹤應用程式，幫助妳配合生理週期智慧斷食。";
+"app.name.herweigh" = "HerWeigh 她體重";
+"app.description.herweigh" = "專為女性設計的體重記錄工具，將生理週期納入考量，讓體重管理更貼心科學。";
+
+"app.name.dialinpourover" = "Dial In Pourovers";
+"app.description.dialinpourover" = "專屬手沖咖啡沖煮日誌，幫你記錄每一項沖煮變數，精準重現最佳配方，讓下一杯更加香醇。";
+
+"feedback.message" = "我很想聽聽您的真實想法！無論是功能建議、錯誤回報，還是告訴我哪些功能好用（或不好用）——您的回饋都能幫助我做得更好。請寫信至：";
+"feedback.appreciation" = "感謝您幫助我做得更好！❤️";
+"feedback.signature" = "Grace";
+"feedback.title" = "分享回饋";
+
+"other.apps.by.grace" = "Grace 的其他 App";
+"other.apps.built.by.grace" = "Grace 開發的其他 App";
+"apps.introduction" = "Grace 從日常生活中汲取靈感，打造了她與親友們日常真心使用並喜愛的簡約 App。以下是她的 App 列表：";
+"feedback.footnote" = "我想聽聽您的真實想法（無論好壞）！請透過 %@ 聯絡我";
+"faq.title" = "常見問題";
+"legal.section" = "法律條款";
+"legal.privacy_policy" = "隱私權政策";
+"legal.terms_of_use" = "使用條款";
+
+"release_notes.title" = "最新功能";
+"release_notes.version_prefix" = "版本";
+"release_notes.tier_prefix" = "包含在";
+"release_notes.tier_suffix" = "中";
+"release_notes.upgrade_to %@" = "升級至 %@";
+
+"about.section.title" = "關於 %@";
+"about.version" = "版本";
+"about.rate_this_app" = "前往評分";
+"about.share_this_app" = "分享此 App";
+"about.app_fallback" = "App";
+"settings.language" = "語言";
+
+"support.section.title" = "協助與支援";
+"support.sources_references" = "資料來源與參考文獻";
+"support.disclaimer" = "免責聲明";
+
+"developer.section.title" = "關於開發者";
+
+/* Solicit Review */
+"Are you enjoying %@?" = "您喜歡使用 %@ 嗎？";
+"Tell us what you think" = "請告訴我們您的想法";
+"Yes, I am 🥰" = "是的，很喜歡 🥰";
+"Not really" = "不太喜歡";
+"Leave a Rating" = "前往評分";
+
+"onboarding.skip" = "暫時略過";

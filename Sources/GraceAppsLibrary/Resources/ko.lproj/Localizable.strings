@@ -1,0 +1,82 @@
+"app.name.tallycoin" = "TallyCoin 탤리코인";
+"app.description.tallycoin" = "가족을 위해 설계된 심부름 및 보상 기록에 완벽한 앱입니다.";
+
+"app.name.readingclock" = "ReadingClock 독서 타이머";
+"app.description.readingclock" = "매일의 독서 시간과 진행 상황을 기록하는 심플한 앱입니다.";
+
+"app.name.stemcards" = "Stem Cards 어근 카드";
+"app.description.stemcards" = "영어 어근, 접두사, 접미사를 쉽고 재미있게 배울 수 있는 앱입니다.";
+
+"app.name.quizmeai" = "QuizMe.AI";
+"app.description.quizmeai" = "어떤 내용이든 원하는 주제로 퀴즈를 만들 수 있는 AI 퀴즈 앱입니다.";
+
+"app.name.localspeaks" = "LocalSpeaks 로컬스픽스";
+"app.description.localspeaks" = "다양한 언어의 자연스러운 표현을 배우고 연습할 수 있는 회화집 앱입니다. 여행자와 언어 학습자에게 완벽합니다.";
+
+"app.name.itemizeai" = "Itemize AI";
+"app.description.itemizeai" = "긴 텍스트를 분석하여 핵심 요점으로 정리하고 요약해 주는 AI 앱입니다. 시각적 읽기에 최적화되어 있습니다.";
+
+"app.name.snapprogress" = "SnapProgress 스냅프로그레스";
+"app.description.snapprogress" = "사진으로 나의 성장과 변화를 한눈에 기록하는 시각적 진행 트래커입니다.";
+
+"label.new" = "신규";
+"label.get" = "받기";
+
+"app.name.stitchtally" = "StitchTally 뜨개질 카운터";
+"app.description.stitchtally" = "뜨개질과 코바늘 프로젝트를 간편하게 기록하고 관리하는 앱입니다.";
+
+"app.name.chartybee" = "ChartyBee 차티비";
+"app.description.chartybee" = "읽은 페이지 수, 마신 커피 잔 수, 수면의 질 등 일상의 소소한 순간들을 기록하는 미니 트래커 앱입니다.";
+
+"app.name.dialinespresso" = "Dial In Espresso";
+"app.description.dialinespresso" = "원두와 추출 과정을 기록하는 간결한 에스프레소 트래커입니다. 기록하고 테스트하여 언제나 최고의 한 잔을 완성해 보세요.";
+
+"app.name.fastinglady" = "FastingLady 패스팅레이디";
+"app.description.fastinglady" = "여성을 위해 디자인된 단식 트래커로, 월경 주기에 맞춘 건강한 단식을 돕습니다.";
+"app.name.herweigh" = "HerWeigh 허웨이";
+"app.description.herweigh" = "생리 주기를 고려하여 더 지혜롭게 체중을 관리할 수 있는 여성용 체중 기록 앱입니다.";
+
+"app.name.dialinpourover" = "Dial In Pourovers";
+"app.description.dialinpourover" = "모든 추출 변수를 기록하고 성공적인 레시피를 재현하여 다음 잔을 더 맛있게 만들어 주는 나만의 드립 커피 저널입니다.";
+
+"feedback.message" = "여러분의 솔직한 의견을 듣고 싶어요! 새로운 기능 아이디어, 버그 제보, 또는 어떤 점이 좋고 아쉬운지 알려주시면 앱을 개선하는 데 큰 도움이 됩니다. 언제든 편하게 메일을 보내주세요:";
+"feedback.appreciation" = "더 나은 앱을 만드는 데 도움을 주셔서 진심으로 감사합니다! ❤️";
+"feedback.signature" = "Grace";
+"feedback.title" = "피드백 보내기";
+
+"other.apps.by.grace" = "Grace의 다른 앱";
+"other.apps.built.by.grace" = "Grace가 개발한 다른 앱";
+"apps.introduction" = "Grace는 일상생활에서 얻은 영감을 바탕으로 본인과 소중한 사람들이 진심으로 아끼고 사용하는 심플한 앱들을 만듭니다. Grace의 앱들을 만나보세요:";
+"feedback.footnote" = "좋은 점이든 아쉬운 점이든 자유롭게 들려주세요! %@ 로 문의해 주세요";
+"faq.title" = "자주 묻는 질문";
+"legal.section" = "법적 고지";
+"legal.privacy_policy" = "개인정보 처리방침";
+"legal.terms_of_use" = "이용약관";
+
+"release_notes.title" = "새로운 기능";
+"release_notes.version_prefix" = "버전";
+"release_notes.tier_prefix" = "";
+"release_notes.tier_suffix" = "에 포함됨";
+"release_notes.upgrade_to %@" = "%@ (으)로 업그레이드";
+
+"about.section.title" = "%@ 정보";
+"about.version" = "버전";
+"about.rate_this_app" = "평가하기";
+"about.share_this_app" = "이 앱 공유하기";
+"about.app_fallback" = "앱";
+"settings.language" = "언어";
+
+"support.section.title" = "도움말 및 지원";
+"support.sources_references" = "출처 및 참고문헌";
+"support.disclaimer" = "면책 조항";
+
+"developer.section.title" = "앱 개발자 정보";
+
+/* Solicit Review */
+"Are you enjoying %@?" = "%@ 앱에 만족하고 계신가요?";
+"Tell us what you think" = "소중한 의견을 들려주세요";
+"Yes, I am 🥰" = "네, 좋아요 🥰";
+"Not really" = "아쉬워요";
+"Leave a Rating" = "평가 남기기";
+
+"onboarding.skip" = "지금은 건너뛰기";
