@@ -723,8 +723,8 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     }}
 
     .hero-flashcard-2 {{
-      top: 290px;
-      right: 20px;
+      top: 310px;
+      right: 15px;
       width: 800px;
       height: 360px;
       transform: rotate(5deg);
@@ -733,8 +733,8 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     }}
 
     .hero-flashcard-3 {{
-      top: 590px;
-      left: 40px;
+      top: 610px;
+      left: 35px;
       width: 790px;
       height: 350px;
       transform: rotate(-3deg);
@@ -813,6 +813,10 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       flex-wrap: wrap;
       gap: 12px;
       margin-top: 20px;
+    }}
+
+    .hero-flashcard-1 .card-examples {{
+      max-width: 380px;
     }}
 
     .example-pill {{
@@ -1052,6 +1056,220 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       font-family: var(--font-ko);
       font-size: 56px;
       letter-spacing: 0.15em;
+    }}
+
+    /* ========================================================
+       HERO POSTER: iPad Specific Rules (2048 x 2732 px)
+       ======================================================== */
+    .device-ipad.slide-hero .hero-identity {{
+      top: 140px;
+      left: 140px;
+      gap: 32px;
+    }}
+
+    .device-ipad.slide-hero .hero-app-icon {{
+      width: 128px;
+      height: 128px;
+      border-radius: 30px;
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.14), 0 4px 10px rgba(0, 0, 0, 0.08);
+    }}
+
+    .device-ipad.slide-hero .hero-app-name {{
+      font-size: 68px;
+    }}
+
+    .device-ipad.slide-hero .hero-headline-container {{
+      top: 310px;
+      left: 140px;
+      right: 140px;
+    }}
+
+    .device-ipad.slide-hero .hero-headline {{
+      font-size: 118px;
+      line-height: 1.15;
+    }}
+
+    body[data-lang="Simplified Chinese"] .device-ipad.slide-hero .hero-headline,
+    body[data-lang="Traditional Chinese"] .device-ipad.slide-hero .hero-headline {{
+      font-size: 110px;
+      line-height: 1.20;
+    }}
+
+    body[data-lang="Japanese"] .device-ipad.slide-hero .hero-headline {{
+      font-size: 96px;
+      line-height: 1.25;
+    }}
+
+    body[data-lang="Korean"] .device-ipad.slide-hero .hero-headline {{
+      font-size: 104px;
+      line-height: 1.25;
+    }}
+
+    /* iPad Cards Stage */
+    .device-ipad.slide-hero .hero-cards-stage {{
+      top: 670px;
+      width: 1720px;
+      height: 1080px;
+    }}
+
+    .device-ipad.slide-hero .hero-flashcard {{
+      border-radius: 44px;
+      padding: 42px 54px;
+      box-shadow: 0 40px 95px rgba(32, 77, 54, 0.16), 0 14px 34px rgba(0, 0, 0, 0.05);
+    }}
+
+    .device-ipad.slide-hero .hero-flashcard-1 {{
+      top: 0px;
+      left: 40px;
+      width: 1140px;
+      height: 430px;
+      transform: rotate(-4.5deg);
+    }}
+
+    .device-ipad.slide-hero .hero-flashcard-2 {{
+      top: 310px;
+      right: 40px;
+      width: 1180px;
+      height: 450px;
+      transform: rotate(4.5deg);
+      box-shadow: 0 46px 110px rgba(32, 77, 54, 0.20), 0 16px 40px rgba(0, 0, 0, 0.06);
+    }}
+
+    .device-ipad.slide-hero .hero-flashcard-3 {{
+      top: 630px;
+      left: 80px;
+      width: 1160px;
+      height: 440px;
+      transform: rotate(-2.5deg);
+      box-shadow: 0 50px 120px rgba(32, 77, 54, 0.22), 0 18px 44px rgba(0, 0, 0, 0.06);
+    }}
+
+    .device-ipad.slide-hero .card-badge {{
+      font-size: 26px;
+      padding: 8px 22px;
+      border-radius: 14px;
+    }}
+
+    .device-ipad.slide-hero .card-category {{
+      font-size: 26px;
+    }}
+
+    .device-ipad.slide-hero .card-term {{
+      font-size: 92px;
+    }}
+
+    .device-ipad.slide-hero .card-meaning {{
+      font-size: 34px;
+      margin-top: 12px;
+    }}
+
+    .device-ipad.slide-hero .card-examples {{
+      gap: 16px;
+      margin-top: 26px;
+    }}
+
+    .device-ipad.slide-hero .hero-flashcard-1 .card-examples {{
+      max-width: 540px;
+    }}
+
+    .device-ipad.slide-hero .example-pill {{
+      font-size: 26px;
+      padding: 10px 22px;
+      border-radius: 16px;
+    }}
+
+    /* iPad Curriculum Stats */
+    .device-ipad.slide-hero .hero-stats-row {{
+      top: 1820px;
+      width: 1680px;
+      gap: 32px;
+    }}
+
+    .device-ipad.slide-hero .hero-stat-chip {{
+      padding: 28px 24px;
+      border-radius: 32px;
+      box-shadow: 0 18px 44px rgba(32, 77, 54, 0.08);
+    }}
+
+    .device-ipad.slide-hero .stat-number {{
+      font-size: 68px;
+    }}
+
+    .device-ipad.slide-hero .stat-label {{
+      font-size: 26px;
+      margin-top: 10px;
+    }}
+
+    /* iPad Methodology Capsules */
+    .device-ipad.slide-hero .hero-features-row {{
+      top: 2010px;
+      width: 1540px;
+      gap: 30px;
+    }}
+
+    .device-ipad.slide-hero .hero-feature-capsule {{
+      padding: 24px 44px;
+      border-radius: 50px;
+      gap: 16px;
+    }}
+
+    .device-ipad.slide-hero .feature-capsule-icon {{
+      font-size: 36px;
+    }}
+
+    .device-ipad.slide-hero .feature-capsule-text {{
+      font-size: 32px;
+    }}
+
+    body[data-lang="Simplified Chinese"] .device-ipad.slide-hero .feature-capsule-text,
+    body[data-lang="Traditional Chinese"] .device-ipad.slide-hero .feature-capsule-text {{
+      font-size: 32px;
+    }}
+
+    body[data-lang="Japanese"] .device-ipad.slide-hero .feature-capsule-text {{
+      font-size: 30px;
+    }}
+
+    body[data-lang="Korean"] .device-ipad.slide-hero .feature-capsule-text {{
+      font-size: 30px;
+    }}
+
+    /* iPad Laurel Wreath Social Proof */
+    .device-ipad.slide-hero .hero-laurel-badge {{
+      top: 2190px;
+      width: 1060px;
+      gap: 24px;
+    }}
+
+    .device-ipad.slide-hero .laurel-branch {{
+      height: 340px;
+    }}
+
+    .device-ipad.slide-hero .laurel-title {{
+      font-size: 64px;
+    }}
+
+    body[data-lang="Simplified Chinese"] .device-ipad.slide-hero .laurel-title,
+    body[data-lang="Traditional Chinese"] .device-ipad.slide-hero .laurel-title {{
+      font-size: 64px;
+    }}
+
+    body[data-lang="Japanese"] .device-ipad.slide-hero .laurel-title {{
+      font-size: 54px;
+    }}
+
+    body[data-lang="Korean"] .device-ipad.slide-hero .laurel-title {{
+      font-size: 56px;
+    }}
+
+    .device-ipad.slide-hero .laurel-stars {{
+      font-size: 44px;
+      margin-top: 10px;
+    }}
+
+    .device-ipad.slide-hero .laurel-sub {{
+      font-size: 26px;
+      margin-top: 6px;
     }}
 
     .feature-card {{
