@@ -694,11 +694,11 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     /* 3D Flashcards Stage */
     .hero-cards-stage {{
       position: absolute;
-      top: 720px;
+      top: 690px;
       left: 50%;
       transform: translateX(-50%);
       width: 1040px;
-      height: 940px;
+      height: 980px;
       perspective: 1200px;
       z-index: 10;
     }}
@@ -708,38 +708,38 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       border-radius: 34px;
       background: #FFFFFF;
       box-sizing: border-box;
-      padding: 32px 38px;
-      box-shadow: 0 28px 70px rgba(32, 77, 54, 0.16), 0 10px 24px rgba(0, 0, 0, 0.05);
+      padding: 34px 42px;
+      box-shadow: 0 32px 75px rgba(32, 77, 54, 0.16), 0 10px 24px rgba(0, 0, 0, 0.05);
       border: 1.5px solid rgba(41, 86, 65, 0.08);
     }}
 
     .hero-flashcard-1 {{
       top: 0px;
-      left: 15px;
-      width: 620px;
+      left: 20px;
+      width: 780px;
       height: 350px;
-      transform: rotate(-5.5deg);
+      transform: rotate(-5deg);
       z-index: 12;
     }}
 
     .hero-flashcard-2 {{
-      top: 260px;
-      right: 15px;
-      width: 640px;
+      top: 290px;
+      right: 20px;
+      width: 800px;
       height: 360px;
       transform: rotate(5deg);
       z-index: 14;
-      box-shadow: 0 34px 85px rgba(32, 77, 54, 0.20), 0 12px 28px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 36px 85px rgba(32, 77, 54, 0.20), 0 12px 28px rgba(0, 0, 0, 0.06);
     }}
 
     .hero-flashcard-3 {{
-      top: 530px;
-      left: 35px;
-      width: 630px;
+      top: 590px;
+      left: 40px;
+      width: 790px;
       height: 350px;
       transform: rotate(-3deg);
       z-index: 16;
-      box-shadow: 0 38px 90px rgba(32, 77, 54, 0.22), 0 14px 32px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 40px 92px rgba(32, 77, 54, 0.22), 0 14px 32px rgba(0, 0, 0, 0.06);
     }}
 
     .card-header {{
@@ -751,10 +751,10 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .card-badge {{
       font-family: var(--font-rounded);
-      font-size: 20px;
+      font-size: 21px;
       font-weight: 800;
       letter-spacing: 0.06em;
-      padding: 6px 16px;
+      padding: 6px 18px;
       border-radius: 12px;
       text-transform: uppercase;
     }}
@@ -776,7 +776,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .card-category {{
       font-family: var(--font-rounded);
-      font-size: 20px;
+      font-size: 21px;
       font-weight: 700;
       color: #7A9F8D;
       letter-spacing: 0.06em;
@@ -785,7 +785,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .card-term {{
       font-family: var(--font-rounded);
-      font-size: 70px;
+      font-size: 74px;
       font-weight: 800;
       color: #1A3E2C;
       line-height: 1.05;
@@ -794,7 +794,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .card-meaning {{
       font-family: var(--font-rounded);
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 600;
       color: #3E6B54;
       margin-top: 8px;
@@ -811,17 +811,17 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     .card-examples {{
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
       margin-top: 20px;
     }}
 
     .example-pill {{
       font-family: var(--font-rounded);
-      font-size: 21px;
+      font-size: 22px;
       font-weight: 600;
       color: #2F5943;
       background: #F1F6F2;
-      padding: 7px 16px;
+      padding: 8px 18px;
       border-radius: 12px;
       border: 1px solid rgba(41, 86, 65, 0.06);
     }}
@@ -829,7 +829,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     /* Curriculum Bento / Stat Chips */
     .hero-stats-row {{
       position: absolute;
-      top: 1730px;
+      top: 1740px;
       left: 50%;
       transform: translateX(-50%);
       width: 1020px;
@@ -889,7 +889,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     /* Learning Methodology Feature Capsules */
     .hero-features-row {{
       position: absolute;
-      top: 1930px;
+      top: 1910px;
       left: 50%;
       transform: translateX(-50%);
       width: 1020px;
@@ -908,7 +908,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       -webkit-backdrop-filter: blur(20px);
       border: 1.5px solid rgba(41, 86, 65, 0.12);
       border-radius: 40px;
-      padding: 18px 30px;
+      padding: 16px 28px;
       box-shadow: 0 10px 28px rgba(32, 77, 54, 0.06);
     }}
 
@@ -942,75 +942,97 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       font-size: 23px;
     }}
 
-    /* Social Proof Quote */
-    .hero-quote-container {{
+    /* Prestige Laurel Wreath Social Proof */
+    .hero-laurel-badge {{
       position: absolute;
-      top: 2120px;
+      top: 2070px;
       left: 50%;
       transform: translateX(-50%);
       width: 860px;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
+      gap: 20px;
       z-index: 10;
     }}
 
-    .hero-quote-box {{
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      text-align: center;
-      width: 100%;
-    }}
-
-    .hero-quote-mark {{
-      font-family: "Georgia", "Baskerville", serif;
-      font-size: 80px;
-      line-height: 0.8;
-      color: #3B7E5A;
-      opacity: 0.55;
-      font-weight: 700;
+    .laurel-branch {{
+      height: 300px;
+      width: auto;
+      object-fit: contain;
       user-select: none;
-      display: inline-block;
+      flex-shrink: 0;
     }}
 
-    .hero-quote-left {{
-      transform: translateY(-8px);
+    .laurel-center {{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
     }}
 
-    .hero-quote-right {{
-      transform: translateY(8px);
-    }}
-
-    .hero-quote-text {{
+    .laurel-title {{
       font-family: var(--font-rounded);
-      font-size: 42px;
+      font-size: 52px;
       font-weight: 800;
-      line-height: 1.25;
-      color: var(--title-color, #204D36);
+      color: #1E4D34;
       letter-spacing: 0.06em;
       text-transform: uppercase;
+      line-height: 1.12;
       white-space: nowrap;
     }}
 
-    body[data-lang="Simplified Chinese"] .hero-quote-text,
-    body[data-lang="Traditional Chinese"] .hero-quote-text {{
+    body[data-lang="Simplified Chinese"] .laurel-title,
+    body[data-lang="Traditional Chinese"] .laurel-title {{
       font-family: var(--font-zh);
-      font-size: 44px;
+      font-size: 52px;
       letter-spacing: 0.08em;
     }}
 
-    body[data-lang="Japanese"] .hero-quote-text {{
+    body[data-lang="Japanese"] .laurel-title {{
       font-family: var(--font-ja);
-      font-size: 40px;
+      font-size: 44px;
       letter-spacing: 0.04em;
     }}
 
-    body[data-lang="Korean"] .hero-quote-text {{
+    body[data-lang="Korean"] .laurel-title {{
       font-family: var(--font-ko);
-      font-size: 42px;
+      font-size: 46px;
       letter-spacing: 0.04em;
+    }}
+
+    .laurel-stars {{
+      color: #2D6A48;
+      font-size: 36px;
+      letter-spacing: 0.20em;
+      line-height: 1;
+    }}
+
+    .laurel-sub {{
+      font-family: var(--font-rounded);
+      font-size: 22px;
+      font-weight: 700;
+      color: #55876E;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }}
+
+    body[data-lang="Simplified Chinese"] .laurel-sub,
+    body[data-lang="Traditional Chinese"] .laurel-sub {{
+      font-family: var(--font-zh);
+      font-size: 22px;
+    }}
+
+    body[data-lang="Japanese"] .laurel-sub {{
+      font-family: var(--font-ja);
+      font-size: 20px;
+    }}
+
+    body[data-lang="Korean"] .laurel-sub {{
+      font-family: var(--font-ko);
+      font-size: 20px;
     }}
 
     body[data-lang="Simplified Chinese"] .hero-footer-text,
@@ -1254,6 +1276,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
           const brandName = (slide.brand && slide.brand.name) ? (typeof slide.brand.name === "object" ? (slide.brand.name[currentLang] || slide.brand.name["English"]) : slide.brand.name) : '{app_name}';
           const heroTitle = titleObj ? (currentDevice === "ipad" ? titleObj.ipad : titleObj.iphone) : "";
           const quoteObj = slide.quote ? (typeof slide.quote === "object" ? (slide.quote[currentLang] || slide.quote["English"]) : slide.quote) : "";
+          const quoteSubObj = slide.quoteSub ? (typeof slide.quoteSub === "object" ? (slide.quoteSub[currentLang] || slide.quoteSub["English"]) : slide.quoteSub) : "";
 
           // Flashcards (universal English learning content)
           const cardsData = slide.cards || [
@@ -1358,12 +1381,14 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
               <div class="hero-features-row">
                 ${{featuresHtml}}
               </div>
-              <div class="hero-quote-container">
-                <div class="hero-quote-box">
-                  <span class="hero-quote-mark hero-quote-left">“</span>
-                  <div class="hero-quote-text">${{quoteObj}}</div>
-                  <span class="hero-quote-mark hero-quote-right">”</span>
+              <div class="hero-laurel-badge">
+                <img src="laurel_branch_left.png" class="laurel-branch" alt="Laurel Left" onerror="this.style.display='none'" />
+                <div class="laurel-center">
+                  <div class="laurel-title">${{quoteObj}}</div>
+                  <div class="laurel-stars">★★★★★</div>
+                  ${{quoteSubObj ? `<div class="laurel-sub">${{quoteSubObj}}</div>` : ""}}
                 </div>
+                <img src="laurel_branch_right.png" class="laurel-branch" alt="Laurel Right" onerror="this.style.display='none'" />
               </div>
             </div>
           `;
