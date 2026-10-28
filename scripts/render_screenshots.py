@@ -113,12 +113,14 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     iphone_gap = iphone_typo.get("titleGap", "50px")
     iphone_pad_top = iphone_typo.get("paddingTop", "135px")
     iphone_mockup_top = iphone_typo.get("mockupTop", "740px")
+    iphone_mockup_width = iphone_typo.get("mockupWidth", "968px")
 
     ipad_title_size = ipad_typo.get("titleSize", "140px")
     ipad_sub_size = ipad_typo.get("subtitleSize", "74px")
     ipad_gap = ipad_typo.get("titleGap", "22px")
     ipad_pad_top = ipad_typo.get("paddingTop", "116px")
-    ipad_mockup_top = ipad_typo.get("mockupTop", "445px")
+    ipad_mockup_top = ipad_typo.get("mockupTop", "430px")
+    ipad_mockup_width = ipad_typo.get("mockupWidth", "1480px")
 
     # Preprocess titles and subtitles to handle markdown *accents*
     processed_slides = []
@@ -498,7 +500,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .device-iphone .mockup-container {{
       top: {iphone_mockup_top};
-      width: 968px;
+      width: {iphone_mockup_width};
       background: #0D0F11;
       padding: 14px 14px 0 14px;
       border: 4px solid #C4C9CE;
@@ -526,7 +528,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .device-ipad .mockup-container {{
       top: {ipad_mockup_top};
-      width: 1520px;
+      width: {ipad_mockup_width};
       background: #111315;
       padding: 44px;
       border: 4px solid #BAC0C4;
