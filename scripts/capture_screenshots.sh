@@ -115,9 +115,11 @@ for s in slides:
     # Only capture slides that need simulator captures
     if stype in ('standard-device', 'scene-composite') or ('preset' in s and stype != 'static-asset' and stype != 'feature-grid'):
         p_id = s.get('preset', s.get('id', ''))
-        fname = s.get('filename', '')
-        if p_id and fname:
-            presets.append(f'{p_id}|{fname}')
+        raw_fname = s.get('rawFilename') or s.get('raw') or s.get('filename', '')
+        if isinstance(raw_fname, dict):
+            raw_fname = raw_fname.get('iphone') or raw_fname.get('ipad') or ''
+        if p_id and raw_fname:
+            presets.append(f'{p_id}|{raw_fname}')
 print(','.join(presets))
 " "${CONFIG_FILE}" 2>/dev/null || true)
   fi

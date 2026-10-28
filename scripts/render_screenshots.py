@@ -108,9 +108,9 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     iphone_typo = typography_cfg.get("iphone", {})
     ipad_typo = typography_cfg.get("ipad", {})
 
-    iphone_title_size = iphone_typo.get("titleSize", "110px")
-    iphone_sub_size = iphone_typo.get("subtitleSize", "64px")
-    iphone_gap = iphone_typo.get("titleGap", "44px")
+    iphone_title_size = iphone_typo.get("titleSize", "132px")
+    iphone_sub_size = iphone_typo.get("subtitleSize", "76px")
+    iphone_gap = iphone_typo.get("titleGap", "50px")
     iphone_pad_top = iphone_typo.get("paddingTop", "135px")
     iphone_mockup_top = iphone_typo.get("mockupTop", "740px")
 
@@ -829,27 +829,32 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
           `;
         }} else {{
           // Default: standard-device
-          const imgSrc = getRawImagePath(currentDevice, currentLang, slide.filename);
+          const rawFilename = (typeof slide.rawFilename === 'object' ? slide.rawFilename[currentDevice] : slide.rawFilename) ||
+                              (typeof slide.raw === 'object' ? slide.raw[currentDevice] : slide.raw) ||
+                              (typeof slide.filename === 'object' ? slide.filename[currentDevice] : slide.filename);
+          const imgSrc = getRawImagePath(currentDevice, currentLang, rawFilename);
+          const subHtml = subText ? `<p class="caption-subtitle">${{subText}}</p>` : "";
           slideContent = `
             <div class="canvas device-${{currentDevice}} theme-${{slide.theme || "default"}}">
               <div class="ambient-glow"></div>
               <div class="caption-header">
                 <h2 class="caption-title">${{titleText}}</h2>
-                <p class="caption-subtitle">${{subText}}</p>
+                ${{subHtml}}
               </div>
               <div class="mockup-container">
                 <div class="mockup-screen">
-                  <img src="${{imgSrc}}" alt="${{slide.filename}}" class="mockup-img" loading="eager" />
+                  <img src="${{imgSrc}}" alt="${{rawFilename}}" class="mockup-img" loading="eager" />
                 </div>
               </div>
             </div>
           `;
         }}
 
+        const displayFn = typeof slide.filename === 'object' ? (slide.filename[currentDevice] || slide.id) : (slide.filename || slide.id);
         wrapper.innerHTML = `
           <div class="slide-meta">
             <span class="badge">Slide ${{slide.id}}</span>
-            <span>${{slide.filename || slide.id}} (${{slideType}})</span>
+            <span>${{displayFn}} (${{slideType}})</span>
           </div>
           ${{slideContent}}
         `;
@@ -945,7 +950,8 @@ def export_screenshots(
 
                 slide_id = slide["id"]
                 stype = slide.get("type", "standard-device")
-                filename = slide.get("filename", f"Slide-{slide_id}.png")
+                fn_val = slide.get("filename", f"Slide-{slide_id}.png")
+                filename = fn_val.get(dev_key, f"Slide-{slide_id}.png") if isinstance(fn_val, dict) else fn_val
                 target_path = lang_dir / filename
 
                 # Handle static-asset passthrough
@@ -953,7 +959,16 @@ def export_screenshots(
                     assets = slide.get("assets", {})
                     src_asset = assets.get(lang) or assets.get("universal") or slide.get("asset")
                     if src_asset and Path(src_asset).is_file():
-                        shutil.copyfile(src_asset, target_path)
+                        src_path = Path(src_asset)
+                        if src_path.suffix.lower() == target_path.suffix.lower():
+                            shutil.copyfile(src_path, target_path)
+                        else:
+                            try:
+                                from PIL import Image
+                                im = Image.open(src_path)
+                                im.save(target_path)
+                            except Exception:
+                                shutil.copyfile(src_path, target_path)
                         print(f"  ✅ [static-asset] {filename}")
                         continue
 
