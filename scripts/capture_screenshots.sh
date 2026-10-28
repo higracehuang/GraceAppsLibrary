@@ -31,8 +31,14 @@ RUN_IPAD=true
 SELECTED_LANG="auto"
 CUSTOM_PRESETS=""
 
+CONFIG_FILE=""
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --config)
+      CONFIG_FILE="$2"
+      shift 2
+      ;;
     --bundle)
       BUNDLE_ID="$2"
       shift 2
@@ -83,8 +89,42 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Auto-detect screenshots config if not specified
+if [[ -z "${CONFIG_FILE}" ]]; then
+  if [[ -f "screenshots.json" ]]; then
+    CONFIG_FILE="$(pwd)/screenshots.json"
+  elif [[ -f "Marketing/screenshots.json" ]]; then
+    CONFIG_FILE="$(pwd)/Marketing/screenshots.json"
+  fi
+fi
+
+# Load bundleId and presets from config if available
+if [[ -n "${CONFIG_FILE}" && -f "${CONFIG_FILE}" ]]; then
+  echo "📄 Loaded configuration from: ${CONFIG_FILE}"
+  if [[ -z "${BUNDLE_ID}" ]]; then
+    BUNDLE_ID=$(python3 -c "import json, sys; d=json.load(open(sys.argv[1])); print(d.get('bundleId',''))" "${CONFIG_FILE}" 2>/dev/null || true)
+  fi
+  if [[ -z "${CUSTOM_PRESETS}" ]]; then
+    CUSTOM_PRESETS=$(python3 -c "
+import json, sys
+d = json.load(open(sys.argv[1]))
+slides = d.get('slides', [])
+presets = []
+for s in slides:
+    stype = s.get('type', 'standard-device')
+    # Only capture slides that need simulator captures
+    if stype in ('standard-device', 'scene-composite') or ('preset' in s and stype != 'static-asset' and stype != 'feature-grid'):
+        p_id = s.get('preset', s.get('id', ''))
+        fname = s.get('filename', '')
+        if p_id and fname:
+            presets.append(f'{p_id}|{fname}')
+print(','.join(presets))
+" "${CONFIG_FILE}" 2>/dev/null || true)
+  fi
+fi
+
 if [[ -z "${BUNDLE_ID}" ]]; then
-  echo "❌ Error: --bundle <BUNDLE_ID> is required."
+  echo "❌ Error: --bundle <BUNDLE_ID> is required (or specify bundleId in screenshots.json)."
   exit 1
 fi
 
@@ -109,14 +149,14 @@ fi
 
 echo "📦 Using App Bundle: ${APP_PATH}"
 
-# Device resolution helper
+# Device resolution helper (REQUIREMENT: always resolve the latest available OS simulators)
 find_simulator() {
   local search_name="$1"
   xcrun simctl list devices available | grep -E "${search_name}" | tail -n 1 | sed -E 's/.*\(([A-F0-9-]+)\).*/\1/' || true
 }
 
 if [[ -z "${IPHONE_UDID}" ]]; then
-  for search in "iPhone 17 Pro \(" "iPhone 16 Pro \(" "iPhone 15 Pro \(" "iPhone Pro" "iPhone"; do
+  for search in "iPhone [0-9]+ Pro \(" "iPhone Pro \(" "iPhone"; do
     IPHONE_UDID=$(find_simulator "${search}")
     if [[ -n "${IPHONE_UDID}" ]]; then
       break
@@ -125,7 +165,7 @@ if [[ -z "${IPHONE_UDID}" ]]; then
 fi
 
 if [[ -z "${IPAD_UDID}" ]]; then
-  for search in "iPad Pro 11-inch" "iPad Pro \(11-inch\)" "iPad Pro" "iPad mini \(A17 Pro\)" "iPad mini" "iPad"; do
+  for search in "iPad mini \(A17 Pro\)" "iPad Pro 11-inch" "iPad Pro \(11-inch\)" "iPad Pro" "iPad mini" "iPad"; do
     IPAD_UDID=$(find_simulator "${search}")
     if [[ -n "${IPAD_UDID}" ]]; then
       break
@@ -137,9 +177,11 @@ fi
 declare -a ALL_LANGUAGES=(
   "en|English|en|en_US"
   "zh|Simplified Chinese|zh-Hans|zh_CN"
+  "zh-Hant|Traditional Chinese|zh-Hant|zh_TW"
   "de|German|de|de_DE"
   "es|Spanish|es|es_ES"
   "ja|Japanese|ja|ja_JP"
+  "ko|Korean|ko|ko_KR"
   "fr|French|fr|fr_FR"
 )
 
@@ -383,11 +425,17 @@ except Exception:
 if [[ "${RUN_IPHONE}" == "true" ]]; then
   prepare_device "${IPHONE_UDID}" "iPhone"
   capture_device "${IPHONE_UDID}" "iPhone" "iPhone"
+  echo "  → Shutting down iPhone simulator to conserve system resources..."
+  xcrun simctl shutdown "${IPHONE_UDID}" 2>/dev/null || true
+  sleep 2
 fi
 
 if [[ "${RUN_IPAD}" == "true" ]]; then
   prepare_device "${IPAD_UDID}" "iPad"
   capture_device "${IPAD_UDID}" "iPad" "iPad"
+  echo "  → Shutting down iPad simulator..."
+  xcrun simctl shutdown "${IPAD_UDID}" 2>/dev/null || true
+  sleep 1
 fi
 
 echo ""

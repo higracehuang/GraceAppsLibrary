@@ -99,21 +99,80 @@ Always structure captions with a two-part hierarchy:
 
 * **English (`en`):** 2-line title + 2-line subtitle on iPhone; 1-line on iPad.
 * **Simplified Chinese (`zh`):** Compact characters. Title stays on 1 punchy line. Subtitles break at conjunctions like `与` or `、`.
+* **Traditional Chinese (`zh-Hant`):** Authentic Traditional Chinese terminology for Taiwan/Hong Kong markets.
 * **German (`de`):** Longer compound words. Structure line breaks to avoid awkward mid-word hyphens on iPhone.
 * **Spanish (`es`):** Keep phrasing natural; break after prepositions or verbs.
 * **Japanese (`ja`):** Break at grammatical particles (`の`, `を`, `に`) or sentence clauses for clean readability.
+* **Korean (`ko`):** Hangul phrasing with natural spacing; keyword emphasis via Apple SD Gothic Neo.
 * **French (`fr`):** Preserve French non-breaking spaces before punctuation marks (` : `, ` ! `).
 
 ---
 
-## ⚙️ 6. Automation & Production Encapsulation
+## ⚙️ 6. Universal Automation Architecture (GAL Shared Engine)
+
+GraceAppsLibrary provides a centralized, reusable screenshot pipeline across all Grace apps:
+
+### Architecture Overview
+
+1. **`screenshots.json` (App Repo)**: Declarative definition of theme colors, localized copy, badges, and slides.
+2. **`capture_screenshots.sh` (GAL)**: Universal simulator runner that auto-detects latest iOS runtimes, enforces sequential execution with intermediate shutdown to avoid system process limits, and captures raw simulator screens into `Screenshots/Raw/`.
+3. **`render_screenshots.py` (GAL)**: Parameterized template generator and headless Chrome Retina exporter that produces pixel-perfect final marketing frames in `Screenshots/AppStore/`.
+4. **`screenshots.sh` (GAL)**: Unified single CLI entrypoint:
+   ```bash
+   # Run full pipeline:
+   ./scripts/screenshots.sh all
+   # Or run individually:
+   ./scripts/screenshots.sh capture
+   ./scripts/screenshots.sh export
+   ```
+
+### Supported Slide Types (`type`)
+
+- **`standard-device`** (Default): Centered iPhone/iPad frame with raw capture, ambient radial light bloom, volumetric 3D drop shadow, and two-tier typography.
+- **`artwork-hero`**: Full-bleed lifestyle photo or 3D artwork (e.g. coffee setup in DialInEspresso) with localized headlines automatically stamped on top.
+- **`feature-grid`**: Bento-style frosted glass cards with SF Symbols and localized feature items for closer/summary slides.
+- **`scene-composite`**: Background environment scene with a floating, positioned, or angled device mockup.
+- **`static-asset`**: Passthrough for pre-rendered or legacy assets.
+
+### The `screenshots.json` Schema
+
+```json
+{
+  "bundleId": "com.deelightfullabs.ReadingLog",
+  "appName": "ReadingClock",
+  "defaultTheme": {
+    "background": "linear-gradient(180deg, #EAF6FA 0%, #E4F5EC 100%)",
+    "accentGradient": "linear-gradient(135deg, #0284C7 0%, #0D9488 100%)",
+    "titleColor": "#133440",
+    "subtitleColor": "#3B6978"
+  },
+  "themes": {
+    "focus": { "accentGradient": "linear-gradient(135deg, #0284C7 0%, #0D9488 100%)" },
+    "streak": { "accentGradient": "linear-gradient(135deg, #EA580C 0%, #D97706 100%)" }
+  },
+  "slides": [
+    {
+      "id": "1",
+      "preset": "1",
+      "theme": "focus",
+      "filename": "01 - Main Benefit.png",
+      "titles": {
+        "en": { "iphone": "Stay *Focused*<br>While Reading", "ipad": "Stay *Focused* While Reading" }
+      },
+      "subtitles": {
+        "en": { "iphone": "One-Tap Reading Timer<br>& Live Goal Ring", "ipad": "One-Tap Reading Timer & Live Goal Ring" }
+      }
+    }
+  ]
+}
+```
+
+---
+
+## 🔒 7. Production Encapsulation
 
 1. **In-Memory Store Isolation:** Screenshot seeders must only mutate mock in-memory stores via:
    ```swift
    guard ScreenshotEngine.isInMemoryStore(context: viewContext) else { return }
    ```
 2. **Zero Production Leakage:** All screenshot demo managers, debug settings sections, and preset seeders must be wrapped in `#if DEBUG ... #endif`.
-3. **Automated Capture CLI:** The universal runner script (`scripts/capture_screenshots.sh`) automatically detects supported languages from `.lproj` folders inside the compiled `.app` bundle:
-   ```bash
-   ./scripts/capture_screenshots.sh --bundle "com.yourcompany.app" --iphone-only
-   ```
