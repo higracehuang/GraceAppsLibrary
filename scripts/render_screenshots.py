@@ -626,8 +626,8 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .hero-identity {{
       position: absolute;
-      top: 180px;
-      left: 100px;
+      top: 140px;
+      left: 80px;
       display: flex;
       align-items: center;
       gap: 24px;
@@ -635,16 +635,16 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     }}
 
     .hero-app-icon {{
-      width: 96px;
-      height: 96px;
+      width: 92px;
+      height: 92px;
       border-radius: 22px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
       display: block;
     }}
 
     .hero-app-name {{
       font-family: var(--font-rounded);
-      font-size: 56px;
+      font-size: 52px;
       font-weight: 700;
       color: var(--title-color, #204D36);
       letter-spacing: -0.01em;
@@ -652,16 +652,16 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .hero-headline-container {{
       position: absolute;
-      top: 480px;
-      left: 100px;
-      right: 100px;
+      top: 290px;
+      left: 80px;
+      right: 80px;
       z-index: 10;
     }}
 
     .hero-headline {{
       font-family: var(--font-rounded);
-      font-size: 132px;
-      line-height: 1.15;
+      font-size: 116px;
+      line-height: 1.14;
       font-weight: 800;
       letter-spacing: -0.025em;
       color: #56B87D;
@@ -671,31 +671,229 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     body[data-lang="Simplified Chinese"] .hero-headline,
     body[data-lang="Traditional Chinese"] .hero-headline {{
       font-family: var(--font-zh);
-      font-size: 112px;
-      line-height: 1.25;
+      font-size: 106px;
+      line-height: 1.22;
       font-weight: 700;
+      letter-spacing: -0.01em;
     }}
 
     body[data-lang="Japanese"] .hero-headline {{
       font-family: var(--font-ja);
-      font-size: 96px;
-      line-height: 1.30;
+      font-size: 88px;
+      line-height: 1.25;
       font-weight: 700;
     }}
 
     body[data-lang="Korean"] .hero-headline {{
       font-family: var(--font-ko);
-      font-size: 106px;
+      font-size: 96px;
       line-height: 1.25;
       font-weight: 700;
     }}
 
-    .hero-quote-container {{
+    /* 3D Flashcards Stage */
+    .hero-cards-stage {{
       position: absolute;
-      top: 1480px;
+      top: 750px;
       left: 50%;
       transform: translateX(-50%);
-      width: 720px;
+      width: 1040px;
+      height: 740px;
+      perspective: 1200px;
+      z-index: 10;
+    }}
+
+    .hero-flashcard {{
+      position: absolute;
+      border-radius: 36px;
+      background: #FFFFFF;
+      box-sizing: border-box;
+      padding: 36px 42px;
+      box-shadow: 0 32px 80px rgba(32, 77, 54, 0.18), 0 10px 28px rgba(0, 0, 0, 0.05);
+      border: 1.5px solid rgba(41, 86, 65, 0.08);
+    }}
+
+    .hero-flashcard-1 {{
+      top: 10px;
+      left: 15px;
+      width: 630px;
+      height: 380px;
+      transform: rotate(-6deg);
+      z-index: 12;
+    }}
+
+    .hero-flashcard-2 {{
+      top: 290px;
+      right: 15px;
+      width: 650px;
+      height: 390px;
+      transform: rotate(5.5deg);
+      z-index: 14;
+      box-shadow: 0 38px 90px rgba(32, 77, 54, 0.22), 0 12px 32px rgba(0, 0, 0, 0.06);
+    }}
+
+    .card-header {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }}
+
+    .card-badge {{
+      font-family: var(--font-rounded);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      padding: 6px 18px;
+      border-radius: 14px;
+      text-transform: uppercase;
+    }}
+
+    .badge-prefix {{
+      background: #E6F4ED;
+      color: #204D36;
+    }}
+
+    .badge-root {{
+      background: #E2F1E8;
+      color: #1A4630;
+    }}
+
+    .card-category {{
+      font-family: var(--font-rounded);
+      font-size: 22px;
+      font-weight: 700;
+      color: #7A9F8D;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }}
+
+    .card-term {{
+      font-family: var(--font-rounded);
+      font-size: 74px;
+      font-weight: 800;
+      color: #1A3E2C;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }}
+
+    .card-meaning {{
+      font-family: var(--font-rounded);
+      font-size: 28px;
+      font-weight: 600;
+      color: #3E6B54;
+      margin-top: 10px;
+      line-height: 1.25;
+    }}
+
+    body[data-lang="Simplified Chinese"] .card-meaning,
+    body[data-lang="Traditional Chinese"] .card-meaning {{
+      font-family: var(--font-zh);
+      font-size: 28px;
+    }}
+
+    body[data-lang="Japanese"] .card-meaning {{
+      font-family: var(--font-ja);
+      font-size: 26px;
+    }}
+
+    body[data-lang="Korean"] .card-meaning {{
+      font-family: var(--font-ko);
+      font-size: 26px;
+    }}
+
+    .card-ipa {{
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      font-weight: 400;
+      color: #6C9380;
+      margin-right: 8px;
+    }}
+
+    .card-examples {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }}
+
+    .example-pill {{
+      font-family: var(--font-rounded);
+      font-size: 22px;
+      font-weight: 600;
+      color: #2F5943;
+      background: #F1F6F2;
+      padding: 8px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(41, 86, 65, 0.06);
+    }}
+
+    /* Curriculum Bento / Stat Chips */
+    .hero-stats-row {{
+      position: absolute;
+      top: 1580px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1020px;
+      display: flex;
+      gap: 22px;
+      justify-content: center;
+      z-index: 10;
+    }}
+
+    .hero-stat-chip {{
+      flex: 1;
+      background: rgba(255, 255, 255, 0.90);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1.5px solid rgba(41, 86, 65, 0.12);
+      border-radius: 26px;
+      padding: 24px 18px;
+      text-align: center;
+      box-shadow: 0 14px 34px rgba(32, 77, 54, 0.08);
+    }}
+
+    .stat-number {{
+      font-family: var(--font-rounded);
+      font-size: 56px;
+      font-weight: 800;
+      color: #204D36;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }}
+
+    .stat-label {{
+      font-family: var(--font-rounded);
+      font-size: 22px;
+      font-weight: 700;
+      color: #4D7661;
+      margin-top: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }}
+
+    body[data-lang="Simplified Chinese"] .stat-label,
+    body[data-lang="Traditional Chinese"] .stat-label {{
+      font-family: var(--font-zh);
+      font-size: 22px;
+    }}
+
+    body[data-lang="Japanese"] .stat-label {{
+      font-family: var(--font-ja);
+      font-size: 20px;
+    }}
+
+    body[data-lang="Korean"] .stat-label {{
+      font-family: var(--font-ko);
+      font-size: 20px;
+    }}
+
+    /* Social Proof Quote */
+    .hero-quote-container {{
+      position: absolute;
+      top: 1820px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 860px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -706,28 +904,37 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 20px;
+      gap: 16px;
       text-align: center;
       width: 100%;
     }}
 
     .hero-quote-mark {{
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Georgia", serif;
-      font-size: 180px;
-      line-height: 0.6;
-      color: var(--title-color, #204D36);
-      opacity: 0.85;
-      font-weight: 800;
+      font-family: "Georgia", "Baskerville", serif;
+      font-size: 80px;
+      line-height: 0.8;
+      color: #3B7E5A;
+      opacity: 0.55;
+      font-weight: 700;
       user-select: none;
+      display: inline-block;
+    }}
+
+    .hero-quote-left {{
+      transform: translateY(-8px);
+    }}
+
+    .hero-quote-right {{
+      transform: translateY(8px);
     }}
 
     .hero-quote-text {{
       font-family: var(--font-rounded);
-      font-size: 48px;
+      font-size: 42px;
       font-weight: 800;
       line-height: 1.25;
       color: var(--title-color, #204D36);
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       white-space: nowrap;
     }}
@@ -735,41 +942,62 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     body[data-lang="Simplified Chinese"] .hero-quote-text,
     body[data-lang="Traditional Chinese"] .hero-quote-text {{
       font-family: var(--font-zh);
-      font-size: 50px;
+      font-size: 44px;
       letter-spacing: 0.08em;
     }}
 
     body[data-lang="Japanese"] .hero-quote-text {{
       font-family: var(--font-ja);
-      font-size: 46px;
+      font-size: 40px;
       letter-spacing: 0.04em;
     }}
 
     body[data-lang="Korean"] .hero-quote-text {{
       font-family: var(--font-ko);
-      font-size: 48px;
+      font-size: 42px;
       letter-spacing: 0.04em;
     }}
 
-    .hero-footer-bar {{
+    /* Physical Card Box Metaphor */
+    .hero-box-container {{
       position: absolute;
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 320px;
-      background: var(--title-color, #204D36);
+      z-index: 10;
+    }}
+
+    .hero-footer-bar {{
+      width: 100%;
+      height: 520px;
+      background: linear-gradient(180deg, #1C4631 0%, #133423 100%);
+      border-top: 3px solid rgba(255, 255, 255, 0.22);
+      box-shadow: 0 -24px 60px rgba(18, 48, 33, 0.20);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 10;
+      gap: 16px;
+      box-sizing: border-box;
+      padding-bottom: 60px;
     }}
 
     .hero-footer-text {{
       font-family: var(--font-rounded);
-      font-size: 56px;
-      font-weight: 800;
-      letter-spacing: 0.12em;
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: 0.16em;
       color: #FFFFFF;
+      text-transform: uppercase;
+      text-shadow: 0 4px 16px rgba(0, 0, 0, 0.40);
+    }}
+
+    .hero-footer-sub {{
+      font-family: var(--font-rounded);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.26em;
+      color: #82C39C;
       text-transform: uppercase;
     }}
 
@@ -1015,6 +1243,66 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
           const heroTitle = titleObj ? (currentDevice === "ipad" ? titleObj.ipad : titleObj.iphone) : "";
           const quoteObj = slide.quote ? (typeof slide.quote === "object" ? (slide.quote[currentLang] || slide.quote["English"]) : slide.quote) : "";
           const footerObj = slide.footer ? (typeof slide.footer === "object" ? (slide.footer[currentLang] || slide.footer["English"]) : slide.footer) : brandName;
+          const footerSubObj = slide.footerSub ? (typeof slide.footerSub === "object" ? (slide.footerSub[currentLang] || slide.footerSub["English"]) : slide.footerSub) : "";
+
+          // Flashcards
+          const cardsData = slide.cards || [
+            {{
+              type: "prefix",
+              category: "GREEK",
+              term: "meta-",
+              phonetic: "[ˈmɛtə]",
+              badge: {{ "English": "PREFIX", "Simplified Chinese": "前缀", "Traditional Chinese": "前綴", "Japanese": "接頭辞", "Korean": "접두사" }},
+              meaning: {{ "English": "beyond · change", "Simplified Chinese": "超越 · 改变", "Traditional Chinese": "超越 · 改變", "Japanese": "超えて · 変化", "Korean": "너머 · 변화" }},
+              examples: ["metaphor", "metabolism", "metamorphosis"]
+            }},
+            {{
+              type: "root",
+              category: "LATIN",
+              term: "struct",
+              phonetic: "[strʌkt]",
+              badge: {{ "English": "ROOT", "Simplified Chinese": "词根", "Traditional Chinese": "字根", "Japanese": "語根", "Korean": "어원" }},
+              meaning: {{ "English": "to build · form", "Simplified Chinese": "建造 · 构成", "Traditional Chinese": "建造 · 構成", "Japanese": "構築 · 建てる", "Korean": "짓다 · 구성" }},
+              examples: ["structure", "construct", "destruct"]
+            }}
+          ];
+
+          const cardsHtml = cardsData.map((c, idx) => {{
+            const badge = typeof c.badge === "object" ? (c.badge[currentLang] || c.badge["English"]) : (c.badge || "");
+            const meaning = typeof c.meaning === "object" ? (c.meaning[currentLang] || c.meaning["English"]) : (c.meaning || "");
+            const examplesHtml = (c.examples || []).map(ex => `<span class="example-pill">${{ex}}</span>`).join("");
+            const badgeClass = c.type === "root" ? "badge-root" : "badge-prefix";
+            return `
+              <div class="hero-flashcard hero-flashcard-${{idx + 1}}">
+                <div class="card-header">
+                  <span class="card-badge ${{badgeClass}}">${{badge}}</span>
+                  <span class="card-category">${{c.category || ""}}</span>
+                </div>
+                <div class="card-term">${{c.term}}</div>
+                <div class="card-meaning"><span class="card-ipa">${{c.phonetic || ""}}</span>${{meaning}}</div>
+                <div class="card-examples">
+                  ${{examplesHtml}}
+                </div>
+              </div>
+            `;
+          }}).join("");
+
+          // Stats
+          const statsData = slide.stats || [
+            {{ count: "290", label: {{ "English": "Roots", "Simplified Chinese": "核心词根", "Traditional Chinese": "核心字根", "Japanese": "重要語根", "Korean": "핵심 어원" }} }},
+            {{ count: "91", label: {{ "English": "Prefixes", "Simplified Chinese": "常用前缀", "Traditional Chinese": "常用前綴", "Japanese": "頻出接頭辞", "Korean": "빈출 접두사" }} }},
+            {{ count: "60", label: {{ "English": "Suffixes", "Simplified Chinese": "构词后缀", "Traditional Chinese": "構詞後綴", "Japanese": "重要接尾辞", "Korean": "조어 접미사" }} }}
+          ];
+
+          const statsHtml = statsData.map(s => {{
+            const label = typeof s.label === "object" ? (s.label[currentLang] || s.label["English"]) : (s.label || "");
+            return `
+              <div class="hero-stat-chip">
+                <div class="stat-number">${{s.count}}</div>
+                <div class="stat-label">${{label}}</div>
+              </div>
+            `;
+          }}).join("");
 
           slideContent = `
             <div class="canvas device-${{currentDevice}} slide-hero">
@@ -1025,6 +1313,12 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
               <div class="hero-headline-container">
                 <h1 class="hero-headline">${{heroTitle}}</h1>
               </div>
+              <div class="hero-cards-stage">
+                ${{cardsHtml}}
+              </div>
+              <div class="hero-stats-row">
+                ${{statsHtml}}
+              </div>
               <div class="hero-quote-container">
                 <div class="hero-quote-box">
                   <span class="hero-quote-mark hero-quote-left">“</span>
@@ -1032,8 +1326,11 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
                   <span class="hero-quote-mark hero-quote-right">”</span>
                 </div>
               </div>
-              <div class="hero-footer-bar">
-                <span class="hero-footer-text">${{footerObj}}</span>
+              <div class="hero-box-container">
+                <div class="hero-footer-bar">
+                  <span class="hero-footer-text">${{footerObj}}</span>
+                  ${{footerSubObj ? `<span class="hero-footer-sub">${{footerSubObj}}</span>` : ""}}
+                </div>
               </div>
             </div>
           `;
