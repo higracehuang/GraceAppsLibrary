@@ -176,3 +176,118 @@ GraceAppsLibrary provides a centralized, reusable screenshot pipeline across all
    guard ScreenshotEngine.isInMemoryStore(context: viewContext) else { return }
    ```
 2. **Zero Production Leakage:** All screenshot demo managers, debug settings sections, and preset seeders must be wrapped in `#if DEBUG ... #endif`.
+
+---
+
+## 📦 8. App Store Delivery & Directory Standards (Fastlane)
+
+To eliminate manual copy-pasting of 98 screenshots and localized texts into App Store Connect, adopt the standardized **Fastlane** directory structure:
+
+```text
+fastlane/
+├── Appfile                           # Bundle ID, Apple ID & Team ID
+├── Deliverfile                       # Deliver configuration (safe release settings)
+├── Fastfile                          # Automation lanes (upload_marketing)
+├── metadata/                         # Localized App Store metadata
+│   ├── en-US/
+│   │   ├── name.txt                  # App Title (≤ 30 characters)
+│   │   ├── subtitle.txt              # Subtitle (≤ 30 characters)
+│   │   ├── keywords.txt              # Comma-separated keywords (≤ 100 characters)
+│   │   ├── promotional_text.txt      # Promo hook (≤ 170 characters)
+│   │   ├── description.txt           # Full formatted description
+│   │   ├── release_notes.txt         # Version release notes (What's New)
+│   │   ├── support_url.txt           # Support URL
+│   │   ├── marketing_url.txt         # Marketing URL
+│   │   └── privacy_url.txt           # Privacy Policy URL
+│   ├── zh-Hans/
+│   ├── zh-Hant/
+│   ├── de-DE/
+│   ├── es-ES/
+│   ├── ja/
+│   └── ko/
+└── screenshots/                      # Standardized screenshot assets
+    ├── en-US/
+    │   ├── 01_iPhone_6.7.png
+    │   ├── 01_iPad_12.9.png
+    │   ├── 02_iPhone_6.7.png
+    │   ├── 02_iPad_12.9.png
+    │   └── ... (14 per locale)
+    ├── zh-Hans/
+    └── ...
+```
+
+### Naming & Ordering Rules
+- **Locale Folder Codes**: Must use Apple BCP 47 codes (`en-US`, `zh-Hans`, `zh-Hant`, `de-DE`, `es-ES`, `ja`, `ko`).
+- **File Names**: `<slide_order>_<device_type>.png` (e.g. `01_iPhone_6.7.png`, `01_iPad_12.9.png`).
+- **Ordering**: Fastlane sorts alphabetically. The `01_`, `02_`, `03_`, `04A_`, `04B_`, `05A_`, `05B_` prefix guarantees the exact App Store carousel sequence.
+- **Resolution Detection**: Fastlane automatically assigns device slots based on pixel dimensions (`1179 × 2556` for `APP_IPHONE_67`, `2048 × 2732` for `APP_IPAD_PRO_3GEN_129`).
+
+### Automated Export Script (`export_to_fastlane.py`)
+Apps should include `Scripts/export_to_fastlane.py` to bridge raw markdown documentation (`AppInfo/README.md`, `AppInfo/RELEASE_NOTES.md`) and render outputs (`Screenshots/AppStore/`) into `fastlane/`:
+1. **Dynamic Version Detection**: Reads `MARKETING_VERSION` from `project.pbxproj` and locates the matching `### Release X.Y.Z` notes section.
+2. **Pre-flight Character Validation**: Enforces Apple's strict limits (Title ≤ 30, Subtitle ≤ 30, Keywords ≤ 100, Promo ≤ 170) before export.
+3. **Selective Runs**: Supports `--metadata-only`, `--screenshots-only`, or explicit `--version X.Y.Z`.
+
+---
+
+## 🚀 9. CI/CD Integration: Xcode Cloud & GitHub Actions
+
+### Architecture: Decoupled Automation Model
+
+```mermaid
+flowchart TD
+    subgraph Binary Track (Xcode Cloud)
+        A["Git Tag / Push"] --> B["Xcode Cloud"]
+        B -->|"Auto-signs & compiles"| C["Uploads .ipa to TestFlight"]
+    end
+
+    subgraph Marketing Track (GitHub Actions)
+        D["Actions: 'Run workflow'"] --> E["GitHub Actions (macos-14)"]
+        F["GitHub Secrets<br/>ASC_KEY_ID, ASC_ISSUER_ID, ASC_PRIVATE_KEY"] --> E
+        E -->|"export_to_fastlane.py"| G["Refreshes metadata & screenshots"]
+        E -->|"fastlane deliver"| H["App Store Connect API"]
+        H -->|"Uploads metadata & screenshots"| I["Release in 'Prepare for Submission'"]
+    end
+
+    C --> I
+    I --> J["Submit for App Review"]
+```
+
+### Advantages
+- **Zero Certificate Management in CI**: Xcode Cloud manages signing certificates, provisioning profiles, and binary builds securely within Apple's infrastructure.
+- **No Ruby/Fastlane on Developer Mac**: GitHub Actions macOS runners come with Fastlane pre-installed. Developers run simple Python scripts locally.
+
+### Fastfile Configuration
+```ruby
+default_platform(:ios)
+
+platform :ios do
+  desc "Sync localized screenshots and metadata to App Store Connect"
+  lane :upload_marketing do |options|
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_PRIVATE_KEY"],
+      is_key_content_base64: false
+    )
+
+    deliver(
+      api_key: api_key,
+      force: true,
+      skip_binary_upload: true,
+      overwrite_screenshots: true,
+      skip_screenshots: options[:skip_screenshots] || false,
+      skip_metadata: options[:skip_metadata] || false,
+      app_version: options[:version]
+    )
+  end
+end
+```
+
+### GitHub Actions Workflow (`.github/workflows/sync-appstore.yml`)
+- Triggered manually via `workflow_dispatch` with toggle inputs (`skip_screenshots`, `skip_metadata`, `version`).
+- Uses 3 repository secrets:
+  - `ASC_KEY_ID`: 10-character API Key ID.
+  - `ASC_ISSUER_ID`: Apple Issuer UUID.
+  - `ASC_PRIVATE_KEY`: Content of the `.p8` private key.
+

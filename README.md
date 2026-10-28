@@ -413,7 +413,7 @@ Every App Store screenshot set across Grace Apps collects 5–6 screens showing:
 4. **A realistic example of the result users get** — Proof of progress and consistency over time (e.g. monthly consistency calendar, milestone celebration, earned badge collection).
 5. **Customization or another differentiator** — Personalization options, custom goals, pro perks, or unique controls that separate the app from generic alternatives.
 
-See [Skills/SCREENSHOTS.md](Skills/SCREENSHOTS.md) for the complete screenshot design playbook and caption guidelines.
+See [Skills/SCREENSHOTS.md](Skills/SCREENSHOTS.md) for the complete screenshot design playbook, caption guidelines, Fastlane delivery standards, and Xcode Cloud / GitHub Actions CI/CD.
 
 See [STOREFRONT_CHECK.md](STOREFRONT_CHECK.md) for the per-release storefront checklist: prices, metadata, IAP, privacy, localization, and ratings across storefronts.
 
