@@ -501,8 +501,9 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     .device-iphone .mockup-container {{
       top: {iphone_mockup_top};
       width: {iphone_mockup_width};
+      min-height: calc(2556px - {iphone_mockup_top} + 40px);
       background: #0D0F11;
-      padding: 14px 14px 0 14px;
+      padding: 14px 14px 40px 14px;
       border: 4px solid #C4C9CE;
       outline: 1px solid rgba(0, 0, 0, 0.28);
       border-radius: 114px 114px 0 0;
@@ -625,7 +626,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .hero-identity {{
       position: absolute;
-      top: 260px;
+      top: 180px;
       left: 100px;
       display: flex;
       align-items: center;
@@ -651,7 +652,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .hero-headline-container {{
       position: absolute;
-      top: 540px;
+      top: 480px;
       left: 100px;
       right: 100px;
       z-index: 10;
@@ -659,7 +660,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .hero-headline {{
       font-family: var(--font-rounded);
-      font-size: 136px;
+      font-size: 132px;
       line-height: 1.15;
       font-weight: 800;
       letter-spacing: -0.025em;
@@ -677,24 +678,24 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     body[data-lang="Japanese"] .hero-headline {{
       font-family: var(--font-ja);
-      font-size: 98px;
+      font-size: 96px;
       line-height: 1.30;
       font-weight: 700;
     }}
 
     body[data-lang="Korean"] .hero-headline {{
       font-family: var(--font-ko);
-      font-size: 108px;
+      font-size: 106px;
       line-height: 1.25;
       font-weight: 700;
     }}
 
     .hero-quote-container {{
       position: absolute;
-      top: 1540px;
+      top: 1480px;
       left: 50%;
       transform: translateX(-50%);
-      width: 660px;
+      width: 720px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -705,28 +706,28 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 16px;
+      gap: 20px;
       text-align: center;
       width: 100%;
     }}
 
     .hero-quote-mark {{
-      font-family: "Georgia", serif;
-      font-size: 130px;
-      line-height: 0.8;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Georgia", serif;
+      font-size: 180px;
+      line-height: 0.6;
       color: var(--title-color, #204D36);
       opacity: 0.85;
-      font-weight: 700;
+      font-weight: 800;
       user-select: none;
     }}
 
     .hero-quote-text {{
       font-family: var(--font-rounded);
-      font-size: 46px;
-      font-weight: 700;
+      font-size: 48px;
+      font-weight: 800;
       line-height: 1.25;
       color: var(--title-color, #204D36);
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
       white-space: nowrap;
     }}
