@@ -103,6 +103,23 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     default_title_color = default_theme.get("titleColor", "#133440")
     default_subtitle_color = default_theme.get("subtitleColor", "#3B6978")
 
+    # Typography configuration with robust defaults matching GraceApps visual standard
+    typography_cfg = config.get("typography", {})
+    iphone_typo = typography_cfg.get("iphone", {})
+    ipad_typo = typography_cfg.get("ipad", {})
+
+    iphone_title_size = iphone_typo.get("titleSize", "96px")
+    iphone_sub_size = iphone_typo.get("subtitleSize", "48px")
+    iphone_gap = iphone_typo.get("titleGap", "56px")
+    iphone_pad_top = iphone_typo.get("paddingTop", "100px")
+    iphone_mockup_top = iphone_typo.get("mockupTop", "580px")
+
+    ipad_title_size = ipad_typo.get("titleSize", "104px")
+    ipad_sub_size = ipad_typo.get("subtitleSize", "52px")
+    ipad_gap = ipad_typo.get("titleGap", "44px")
+    ipad_pad_top = ipad_typo.get("paddingTop", "100px")
+    ipad_mockup_top = ipad_typo.get("mockupTop", "390px")
+
     # Preprocess titles and subtitles to handle markdown *accents*
     processed_slides = []
     for s in slides:
@@ -151,13 +168,13 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
        TYPOGRAPHY & ROOT VARIABLES (GraceApps Standard)
        ======================================================== */
     :root {{
-      --font-rounded: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", system-ui, sans-serif;
-      --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
-      --font-mono: "SF Mono", Menlo, Consolas, monospace;
-      --font-zh: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      --font-zh-hant: -apple-system, "PingFang TC", "PingFang HK", "Noto Sans TC", sans-serif;
-      --font-ja: -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
-      --font-ko: -apple-system, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+      --font-rounded: "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", sans-serif;
+      --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", sans-serif;
+      --font-mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      --font-zh: "PingFang SC", "Noto Sans SC", "SF Pro Rounded", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-zh-hant: "PingFang TC", "PingFang HK", "Noto Sans TC", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-ja: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-ko: "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
 
       --bg-gradient: {default_bg};
       --default-accent-gradient: {default_accent};
@@ -330,13 +347,13 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     .canvas.device-iphone {{
       width: 1179px;
       height: 2556px;
-      padding-top: 100px;
+      padding-top: {iphone_pad_top};
     }}
 
     .canvas.device-ipad {{
       width: 2048px;
       height: 2732px;
-      padding-top: 75px;
+      padding-top: {ipad_pad_top};
     }}
 
     /* Interactive preview scaling */
@@ -408,28 +425,28 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     }}
 
     .device-iphone .caption-title {{
-      font-size: 96px;
+      font-size: {iphone_title_size};
       line-height: 1.14;
       letter-spacing: -0.022em;
-      margin-bottom: 56px;
+      margin-bottom: {iphone_gap};
     }}
 
     .device-iphone .caption-subtitle {{
-      font-size: 48px;
+      font-size: {iphone_sub_size};
       line-height: 1.30;
       letter-spacing: -0.005em;
     }}
 
     .device-ipad .caption-title {{
-      font-size: 128px;
+      font-size: {ipad_title_size};
       line-height: 1.15;
       letter-spacing: -0.02em;
-      margin-bottom: 50px;
+      margin-bottom: {ipad_gap};
       white-space: nowrap;
     }}
 
     .device-ipad .caption-subtitle {{
-      font-size: 62px;
+      font-size: {ipad_sub_size};
       line-height: 1.28;
       letter-spacing: 0;
       white-space: nowrap;
@@ -440,17 +457,33 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     body[data-lang="Simplified Chinese"] .caption-subtitle {{
       font-family: var(--font-zh);
     }}
+    body[data-lang="Simplified Chinese"] .caption-title {{
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }}
     body[data-lang="Traditional Chinese"] .caption-title,
     body[data-lang="Traditional Chinese"] .caption-subtitle {{
       font-family: var(--font-zh-hant);
+    }}
+    body[data-lang="Traditional Chinese"] .caption-title {{
+      font-weight: 600;
+      letter-spacing: 0.02em;
     }}
     body[data-lang="Japanese"] .caption-title,
     body[data-lang="Japanese"] .caption-subtitle {{
       font-family: var(--font-ja);
     }}
+    body[data-lang="Japanese"] .caption-title {{
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }}
     body[data-lang="Korean"] .caption-title,
     body[data-lang="Korean"] .caption-subtitle {{
       font-family: var(--font-ko);
+    }}
+    body[data-lang="Korean"] .caption-title {{
+      font-weight: 700;
+      letter-spacing: -0.01em;
     }}
 
     /* ========================================================
@@ -464,7 +497,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     }}
 
     .device-iphone .mockup-container {{
-      top: 580px;
+      top: {iphone_mockup_top};
       width: 968px;
       background: #0D0F11;
       padding: 14px 14px 0 14px;
@@ -492,7 +525,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     }}
 
     .device-ipad .mockup-container {{
-      top: 405px;
+      top: {ipad_mockup_top};
       width: 1520px;
       background: #111315;
       padding: 44px;
