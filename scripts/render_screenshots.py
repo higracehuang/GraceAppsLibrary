@@ -694,58 +694,68 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     /* 3D Flashcards Stage */
     .hero-cards-stage {{
       position: absolute;
-      top: 750px;
+      top: 720px;
       left: 50%;
       transform: translateX(-50%);
       width: 1040px;
-      height: 740px;
+      height: 940px;
       perspective: 1200px;
       z-index: 10;
     }}
 
     .hero-flashcard {{
       position: absolute;
-      border-radius: 36px;
+      border-radius: 34px;
       background: #FFFFFF;
       box-sizing: border-box;
-      padding: 36px 42px;
-      box-shadow: 0 32px 80px rgba(32, 77, 54, 0.18), 0 10px 28px rgba(0, 0, 0, 0.05);
+      padding: 32px 38px;
+      box-shadow: 0 28px 70px rgba(32, 77, 54, 0.16), 0 10px 24px rgba(0, 0, 0, 0.05);
       border: 1.5px solid rgba(41, 86, 65, 0.08);
     }}
 
     .hero-flashcard-1 {{
-      top: 10px;
+      top: 0px;
       left: 15px;
-      width: 630px;
-      height: 380px;
-      transform: rotate(-6deg);
+      width: 620px;
+      height: 350px;
+      transform: rotate(-5.5deg);
       z-index: 12;
     }}
 
     .hero-flashcard-2 {{
-      top: 290px;
+      top: 260px;
       right: 15px;
-      width: 650px;
-      height: 390px;
-      transform: rotate(5.5deg);
+      width: 640px;
+      height: 360px;
+      transform: rotate(5deg);
       z-index: 14;
-      box-shadow: 0 38px 90px rgba(32, 77, 54, 0.22), 0 12px 32px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 34px 85px rgba(32, 77, 54, 0.20), 0 12px 28px rgba(0, 0, 0, 0.06);
+    }}
+
+    .hero-flashcard-3 {{
+      top: 530px;
+      left: 35px;
+      width: 630px;
+      height: 350px;
+      transform: rotate(-3deg);
+      z-index: 16;
+      box-shadow: 0 38px 90px rgba(32, 77, 54, 0.22), 0 14px 32px rgba(0, 0, 0, 0.06);
     }}
 
     .card-header {{
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }}
 
     .card-badge {{
       font-family: var(--font-rounded);
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 800;
       letter-spacing: 0.06em;
-      padding: 6px 18px;
-      border-radius: 14px;
+      padding: 6px 16px;
+      border-radius: 12px;
       text-transform: uppercase;
     }}
 
@@ -759,9 +769,14 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       color: #1A4630;
     }}
 
+    .badge-suffix {{
+      background: #EAF4EE;
+      color: #23523B;
+    }}
+
     .card-category {{
       font-family: var(--font-rounded);
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
       color: #7A9F8D;
       letter-spacing: 0.06em;
@@ -770,7 +785,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .card-term {{
       font-family: var(--font-rounded);
-      font-size: 74px;
+      font-size: 70px;
       font-weight: 800;
       color: #1A3E2C;
       line-height: 1.05;
@@ -779,27 +794,11 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .card-meaning {{
       font-family: var(--font-rounded);
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 600;
       color: #3E6B54;
-      margin-top: 10px;
+      margin-top: 8px;
       line-height: 1.25;
-    }}
-
-    body[data-lang="Simplified Chinese"] .card-meaning,
-    body[data-lang="Traditional Chinese"] .card-meaning {{
-      font-family: var(--font-zh);
-      font-size: 28px;
-    }}
-
-    body[data-lang="Japanese"] .card-meaning {{
-      font-family: var(--font-ja);
-      font-size: 26px;
-    }}
-
-    body[data-lang="Korean"] .card-meaning {{
-      font-family: var(--font-ko);
-      font-size: 26px;
     }}
 
     .card-ipa {{
@@ -812,17 +811,17 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     .card-examples {{
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 24px;
+      gap: 10px;
+      margin-top: 20px;
     }}
 
     .example-pill {{
       font-family: var(--font-rounded);
-      font-size: 22px;
+      font-size: 21px;
       font-weight: 600;
       color: #2F5943;
       background: #F1F6F2;
-      padding: 8px 18px;
+      padding: 7px 16px;
       border-radius: 12px;
       border: 1px solid rgba(41, 86, 65, 0.06);
     }}
@@ -830,7 +829,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     /* Curriculum Bento / Stat Chips */
     .hero-stats-row {{
       position: absolute;
-      top: 1580px;
+      top: 1730px;
       left: 50%;
       transform: translateX(-50%);
       width: 1020px;
@@ -847,14 +846,14 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       -webkit-backdrop-filter: blur(24px);
       border: 1.5px solid rgba(41, 86, 65, 0.12);
       border-radius: 26px;
-      padding: 24px 18px;
+      padding: 22px 18px;
       text-align: center;
       box-shadow: 0 14px 34px rgba(32, 77, 54, 0.08);
     }}
 
     .stat-number {{
       font-family: var(--font-rounded);
-      font-size: 56px;
+      font-size: 54px;
       font-weight: 800;
       color: #204D36;
       line-height: 1;
@@ -887,10 +886,66 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       font-size: 20px;
     }}
 
+    /* Learning Methodology Feature Capsules */
+    .hero-features-row {{
+      position: absolute;
+      top: 1930px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1020px;
+      display: flex;
+      gap: 18px;
+      justify-content: center;
+      z-index: 10;
+    }}
+
+    .hero-feature-capsule {{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.90);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid rgba(41, 86, 65, 0.12);
+      border-radius: 40px;
+      padding: 18px 30px;
+      box-shadow: 0 10px 28px rgba(32, 77, 54, 0.06);
+    }}
+
+    .feature-capsule-icon {{
+      font-size: 26px;
+      line-height: 1;
+    }}
+
+    .feature-capsule-text {{
+      font-family: var(--font-rounded);
+      font-size: 25px;
+      font-weight: 700;
+      color: var(--title-color, #204D36);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }}
+
+    body[data-lang="Simplified Chinese"] .feature-capsule-text,
+    body[data-lang="Traditional Chinese"] .feature-capsule-text {{
+      font-family: var(--font-zh);
+      font-size: 25px;
+    }}
+
+    body[data-lang="Japanese"] .feature-capsule-text {{
+      font-family: var(--font-ja);
+      font-size: 23px;
+    }}
+
+    body[data-lang="Korean"] .feature-capsule-text {{
+      font-family: var(--font-ko);
+      font-size: 23px;
+    }}
+
     /* Social Proof Quote */
     .hero-quote-container {{
       position: absolute;
-      top: 1820px;
+      top: 2120px;
       left: 50%;
       transform: translateX(-50%);
       width: 860px;
@@ -956,49 +1011,6 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       font-family: var(--font-ko);
       font-size: 42px;
       letter-spacing: 0.04em;
-    }}
-
-    /* Physical Card Box Metaphor */
-    .hero-box-container {{
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      z-index: 10;
-    }}
-
-    .hero-footer-bar {{
-      width: 100%;
-      height: 520px;
-      background: linear-gradient(180deg, #1C4631 0%, #133423 100%);
-      border-top: 3px solid rgba(255, 255, 255, 0.22);
-      box-shadow: 0 -24px 60px rgba(18, 48, 33, 0.20);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      box-sizing: border-box;
-      padding-bottom: 60px;
-    }}
-
-    .hero-footer-text {{
-      font-family: var(--font-rounded);
-      font-size: 72px;
-      font-weight: 900;
-      letter-spacing: 0.16em;
-      color: #FFFFFF;
-      text-transform: uppercase;
-      text-shadow: 0 4px 16px rgba(0, 0, 0, 0.40);
-    }}
-
-    .hero-footer-sub {{
-      font-family: var(--font-rounded);
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: 0.26em;
-      color: #82C39C;
-      text-transform: uppercase;
     }}
 
     body[data-lang="Simplified Chinese"] .hero-footer-text,
@@ -1242,18 +1254,16 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
           const brandName = (slide.brand && slide.brand.name) ? (typeof slide.brand.name === "object" ? (slide.brand.name[currentLang] || slide.brand.name["English"]) : slide.brand.name) : '{app_name}';
           const heroTitle = titleObj ? (currentDevice === "ipad" ? titleObj.ipad : titleObj.iphone) : "";
           const quoteObj = slide.quote ? (typeof slide.quote === "object" ? (slide.quote[currentLang] || slide.quote["English"]) : slide.quote) : "";
-          const footerObj = slide.footer ? (typeof slide.footer === "object" ? (slide.footer[currentLang] || slide.footer["English"]) : slide.footer) : brandName;
-          const footerSubObj = slide.footerSub ? (typeof slide.footerSub === "object" ? (slide.footerSub[currentLang] || slide.footerSub["English"]) : slide.footerSub) : "";
 
-          // Flashcards
+          // Flashcards (universal English learning content)
           const cardsData = slide.cards || [
             {{
               type: "prefix",
               category: "GREEK",
               term: "meta-",
               phonetic: "[ˈmɛtə]",
-              badge: {{ "English": "PREFIX", "Simplified Chinese": "前缀", "Traditional Chinese": "前綴", "Japanese": "接頭辞", "Korean": "접두사" }},
-              meaning: {{ "English": "beyond · change", "Simplified Chinese": "超越 · 改变", "Traditional Chinese": "超越 · 改變", "Japanese": "超えて · 変化", "Korean": "너머 · 변화" }},
+              badge: "PREFIX",
+              meaning: "beyond · change",
               examples: ["metaphor", "metabolism", "metamorphosis"]
             }},
             {{
@@ -1261,9 +1271,18 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
               category: "LATIN",
               term: "struct",
               phonetic: "[strʌkt]",
-              badge: {{ "English": "ROOT", "Simplified Chinese": "词根", "Traditional Chinese": "字根", "Japanese": "語根", "Korean": "어원" }},
-              meaning: {{ "English": "to build · form", "Simplified Chinese": "建造 · 构成", "Traditional Chinese": "建造 · 構成", "Japanese": "構築 · 建てる", "Korean": "짓다 · 구성" }},
+              badge: "ROOT",
+              meaning: "to build · form",
               examples: ["structure", "construct", "destruct"]
+            }},
+            {{
+              type: "suffix",
+              category: "GREEK",
+              term: "-ology",
+              phonetic: "[ˈɑːlədʒi]",
+              badge: "SUFFIX",
+              meaning: "study of · science",
+              examples: ["biology", "psychology", "mythology"]
             }}
           ];
 
@@ -1271,7 +1290,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
             const badge = typeof c.badge === "object" ? (c.badge[currentLang] || c.badge["English"]) : (c.badge || "");
             const meaning = typeof c.meaning === "object" ? (c.meaning[currentLang] || c.meaning["English"]) : (c.meaning || "");
             const examplesHtml = (c.examples || []).map(ex => `<span class="example-pill">${{ex}}</span>`).join("");
-            const badgeClass = c.type === "root" ? "badge-root" : "badge-prefix";
+            const badgeClass = c.type === "root" ? "badge-root" : (c.type === "suffix" ? "badge-suffix" : "badge-prefix");
             return `
               <div class="hero-flashcard hero-flashcard-${{idx + 1}}">
                 <div class="card-header">
@@ -1304,6 +1323,23 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
             `;
           }}).join("");
 
+          // Feature Capsules
+          const featuresData = slide.features || [
+            {{ icon: "⚡", title: {{ "English": "Active Recall", "Simplified Chinese": "主动回忆", "Traditional Chinese": "主動回想", "Japanese": "想起学習", "Korean": "능동 회상" }} }},
+            {{ icon: "🔁", title: {{ "English": "Spaced Repetition", "Simplified Chinese": "间隔复习", "Traditional Chinese": "間隔複習", "Japanese": "分散学習", "Korean": "간격 반복" }} }},
+            {{ icon: "🎯", title: {{ "English": "Daily Quizzes", "Simplified Chinese": "智能测验", "Traditional Chinese": "智能測驗", "Japanese": "実力クイズ", "Korean": "실전 퀴즈" }} }}
+          ];
+
+          const featuresHtml = featuresData.map(f => {{
+            const fTitle = typeof f.title === "object" ? (f.title[currentLang] || f.title["English"]) : (f.title || "");
+            return `
+              <div class="hero-feature-capsule">
+                <span class="feature-capsule-icon">${{f.icon || "✦"}}</span>
+                <span class="feature-capsule-text">${{fTitle}}</span>
+              </div>
+            `;
+          }}).join("");
+
           slideContent = `
             <div class="canvas device-${{currentDevice}} slide-hero">
               <div class="hero-identity">
@@ -1319,17 +1355,14 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
               <div class="hero-stats-row">
                 ${{statsHtml}}
               </div>
+              <div class="hero-features-row">
+                ${{featuresHtml}}
+              </div>
               <div class="hero-quote-container">
                 <div class="hero-quote-box">
                   <span class="hero-quote-mark hero-quote-left">“</span>
                   <div class="hero-quote-text">${{quoteObj}}</div>
                   <span class="hero-quote-mark hero-quote-right">”</span>
-                </div>
-              </div>
-              <div class="hero-box-container">
-                <div class="hero-footer-bar">
-                  <span class="hero-footer-text">${{footerObj}}</span>
-                  ${{footerSubObj ? `<span class="hero-footer-sub">${{footerSubObj}}</span>` : ""}}
                 </div>
               </div>
             </div>
