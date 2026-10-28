@@ -612,6 +612,185 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       z-index: 10;
     }}
 
+    /* ========================================================
+       SLIDE TYPE 4: HERO POSTER (Pure HTML Cover Screen)
+       ======================================================== */
+    .slide-hero {{
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg-gradient);
+    }}
+
+    .hero-identity {{
+      position: absolute;
+      top: 260px;
+      left: 100px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      z-index: 10;
+    }}
+
+    .hero-app-icon {{
+      width: 96px;
+      height: 96px;
+      border-radius: 22px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      display: block;
+    }}
+
+    .hero-app-name {{
+      font-family: var(--font-rounded);
+      font-size: 56px;
+      font-weight: 700;
+      color: var(--title-color, #204D36);
+      letter-spacing: -0.01em;
+    }}
+
+    .hero-headline-container {{
+      position: absolute;
+      top: 540px;
+      left: 100px;
+      right: 100px;
+      z-index: 10;
+    }}
+
+    .hero-headline {{
+      font-family: var(--font-rounded);
+      font-size: 136px;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: #56B87D;
+      text-align: left;
+    }}
+
+    body[data-lang="Simplified Chinese"] .hero-headline,
+    body[data-lang="Traditional Chinese"] .hero-headline {{
+      font-family: var(--font-zh);
+      font-size: 112px;
+      line-height: 1.25;
+      font-weight: 700;
+    }}
+
+    body[data-lang="Japanese"] .hero-headline {{
+      font-family: var(--font-ja);
+      font-size: 98px;
+      line-height: 1.30;
+      font-weight: 700;
+    }}
+
+    body[data-lang="Korean"] .hero-headline {{
+      font-family: var(--font-ko);
+      font-size: 108px;
+      line-height: 1.25;
+      font-weight: 700;
+    }}
+
+    .hero-quote-container {{
+      position: absolute;
+      top: 1540px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 660px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }}
+
+    .hero-quote-box {{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      text-align: center;
+      width: 100%;
+    }}
+
+    .hero-quote-mark {{
+      font-family: "Georgia", serif;
+      font-size: 130px;
+      line-height: 0.8;
+      color: var(--title-color, #204D36);
+      opacity: 0.85;
+      font-weight: 700;
+      user-select: none;
+    }}
+
+    .hero-quote-text {{
+      font-family: var(--font-rounded);
+      font-size: 46px;
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--title-color, #204D36);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }}
+
+    body[data-lang="Simplified Chinese"] .hero-quote-text,
+    body[data-lang="Traditional Chinese"] .hero-quote-text {{
+      font-family: var(--font-zh);
+      font-size: 50px;
+      letter-spacing: 0.08em;
+    }}
+
+    body[data-lang="Japanese"] .hero-quote-text {{
+      font-family: var(--font-ja);
+      font-size: 46px;
+      letter-spacing: 0.04em;
+    }}
+
+    body[data-lang="Korean"] .hero-quote-text {{
+      font-family: var(--font-ko);
+      font-size: 48px;
+      letter-spacing: 0.04em;
+    }}
+
+    .hero-footer-bar {{
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 320px;
+      background: var(--title-color, #204D36);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }}
+
+    .hero-footer-text {{
+      font-family: var(--font-rounded);
+      font-size: 56px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: #FFFFFF;
+      text-transform: uppercase;
+    }}
+
+    body[data-lang="Simplified Chinese"] .hero-footer-text,
+    body[data-lang="Traditional Chinese"] .hero-footer-text {{
+      font-family: var(--font-zh);
+      font-size: 56px;
+      letter-spacing: 0.15em;
+    }}
+
+    body[data-lang="Japanese"] .hero-footer-text {{
+      font-family: var(--font-ja);
+      font-size: 54px;
+      letter-spacing: 0.15em;
+    }}
+
+    body[data-lang="Korean"] .hero-footer-text {{
+      font-family: var(--font-ko);
+      font-size: 56px;
+      letter-spacing: 0.15em;
+    }}
+
     .feature-card {{
       background: rgba(255, 255, 255, 0.72);
       backdrop-filter: blur(40px);
@@ -826,6 +1005,34 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
               </div>
               <div class="feature-grid-container">
                 ${{featureCards}}
+              </div>
+            </div>
+          `;
+        }} else if (slideType === "hero") {{
+          const brandIcon = (slide.brand && slide.brand.icon) ? slide.brand.icon : '{app_icon}';
+          const brandName = (slide.brand && slide.brand.name) ? (typeof slide.brand.name === "object" ? (slide.brand.name[currentLang] || slide.brand.name["English"]) : slide.brand.name) : '{app_name}';
+          const heroTitle = titleObj ? (currentDevice === "ipad" ? titleObj.ipad : titleObj.iphone) : "";
+          const quoteObj = slide.quote ? (typeof slide.quote === "object" ? (slide.quote[currentLang] || slide.quote["English"]) : slide.quote) : "";
+          const footerObj = slide.footer ? (typeof slide.footer === "object" ? (slide.footer[currentLang] || slide.footer["English"]) : slide.footer) : brandName;
+
+          slideContent = `
+            <div class="canvas device-${{currentDevice}} slide-hero">
+              <div class="hero-identity">
+                <img src="${{brandIcon}}" alt="App Icon" class="hero-app-icon" onerror="this.style.display='none'" />
+                <span class="hero-app-name">${{brandName}}</span>
+              </div>
+              <div class="hero-headline-container">
+                <h1 class="hero-headline">${{heroTitle}}</h1>
+              </div>
+              <div class="hero-quote-container">
+                <div class="hero-quote-box">
+                  <span class="hero-quote-mark hero-quote-left">“</span>
+                  <div class="hero-quote-text">${{quoteObj}}</div>
+                  <span class="hero-quote-mark hero-quote-right">”</span>
+                </div>
+              </div>
+              <div class="hero-footer-bar">
+                <span class="hero-footer-text">${{footerObj}}</span>
               </div>
             </div>
           `;

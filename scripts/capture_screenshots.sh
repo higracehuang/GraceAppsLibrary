@@ -113,7 +113,7 @@ presets = []
 for s in slides:
     stype = s.get('type', 'standard-device')
     # Only capture slides that need simulator captures
-    if stype in ('standard-device', 'scene-composite') or ('preset' in s and stype != 'static-asset' and stype != 'feature-grid'):
+    if stype in ('standard-device', 'scene-composite') or ('preset' in s and stype not in ('static-asset', 'feature-grid', 'hero', 'artwork-hero')):
         p_id = s.get('preset', s.get('id', ''))
         raw_fname = s.get('rawFilename') or s.get('raw') or s.get('filename', '')
         if isinstance(raw_fname, dict):
