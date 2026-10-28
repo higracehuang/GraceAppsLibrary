@@ -108,17 +108,17 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     iphone_typo = typography_cfg.get("iphone", {})
     ipad_typo = typography_cfg.get("ipad", {})
 
-    iphone_title_size = iphone_typo.get("titleSize", "96px")
-    iphone_sub_size = iphone_typo.get("subtitleSize", "48px")
-    iphone_gap = iphone_typo.get("titleGap", "56px")
-    iphone_pad_top = iphone_typo.get("paddingTop", "100px")
-    iphone_mockup_top = iphone_typo.get("mockupTop", "580px")
+    iphone_title_size = iphone_typo.get("titleSize", "110px")
+    iphone_sub_size = iphone_typo.get("subtitleSize", "64px")
+    iphone_gap = iphone_typo.get("titleGap", "44px")
+    iphone_pad_top = iphone_typo.get("paddingTop", "135px")
+    iphone_mockup_top = iphone_typo.get("mockupTop", "740px")
 
-    ipad_title_size = ipad_typo.get("titleSize", "104px")
-    ipad_sub_size = ipad_typo.get("subtitleSize", "52px")
-    ipad_gap = ipad_typo.get("titleGap", "44px")
-    ipad_pad_top = ipad_typo.get("paddingTop", "100px")
-    ipad_mockup_top = ipad_typo.get("mockupTop", "390px")
+    ipad_title_size = ipad_typo.get("titleSize", "140px")
+    ipad_sub_size = ipad_typo.get("subtitleSize", "74px")
+    ipad_gap = ipad_typo.get("titleGap", "22px")
+    ipad_pad_top = ipad_typo.get("paddingTop", "116px")
+    ipad_mockup_top = ipad_typo.get("mockupTop", "445px")
 
     # Preprocess titles and subtitles to handle markdown *accents*
     processed_slides = []
@@ -381,7 +381,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     }}
 
     .device-iphone .ambient-glow {{
-      top: 480px;
+      top: 660px;
       width: 1100px;
       height: 1100px;
       filter: blur(90px);
@@ -389,7 +389,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     }}
 
     .device-ipad .ambient-glow {{
-      top: 380px;
+      top: 420px;
       width: 1800px;
       height: 1800px;
       filter: blur(120px);
@@ -412,8 +412,8 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     }}
 
     .caption-subtitle {{
-      font-family: var(--font-display);
-      font-weight: 500;
+      font-family: var(--font-rounded);
+      font-weight: 600;
       color: var(--subtitle-color);
     }}
 
@@ -426,15 +426,15 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .device-iphone .caption-title {{
       font-size: {iphone_title_size};
-      line-height: 1.14;
+      line-height: 1.15;
       letter-spacing: -0.022em;
       margin-bottom: {iphone_gap};
     }}
 
     .device-iphone .caption-subtitle {{
       font-size: {iphone_sub_size};
-      line-height: 1.30;
-      letter-spacing: -0.005em;
+      line-height: 1.34;
+      letter-spacing: -0.01em;
     }}
 
     .device-ipad .caption-title {{
@@ -447,8 +447,8 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .device-ipad .caption-subtitle {{
       font-size: {ipad_sub_size};
-      line-height: 1.28;
-      letter-spacing: 0;
+      line-height: 1.26;
+      letter-spacing: -0.01em;
       white-space: nowrap;
     }}
 
