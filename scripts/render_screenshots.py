@@ -168,13 +168,13 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
        TYPOGRAPHY & ROOT VARIABLES (GraceApps Standard)
        ======================================================== */
     :root {{
-      --font-rounded: "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", sans-serif;
-      --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", sans-serif;
+      --font-rounded: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", sans-serif;
+      --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Plus Jakarta Sans", sans-serif;
       --font-mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
-      --font-zh: "PingFang SC", "Noto Sans SC", "SF Pro Rounded", -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-zh-hant: "PingFang TC", "PingFang HK", "Noto Sans TC", -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-ja: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-ko: "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-zh: "PingFang SC", "Noto Sans SC", ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-zh-hant: "PingFang TC", "PingFang HK", "Noto Sans TC", ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-ja: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-ko: "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif;
 
       --bg-gradient: {default_bg};
       --default-accent-gradient: {default_accent};
