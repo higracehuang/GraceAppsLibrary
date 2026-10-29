@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import SwiftUI
 
 /// Coordinator managing onboarding step navigation, completion state, and transition callbacks.
 public final class OnboardingCoordinator: ObservableObject {
@@ -53,27 +54,45 @@ public final class OnboardingCoordinator: ObservableObject {
     }
     
     /// Advances to the next step, or triggers `complete()` if already on the last step.
-    public func next() {
+    public func next(animated: Bool = true) {
         guard totalSteps > 0 else { return }
         if currentStep < totalSteps - 1 {
-            currentStep += 1
+            if animated {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    currentStep += 1
+                }
+            } else {
+                currentStep += 1
+            }
         } else {
             complete()
         }
     }
     
     /// Goes back to the previous step if not on the first step.
-    public func previous() {
+    public func previous(animated: Bool = true) {
         if currentStep > 0 {
-            currentStep -= 1
+            if animated {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    currentStep -= 1
+                }
+            } else {
+                currentStep -= 1
+            }
         }
     }
     
     /// Navigates directly to a target step within bounds.
-    public func goTo(step: Int) {
+    public func goTo(step: Int, animated: Bool = true) {
         guard totalSteps > 0 else { return }
         let clamped = max(0, min(step, totalSteps - 1))
-        currentStep = clamped
+        if animated {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                currentStep = clamped
+            }
+        } else {
+            currentStep = clamped
+        }
     }
     
     /// Triggers the skip handler if provided, or defaults to calling `complete()`.
