@@ -321,7 +321,7 @@ prepare_device() {
     xcrun simctl boot "${udid}"
   fi
 
-  xcrun simctl bootstatus "${udid}" >/dev/null 2>&1
+  xcrun simctl bootstatus "${udid}" -b >/dev/null 2>&1 || true
 
   echo "  → Installing latest app..."
   xcrun simctl install "${udid}" "${APP_PATH}"
@@ -371,7 +371,11 @@ capture_device() {
         -AppleLocale "${apple_locale}" >/dev/null
 
       # Initial wait for cold-launch, view animation and seeding
-      sleep 6.0
+      if [[ "${preset_id}" == "4"* || "${preset_id}" == "6"* ]]; then
+        sleep 8.5
+      else
+        sleep 6.0
+      fi
 
       # Verification loop: ensure the app has transitioned off the splash/launch screen
       local max_retries=6
