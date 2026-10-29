@@ -356,8 +356,8 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       flex-direction: row !important;
       flex-wrap: nowrap !important;
       justify-content: flex-start !important;
-      align-items: center !important;
-      gap: 14px !important;
+      align-items: flex-start !important;
+      gap: 12px !important;
       width: 100% !important;
       max-width: 100% !important;
       overflow-x: auto !important;
@@ -372,24 +372,43 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     }}
 
     body[data-view="appstore"]:not(.capture-mode) .slide-wrapper {{
-      flex: 0 0 auto !important;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      zoom: 0.28;
-    }}
-
-    body[data-view="appstore"]:not(.capture-mode)[data-device="ipad"] .slide-wrapper {{
-      zoom: 0.24;
+      flex: 0 0 330px !important;
+      width: 330px !important;
+      max-width: 330px !important;
+      height: 716px !important;
+      position: relative !important;
+      overflow: visible !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }}
 
     body[data-view="appstore"]:not(.capture-mode) .canvas {{
+      transform: scale(0.28) !important;
+      transform-origin: top left !important;
       border-radius: 40px !important;
       box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45) !important;
     }}
 
+    body[data-view="appstore"]:not(.capture-mode)[data-device="ipad"] .slide-wrapper {{
+      flex: 0 0 492px !important;
+      width: 492px !important;
+      max-width: 492px !important;
+      height: 656px !important;
+    }}
+
+    body[data-view="appstore"]:not(.capture-mode)[data-device="ipad"] .canvas {{
+      transform: scale(0.24) !important;
+    }}
+
     body.capture-mode .slide-wrapper {{
+      width: auto !important;
+      height: auto !important;
+      max-width: none !important;
       zoom: 1 !important;
+    }}
+
+    body.capture-mode .canvas {{
+      transform: none !important;
     }}
 
     .slide-wrapper {{
