@@ -301,11 +301,66 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .gallery {{
       display: flex;
+      gap: 32px;
+      transition: all 0.2s ease;
+    }}
+
+    /* Row View (Default) */
+    body[data-view="row"] {{
+      padding: 24px 24px 80px;
+      align-items: flex-start;
+      overflow-x: auto;
+    }}
+
+    body[data-view="row"] .preview-header {{
+      position: sticky;
+      left: 0;
+      max-width: none;
+      width: fit-content;
+      min-width: 100%;
+      z-index: 100;
+    }}
+
+    body[data-view="row"] .gallery {{
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      align-items: flex-start;
+      max-width: none;
+      width: max-content;
+      padding: 10px 10px 40px;
+    }}
+
+    /* Grid View */
+    body[data-view="grid"] .gallery {{
       flex-wrap: wrap;
       justify-content: center;
-      gap: 36px;
       max-width: 1700px;
       width: 100%;
+    }}
+
+    /* Scaling presets */
+    body[data-scale="fit"] .slide-wrapper {{
+      zoom: 0.28;
+    }}
+    body[data-scale="fit"][data-device="ipad"] .slide-wrapper {{
+      zoom: 0.22;
+    }}
+
+    body[data-scale="compact"] .slide-wrapper {{
+      zoom: 0.35;
+    }}
+
+    body[data-scale="medium"] .slide-wrapper {{
+      zoom: 0.50;
+    }}
+
+    body[data-scale="full"] .slide-wrapper {{
+      zoom: 1;
+    }}
+
+    body.capture-mode .slide-wrapper {{
+      zoom: 1 !important;
     }}
 
     .slide-wrapper {{
@@ -1392,6 +1447,14 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
         <span class="control-label">Language</span>
         <!-- Populated dynamically -->
       </div>
+
+      <div class="control-group" id="view-selector">
+        <span class="control-label">View</span>
+        <button class="pill-btn active" data-view="row" data-scale="fit">Row (Fit)</button>
+        <button class="pill-btn" data-view="row" data-scale="compact">Row (35%)</button>
+        <button class="pill-btn" data-view="row" data-scale="medium">Row (50%)</button>
+        <button class="pill-btn" data-view="grid" data-scale="full">Grid (100%)</button>
+      </div>
     </div>
   </header>
 
@@ -1409,12 +1472,17 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     if (params.get("lang")) currentLang = params.get("lang");
     const slideParam = params.get("slide");
 
+    let currentView = params.get("view") || "row";
+    let currentScale = params.get("scale") || "fit";
+
     if (slideParam) {{
       document.body.classList.add("capture-mode");
     }}
 
     document.body.setAttribute("data-lang", currentLang);
     document.body.setAttribute("data-device", currentDevice);
+    document.body.setAttribute("data-view", currentView);
+    document.body.setAttribute("data-scale", currentScale);
 
     function getRawImagePath(device, lang, filename) {{
       const folderDevice = device === "ipad" ? "iPad" : "iPhone";
@@ -1671,6 +1739,25 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
         currentDevice = btn.getAttribute("data-device");
         document.body.setAttribute("data-device", currentDevice);
         renderGallery();
+      }});
+    }});
+
+    // View selector events
+    const viewButtons = document.querySelectorAll("#view-selector .pill-btn");
+    viewButtons.forEach(btn => {{
+      const bView = btn.getAttribute("data-view");
+      const bScale = btn.getAttribute("data-scale");
+      if (bView === currentView && bScale === currentScale) {{
+        viewButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      }}
+      btn.addEventListener("click", () => {{
+        viewButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentView = btn.getAttribute("data-view");
+        currentScale = btn.getAttribute("data-scale");
+        document.body.setAttribute("data-view", currentView);
+        document.body.setAttribute("data-scale", currentScale);
       }});
     }});
 
