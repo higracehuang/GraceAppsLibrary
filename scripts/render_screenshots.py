@@ -339,18 +339,17 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
        APPLE APP STORE VIEW (Side-by-side in a row)
        ======================================================== */
     body[data-view="appstore"]:not(.capture-mode) {{
-      padding: 24px 24px 60px;
-      align-items: flex-start;
+      padding: 24px 0 60px 0;
+      align-items: stretch;
       background: #0B161B;
-      overflow-x: auto;
+      overflow-x: hidden;
+      width: 100%;
     }}
 
     body[data-view="appstore"]:not(.capture-mode) .preview-header {{
-      position: sticky;
-      left: 24px;
+      margin: 0 auto 24px auto;
       max-width: 1750px;
-      width: 100%;
-      margin-bottom: 24px;
+      width: calc(100% - 48px);
       z-index: 100;
     }}
 
@@ -361,11 +360,14 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       justify-content: flex-start !important;
       align-items: flex-start !important;
       gap: 12px !important;
-      width: max-content !important;
-      max-width: none !important;
-      overflow-x: visible !important;
-      overflow-y: visible !important;
-      padding: 10px 0 30px 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      padding: 10px 32px 30px 32px !important;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
     }}
 
     body[data-view="appstore"]:not(.capture-mode) .slide-meta {{
@@ -1800,6 +1802,9 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
         btn.classList.add("active");
         currentView = btn.getAttribute("data-view");
         document.body.setAttribute("data-view", currentView);
+        const gal = document.getElementById("gallery");
+        if (gal) gal.scrollLeft = 0;
+        window.scrollTo(0, 0);
       }});
     }});
 
