@@ -340,15 +340,18 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
        ======================================================== */
     body[data-view="appstore"]:not(.capture-mode) {{
       padding: 24px 24px 60px;
-      align-items: center;
+      align-items: flex-start;
       background: #0B161B;
-      overflow-x: hidden;
+      overflow-x: auto;
     }}
 
     body[data-view="appstore"]:not(.capture-mode) .preview-header {{
+      position: sticky;
+      left: 24px;
       max-width: 1750px;
       width: 100%;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
+      z-index: 100;
     }}
 
     body[data-view="appstore"]:not(.capture-mode) .gallery {{
@@ -358,13 +361,11 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       justify-content: flex-start !important;
       align-items: flex-start !important;
       gap: 12px !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      overflow-x: auto !important;
-      overflow-y: hidden !important;
-      padding: 10px 32px 30px !important;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
+      width: max-content !important;
+      max-width: none !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+      padding: 10px 0 30px 0 !important;
     }}
 
     body[data-view="appstore"]:not(.capture-mode) .slide-meta {{
