@@ -300,22 +300,58 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     }}
 
     /* ========================================================
-       APP STORE ROW CAROUSEL VIEW
+       ORIGINAL 1 COLUMN VIEW (Default)
        ======================================================== */
-    body:not(.capture-mode) {{
+    .gallery {{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+      max-width: 1700px;
+      width: 100%;
+    }}
+
+    .slide-wrapper {{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }}
+
+    .slide-meta {{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: #88A6B2;
+      font-family: var(--font-mono);
+    }}
+
+    .slide-meta .badge {{
+      background: rgba(83, 184, 218, 0.2);
+      color: #79D4F2;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }}
+
+    /* ========================================================
+       APPLE APP STORE VIEW (Side-by-side in a row)
+       ======================================================== */
+    body[data-view="appstore"]:not(.capture-mode) {{
       padding: 24px 24px 60px;
       align-items: center;
       background: #0B161B;
       overflow-x: hidden;
     }}
 
-    body:not(.capture-mode) .preview-header {{
+    body[data-view="appstore"]:not(.capture-mode) .preview-header {{
       max-width: 1750px;
       width: 100%;
       margin-bottom: 20px;
     }}
 
-    body:not(.capture-mode) .gallery {{
+    body[data-view="appstore"]:not(.capture-mode) .gallery {{
       display: flex !important;
       flex-direction: row !important;
       flex-wrap: nowrap !important;
@@ -331,12 +367,11 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       -webkit-overflow-scrolling: touch;
     }}
 
-    /* Hide engineering metadata labels in App Store preview */
-    body:not(.capture-mode) .slide-meta {{
+    body[data-view="appstore"]:not(.capture-mode) .slide-meta {{
       display: none !important;
     }}
 
-    body:not(.capture-mode) .slide-wrapper {{
+    body[data-view="appstore"]:not(.capture-mode) .slide-wrapper {{
       flex: 0 0 auto !important;
       display: flex;
       flex-direction: column;
@@ -344,11 +379,11 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       zoom: 0.28;
     }}
 
-    body:not(.capture-mode)[data-device="ipad"] .slide-wrapper {{
+    body[data-view="appstore"]:not(.capture-mode)[data-device="ipad"] .slide-wrapper {{
       zoom: 0.24;
     }}
 
-    body:not(.capture-mode) .canvas {{
+    body[data-view="appstore"]:not(.capture-mode) .canvas {{
       border-radius: 40px !important;
       box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45) !important;
     }}
@@ -1441,6 +1476,12 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
         <span class="control-label">Language</span>
         <!-- Populated dynamically -->
       </div>
+
+      <div class="control-group" id="view-selector">
+        <span class="control-label">View</span>
+        <button class="pill-btn active" data-view="column">1 Column</button>
+        <button class="pill-btn" data-view="appstore">Apple App Store</button>
+      </div>
     </div>
   </header>
 
@@ -1458,12 +1499,15 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     if (params.get("lang")) currentLang = params.get("lang");
     const slideParam = params.get("slide");
 
+    let currentView = params.get("view") || "column";
+
     if (slideParam) {{
       document.body.classList.add("capture-mode");
     }}
 
     document.body.setAttribute("data-lang", currentLang);
     document.body.setAttribute("data-device", currentDevice);
+    document.body.setAttribute("data-view", currentView);
 
     function getRawImagePath(device, lang, filename) {{
       const folderDevice = device === "ipad" ? "iPad" : "iPhone";
@@ -1720,6 +1764,22 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
         currentDevice = btn.getAttribute("data-device");
         document.body.setAttribute("data-device", currentDevice);
         renderGallery();
+      }});
+    }});
+
+    // View selector events (1 Column vs Apple App Store)
+    const viewButtons = document.querySelectorAll("#view-selector .pill-btn");
+    viewButtons.forEach(btn => {{
+      const bView = btn.getAttribute("data-view");
+      if (bView === currentView) {{
+        viewButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      }}
+      btn.addEventListener("click", () => {{
+        viewButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentView = btn.getAttribute("data-view");
+        document.body.setAttribute("data-view", currentView);
       }});
     }});
 
