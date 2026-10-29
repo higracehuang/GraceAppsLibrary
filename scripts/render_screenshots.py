@@ -385,9 +385,16 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       padding: 0 !important;
     }}
 
+    body[data-view="appstore"]:not(.capture-mode) .slide-wrapper .canvas.device-iphone,
+    body[data-view="appstore"]:not(.capture-mode) .slide-wrapper .canvas.device-ipad,
+    body[data-view="appstore"]:not(.capture-mode) .slide-wrapper .canvas,
     body[data-view="appstore"]:not(.capture-mode) .canvas {{
       transform: scale(0.28) !important;
       transform-origin: top left !important;
+      margin: 0 !important;
+      left: 0 !important;
+      top: 0 !important;
+      position: relative !important;
       border-radius: 40px !important;
       box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45) !important;
     }}
@@ -399,8 +406,10 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       height: 656px !important;
     }}
 
-    body[data-view="appstore"]:not(.capture-mode)[data-device="ipad"] .canvas {{
+    body[data-view="appstore"]:not(.capture-mode)[data-device="ipad"] .slide-wrapper .canvas.device-ipad {{
       transform: scale(0.24) !important;
+      transform-origin: top left !important;
+      margin: 0 !important;
     }}
 
     body.capture-mode .slide-wrapper {{
