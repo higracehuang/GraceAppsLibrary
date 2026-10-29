@@ -299,64 +299,58 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       color: #FFFFFF;
     }}
 
-    .gallery {{
-      display: flex;
-      gap: 32px;
-      transition: all 0.2s ease;
+    /* ========================================================
+       APP STORE ROW CAROUSEL VIEW
+       ======================================================== */
+    body:not(.capture-mode) {{
+      padding: 24px 24px 60px;
+      align-items: center;
+      background: #0B161B;
+      overflow-x: hidden;
     }}
 
-    /* Row View (Default) */
-    body[data-view="row"] {{
-      padding: 24px 24px 80px;
-      align-items: flex-start;
-      overflow-x: auto;
-    }}
-
-    body[data-view="row"] .preview-header {{
-      position: sticky;
-      left: 0;
-      max-width: none;
-      width: fit-content;
-      min-width: 100%;
-      z-index: 100;
-    }}
-
-    body[data-view="row"] .gallery {{
-      flex-direction: row;
-      flex-wrap: nowrap;
-      justify-content: flex-start;
-      align-items: flex-start;
-      max-width: none;
-      width: max-content;
-      padding: 10px 10px 40px;
-    }}
-
-    /* Grid View */
-    body[data-view="grid"] .gallery {{
-      flex-wrap: wrap;
-      justify-content: center;
-      max-width: 1700px;
+    body:not(.capture-mode) .preview-header {{
+      max-width: 1750px;
       width: 100%;
+      margin-bottom: 20px;
     }}
 
-    /* Scaling presets */
-    body[data-scale="fit"] .slide-wrapper {{
+    body:not(.capture-mode) .gallery {{
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      justify-content: flex-start !important;
+      align-items: center !important;
+      gap: 14px !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      padding: 10px 32px 30px !important;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }}
+
+    /* Hide engineering metadata labels in App Store preview */
+    body:not(.capture-mode) .slide-meta {{
+      display: none !important;
+    }}
+
+    body:not(.capture-mode) .slide-wrapper {{
+      flex: 0 0 auto !important;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       zoom: 0.28;
     }}
-    body[data-scale="fit"][data-device="ipad"] .slide-wrapper {{
-      zoom: 0.22;
+
+    body:not(.capture-mode)[data-device="ipad"] .slide-wrapper {{
+      zoom: 0.24;
     }}
 
-    body[data-scale="compact"] .slide-wrapper {{
-      zoom: 0.35;
-    }}
-
-    body[data-scale="medium"] .slide-wrapper {{
-      zoom: 0.50;
-    }}
-
-    body[data-scale="full"] .slide-wrapper {{
-      zoom: 1;
+    body:not(.capture-mode) .canvas {{
+      border-radius: 40px !important;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45) !important;
     }}
 
     body.capture-mode .slide-wrapper {{
@@ -1447,14 +1441,6 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
         <span class="control-label">Language</span>
         <!-- Populated dynamically -->
       </div>
-
-      <div class="control-group" id="view-selector">
-        <span class="control-label">View</span>
-        <button class="pill-btn active" data-view="row" data-scale="fit">Row (Fit)</button>
-        <button class="pill-btn" data-view="row" data-scale="compact">Row (35%)</button>
-        <button class="pill-btn" data-view="row" data-scale="medium">Row (50%)</button>
-        <button class="pill-btn" data-view="grid" data-scale="full">Grid (100%)</button>
-      </div>
     </div>
   </header>
 
@@ -1472,17 +1458,12 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     if (params.get("lang")) currentLang = params.get("lang");
     const slideParam = params.get("slide");
 
-    let currentView = params.get("view") || "row";
-    let currentScale = params.get("scale") || "fit";
-
     if (slideParam) {{
       document.body.classList.add("capture-mode");
     }}
 
     document.body.setAttribute("data-lang", currentLang);
     document.body.setAttribute("data-device", currentDevice);
-    document.body.setAttribute("data-view", currentView);
-    document.body.setAttribute("data-scale", currentScale);
 
     function getRawImagePath(device, lang, filename) {{
       const folderDevice = device === "ipad" ? "iPad" : "iPhone";
@@ -1742,24 +1723,14 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       }});
     }});
 
-    // View selector events
-    const viewButtons = document.querySelectorAll("#view-selector .pill-btn");
-    viewButtons.forEach(btn => {{
-      const bView = btn.getAttribute("data-view");
-      const bScale = btn.getAttribute("data-scale");
-      if (bView === currentView && bScale === currentScale) {{
-        viewButtons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
+    // Horizontal wheel scrolling for App Store carousel
+    const galleryEl = document.getElementById("gallery");
+    galleryEl.addEventListener("wheel", (evt) => {{
+      if (evt.deltaY !== 0 && evt.deltaX === 0) {{
+        evt.preventDefault();
+        galleryEl.scrollLeft += evt.deltaY;
       }}
-      btn.addEventListener("click", () => {{
-        viewButtons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        currentView = btn.getAttribute("data-view");
-        currentScale = btn.getAttribute("data-scale");
-        document.body.setAttribute("data-view", currentView);
-        document.body.setAttribute("data-scale", currentScale);
-      }});
-    }});
+    }}, {{ passive: false }});
 
     renderGallery();
   </script>
