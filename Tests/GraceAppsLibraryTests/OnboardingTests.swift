@@ -252,6 +252,27 @@ final class OnboardingTests: XCTestCase {
         XCTAssertEqual(outOfBoundsSegmented.currentStep, 2)
     }
     
+    func testContainerSwipeOptionDefaultsAndConfiguration() {
+        let coordinator = OnboardingCoordinator(initialStep: 0, totalSteps: 3)
+        
+        let defaultContainer = OnboardingContainer(coordinator: coordinator) {
+            EmptyView()
+        } bottomActions: {
+            EmptyView()
+        }
+        XCTAssertTrue(defaultContainer.isSwipeEnabled)
+        
+        let nonSwipeContainer = OnboardingContainer(
+            coordinator: coordinator,
+            isSwipeEnabled: false
+        ) {
+            EmptyView()
+        } bottomActions: {
+            EmptyView()
+        }
+        XCTAssertFalse(nonSwipeContainer.isSwipeEnabled)
+    }
+    
     // MARK: - OnboardingTracker Tests
     
     final class MockAnalyticsProvider: OnboardingAnalyticsProvider, @unchecked Sendable {

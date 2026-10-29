@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Indicator style options for onboarding progress visualization.
 public enum OnboardingIndicatorStyle: Equatable {
@@ -165,6 +166,7 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
     public let indicatorActiveColor: Color
     public let indicatorInactiveColor: Color
     public let bottomTrayHeight: CGFloat
+    public let isSwipeEnabled: Bool
     @ViewBuilder public let slides: () -> SlidesContent
     @ViewBuilder public let bottomActions: () -> BottomContent
     
@@ -176,6 +178,7 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
         indicatorActiveColor: Color = .primary,
         indicatorInactiveColor: Color = Color.primary.opacity(0.2),
         bottomTrayHeight: CGFloat = 0,
+        isSwipeEnabled: Bool = true,
         @ViewBuilder slides: @escaping () -> SlidesContent,
         @ViewBuilder bottomActions: @escaping () -> BottomContent
     ) {
@@ -186,6 +189,7 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
         self.indicatorActiveColor = indicatorActiveColor
         self.indicatorInactiveColor = indicatorInactiveColor
         self.bottomTrayHeight = bottomTrayHeight
+        self.isSwipeEnabled = isSwipeEnabled
         self.slides = slides
         self.bottomActions = bottomActions
     }
@@ -197,6 +201,7 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
         indicatorActiveColor: Color = .primary,
         indicatorInactiveColor: Color = Color.primary.opacity(0.2),
         bottomTrayHeight: CGFloat = 0,
+        isSwipeEnabled: Bool = true,
         @ViewBuilder slides: @escaping () -> SlidesContent,
         @ViewBuilder bottomActions: @escaping () -> BottomContent
     ) {
@@ -211,8 +216,20 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
             indicatorActiveColor: indicatorActiveColor,
             indicatorInactiveColor: indicatorInactiveColor,
             bottomTrayHeight: bottomTrayHeight,
+            isSwipeEnabled: isSwipeEnabled,
             slides: slides,
             bottomActions: bottomActions
+        )
+    }
+    
+    private var tabSelection: Binding<Int> {
+        Binding(
+            get: { currentStep },
+            set: { newValue in
+                if isSwipeEnabled {
+                    currentStep = newValue
+                }
+            }
         )
     }
     
@@ -257,10 +274,13 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
                 }
                 
                 // Main Slide Carousel
-                TabView(selection: $currentStep) {
+                TabView(selection: tabSelection) {
                     slides()
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
+                .background(
+                    OnboardingPageSwipeConfigurator(isSwipeEnabled: isSwipeEnabled)
+                )
                 
                 // Bottom Page Indicator (if dots style)
                 if totalSteps > 1 && indicatorStyle == .dots {
@@ -282,6 +302,69 @@ public struct OnboardingContainer<SlidesContent: View, BottomContent: View>: Vie
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
             }
+        }
+    }
+}
+
+private struct OnboardingPageSwipeConfigurator: UIViewRepresentable {
+    let isSwipeEnabled: Bool
+
+    func makeUIView(context: Context) -> SwipeConfiguratorView {
+        let view = SwipeConfiguratorView()
+        view.isSwipeEnabled = isSwipeEnabled
+        view.isUserInteractionEnabled = false
+        return view
+    }
+
+    func updateUIView(_ uiView: SwipeConfiguratorView, context: Context) {
+        uiView.isSwipeEnabled = isSwipeEnabled
+        uiView.applyConfiguration()
+    }
+
+    final class SwipeConfiguratorView: UIView {
+        var isSwipeEnabled: Bool = true
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            applyConfiguration()
+        }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            applyConfiguration()
+        }
+
+        func applyConfiguration() {
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                var ancestor: UIView? = self.superview
+                for _ in 0..<4 {
+                    guard let current = ancestor else { break }
+                    if Self.configurePagingScrollViews(in: current, isSwipeEnabled: self.isSwipeEnabled) {
+                        return
+                    }
+                    ancestor = current.superview
+                }
+            }
+        }
+
+        @discardableResult
+        private static func configurePagingScrollViews(in view: UIView, isSwipeEnabled: Bool) -> Bool {
+            var found = false
+            for subview in view.subviews {
+                if let scrollView = subview as? UIScrollView {
+                    let typeName = String(describing: type(of: scrollView))
+                    if scrollView.isPagingEnabled || typeName.contains("QueuingScrollView") || typeName.contains("Page") {
+                        scrollView.isScrollEnabled = isSwipeEnabled
+                        scrollView.panGestureRecognizer.isEnabled = isSwipeEnabled
+                        found = true
+                    }
+                }
+                if configurePagingScrollViews(in: subview, isSwipeEnabled: isSwipeEnabled) {
+                    found = true
+                }
+            }
+            return found
         }
     }
 }
