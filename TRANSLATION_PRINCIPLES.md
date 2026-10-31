@@ -62,6 +62,20 @@ translation — never word-for-word.**
    respected by tightening wording, never by cutting content the source
    carries.
 
+10. **Context lives in the catalog.** A string that cannot be translated
+    correctly without knowing where it renders carries a String Catalog
+    comment saying so — the screen, the control, and what the user is
+    doing there. Translators judge from the catalog, never from guessing:
+    "Keep Going" is encouragement on the milestone celebration screen,
+    not a plain Continue button; "Pending" is the streak card's badge
+    for a day not yet read; "Presets" heads the quick-pick goal chips.
+    When a review ruling turns on render context, that context is
+    written into the string's comment in the same pass, so the next pass
+    starts with it. (ReadingClock, 2026-10-31: every judgment call in
+    the principles review hinged on render context looked up in the
+    code; the comments now record it.) A string whose render site cannot
+    be established gets no invented comment — it gets flagged instead.
+
 ## Reviewing a translation
 
 A review pass reads every string against these principles and reports in
