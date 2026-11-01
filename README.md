@@ -415,7 +415,7 @@ Every App Store screenshot set across Grace Apps collects 5–6 screens showing:
 
 See [Skills/SCREENSHOTS.md](Skills/SCREENSHOTS.md) for the complete screenshot design playbook, caption guidelines, Fastlane delivery standards, and Xcode Cloud / GitHub Actions CI/CD.
 
-See [STOREFRONT_CHECK.md](STOREFRONT_CHECK.md) for the per-release storefront checklist: prices, metadata, IAP, privacy, localization, and ratings across storefronts.
+See [STOREFRONT_CHECK.md](https://github.com/higracehuang/GraceAppKnowledge/blob/main/STOREFRONT_CHECK.md) in GraceAppKnowledge for the per-release storefront checklist: prices, metadata, IAP, privacy, localization, and ratings across storefronts.
 
 See [TRANSLATION_PRINCIPLES.md](https://github.com/higracehuang/GraceAppKnowledge/blob/main/TRANSLATION_PRINCIPLES.md) in GraceAppKnowledge for the localization standard: meaning over word-for-word translation, authentic local terminology, register, terminology consistency, and placeholder integrity.
 
@@ -683,5 +683,5 @@ python3 scripts/check_translations.py
 This check is also automatically performed when running `scripts/build.sh`.
 
 ### Versioning
-See [VERSIONING.md](VERSIONING.md) for semantic versioning rules and release conventions.
+See [VERSIONING.md](https://github.com/higracehuang/GraceAppKnowledge/blob/main/VERSIONING.md) in GraceAppKnowledge for semantic versioning rules and release conventions.
 
