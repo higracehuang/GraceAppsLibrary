@@ -417,7 +417,7 @@ See [Skills/SCREENSHOTS.md](Skills/SCREENSHOTS.md) for the complete screenshot d
 
 See [STOREFRONT_CHECK.md](STOREFRONT_CHECK.md) for the per-release storefront checklist: prices, metadata, IAP, privacy, localization, and ratings across storefronts.
 
-See [TRANSLATION_PRINCIPLES.md](TRANSLATION_PRINCIPLES.md) for the localization standard: meaning over word-for-word translation, authentic local terminology, register, terminology consistency, and placeholder integrity.
+See [TRANSLATION_PRINCIPLES.md](https://github.com/higracehuang/GraceAppKnowledge/blob/main/TRANSLATION_PRINCIPLES.md) in GraceAppKnowledge for the localization standard: meaning over word-for-word translation, authentic local terminology, register, terminology consistency, and placeholder integrity.
 
 ##### Architecture & Components
 - **`ScreenshotPresetProvider`**: Protocol defining your app's marketing presets (slot label, headline, suggested filename, system icon, CLI token parser).
