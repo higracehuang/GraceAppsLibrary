@@ -671,6 +671,50 @@ exec bash "${RUNNER}" \
   "$@"
 ```
 
+#### 11. App Store Preview Videos (Recording, Overlays & 30fps Encoding)
+
+Automate Apple-compliant App Store Preview videos across multiple languages without video editing software or rejection traps:
+
+- **Strict Apple Compliance**: Automatically encodes to **constant 30 fps** (Apple strictly rejects >30 fps), injects a **mandatory stereo AAC 48 kHz audio track** (required by App Store Connect), scales to standard **886 × 1920 px** portrait (iPhone 6.7"/6.5"), and constrains duration to 15–30s.
+- **Config-driven Storyboards**: Define timed headline pill overlays and translations in `Marketing/preview_storyboard.json`.
+- **Reusable Glass Pill Design**: Frosted dark glass pills with animated indicator dots, system font typography, and smooth crossfades.
+
+##### Unified CLI Runner
+```bash
+# 1. Record 28s interactive simulator walkthrough:
+./scripts/preview_video.sh record --duration 28 --lang en
+
+# 2. Render overlays & transcode canonical 30fps video:
+./scripts/preview_video.sh render --lang en
+
+# 3. Render all languages and copy directly to Fastlane:
+./scripts/preview_video.sh render --lang all --fastlane
+```
+
+##### Storyboard Configuration (`Marketing/preview_storyboard.json`)
+```json
+{
+  "theme": {
+    "style": "pill",
+    "pill_bg": [20, 14, 22, 225],
+    "pill_outline": [255, 180, 210, 140],
+    "accent_dot": [255, 77, 121, 255],
+    "text_color": [255, 255, 255, 255],
+    "top_percent": 0.082
+  },
+  "storyboard": {
+    "en": [
+      { "start": 0.5, "end": 4.0, "title": "Headline 1" },
+      { "start": 4.5, "end": 10.0, "title": "Headline 2" }
+    ],
+    "es": [
+      { "start": 0.5, "end": 4.0, "title": "Título 1" },
+      { "start": 4.5, "end": 10.0, "title": "Título 2" }
+    ]
+  }
+}
+```
+
 ## Development
 
 ### Translation Consistency
