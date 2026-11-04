@@ -1869,8 +1869,8 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
             const secSrc = typeof slide.secondaryMockup === 'object' ? (slide.secondaryMockup[currentDevice] || slide.secondaryMockup.iphone) : slide.secondaryMockup;
             if (secSrc) {{
               secondaryMockupHtml = `
-                <div class="secondary-mockup">
-                  <img src="${{secSrc}}" alt="" class="secondary-mockup-img" />
+                <div class="secondary-mockup watch-pod">
+                  <img src="${{secSrc}}" alt="" class="secondary-mockup-img watch-pod-img" />
                 </div>
               `;
             }}
