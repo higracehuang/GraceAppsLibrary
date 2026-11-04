@@ -1864,8 +1864,19 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
               </div>
             `;
           }}
+          let secondaryMockupHtml = "";
+          if (slide.secondaryMockup) {{
+            const secSrc = typeof slide.secondaryMockup === 'object' ? (slide.secondaryMockup[currentDevice] || slide.secondaryMockup.iphone) : slide.secondaryMockup;
+            if (secSrc) {{
+              secondaryMockupHtml = `
+                <div class="secondary-mockup">
+                  <img src="${{secSrc}}" alt="" class="secondary-mockup-img" />
+                </div>
+              `;
+            }}
+          }}
           slideContent = `
-            <div class="canvas device-${{currentDevice}} theme-${{slide.theme || "default"}}">
+            <div class="canvas device-${{currentDevice}} theme-${{slide.theme || "default"}} ${{slide.secondaryMockup ? "has-secondary-mockup" : ""}}">
               <div class="ambient-glow"></div>
               <div class="caption-header">
                 ${{brandHtml}}
@@ -1877,6 +1888,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
                   <img src="${{imgSrc}}" alt="${{rawFilename}}" class="mockup-img" loading="eager" />
                 </div>
               </div>
+              ${{secondaryMockupHtml}}
             </div>
           `;
         }}
