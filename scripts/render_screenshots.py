@@ -627,7 +627,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-top: 38px;
+      padding-top: 36px;
     }}
 
     .device-watch .caption-header {{
@@ -663,17 +663,17 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
     .device-watch .watch-mockup-container {{
       position: absolute;
-      bottom: 12px;
+      bottom: 45px;
       left: 50%;
       transform: translateX(-50%);
-      width: 326px;
+      width: 336px;
       display: flex;
       justify-content: center;
       z-index: 5;
     }}
 
     .device-watch .watch-mockup-img {{
-      width: 326px;
+      width: 336px;
       height: auto;
       display: block;
       filter: drop-shadow(0 16px 32px rgba(36, 18, 28, 0.38))
