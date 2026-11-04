@@ -42,6 +42,13 @@ DEVICE_SPECS = {
         "height": 2732,
         "scale": 1,
     },
+    "watch": {
+        "name": "Apple Watch",
+        "folder": "Watch",
+        "width": 396,
+        "height": 484,
+        "scale": 1,
+    },
 }
 
 DEFAULT_LANGUAGES = [
@@ -133,6 +140,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
                 processed_titles[lk] = {
                     "iphone": format_accent_text(tv.get("iphone", "")),
                     "ipad": format_accent_text(tv.get("ipad", "")),
+                    "watch": format_accent_text(tv.get("watch", tv.get("iphone", ""))),
                 }
             else:
                 formatted = format_accent_text(str(tv))
@@ -147,6 +155,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
                 processed_subs[lk] = {
                     "iphone": format_accent_text(sv.get("iphone", "")),
                     "ipad": format_accent_text(sv.get("ipad", "")),
+                    "watch": format_accent_text(sv.get("watch", sv.get("iphone", ""))),
                 }
             else:
                 formatted = format_accent_text(str(sv))
@@ -602,6 +611,89 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     body[data-lang="Korean"] .caption-title {{
       font-weight: 700;
       letter-spacing: -0.01em;
+    }}
+
+    /* ========================================================
+       SLIDE TYPE WATCH: APPLE WATCH CANVAS (396 × 484)
+       ======================================================== */
+    .canvas.device-watch {{
+      width: 396px;
+      height: 484px;
+      background: var(--slide-bg, var(--bg-gradient));
+      position: relative;
+      border-radius: 36px;
+      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 38px;
+    }}
+
+    .device-watch .caption-header {{
+      padding: 0 16px;
+      position: relative;
+      z-index: 5;
+    }}
+
+    .device-watch .caption-title {{
+      font-family: var(--font-rounded);
+      font-size: 34px;
+      font-weight: 850;
+      line-height: 1.12;
+      letter-spacing: -0.024em;
+    }}
+
+    body[data-lang="Simplified Chinese"] .device-watch .caption-title {{
+      font-family: var(--font-zh);
+      font-size: 35px;
+    }}
+
+    body[data-lang="Japanese"] .device-watch .caption-title {{
+      font-family: var(--font-ja);
+      font-size: 33px;
+    }}
+
+    body[data-lang="German"] .device-watch .caption-title,
+    body[data-lang="Spanish"] .device-watch .caption-title,
+    body[data-lang="French"] .device-watch .caption-title {{
+      font-size: 30px;
+      line-height: 1.10;
+    }}
+
+    .device-watch .watch-mockup-container {{
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 326px;
+      display: flex;
+      justify-content: center;
+      z-index: 5;
+    }}
+
+    .device-watch .watch-mockup-img {{
+      width: 326px;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 16px 32px rgba(36, 18, 28, 0.38))
+              drop-shadow(0 4px 10px rgba(0, 0, 0, 0.16));
+    }}
+
+    body[data-view="appstore"]:not(.capture-mode)[data-device="watch"] .slide-wrapper {{
+      width: 396px !important;
+      height: 484px !important;
+      flex: 0 0 396px !important;
+      display: block !important;
+    }}
+
+    body[data-view="appstore"]:not(.capture-mode)[data-device="watch"] .slide-wrapper .canvas.device-watch {{
+      transform: none !important;
+    }}
+
+    body.capture-mode .canvas.device-watch {{
+      border-radius: 0;
+      box-shadow: none;
     }}
 
     /* ========================================================
@@ -1502,6 +1594,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
         <span class="control-label">Device</span>
         <button class="pill-btn active" data-device="iphone">iPhone (1179 × 2556)</button>
         <button class="pill-btn" data-device="ipad">iPad Pro (2048 × 2732)</button>
+        <button class="pill-btn" data-device="watch">Apple Watch (396 × 484)</button>
       </div>
 
       <div class="control-group" id="lang-selector">
@@ -1541,6 +1634,10 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     document.body.setAttribute("data-device", currentDevice);
     document.body.setAttribute("data-view", currentView);
 
+    document.querySelectorAll("#device-selector .pill-btn").forEach(b => {{
+      b.classList.toggle("active", b.getAttribute("data-device") === currentDevice);
+    }});
+
     function getRawImagePath(device, lang, filename) {{
       const folderDevice = device === "ipad" ? "iPad" : "iPhone";
       return `../Screenshots/Raw/${{folderDevice}}/${{encodeURIComponent(lang)}}/${{encodeURIComponent(filename)}}`;
@@ -1573,7 +1670,21 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
 
         let slideContent = "";
 
-        if (slideType === "artwork-hero") {{
+        if (slideType === "watch" || currentDevice === "watch") {{
+          const watchSrc = slide.image || slide.watchImage || slide.filename || "";
+          const titleWatch = titleObj ? (titleObj.watch || titleObj.iphone || "") : "";
+          slideContent = `
+            <div class="canvas device-watch theme-${{slide.theme || "default"}}">
+              <div class="ambient-glow"></div>
+              <div class="caption-header">
+                <h2 class="caption-title">${{titleWatch}}</h2>
+              </div>
+              <div class="watch-mockup-container">
+                <img src="${{watchSrc}}" alt="" class="watch-mockup-img" />
+              </div>
+            </div>
+          `;
+        }} else if (slideType === "artwork-hero") {{
           const artSrc = slide.artwork || "";
           slideContent = `
             <div class="canvas device-${{currentDevice}} slide-artwork-hero">
@@ -1999,7 +2110,9 @@ def main():
     chrome_bin = args.chrome_bin or find_chrome()
 
     # Determine devices
-    devices = ["iphone", "ipad"] if args.device == "all" else [args.device]
+    has_watch = any("watch" in s.get("devices", []) for s in config.get("slides", []))
+    default_devs = ["iphone", "ipad", "watch"] if has_watch else ["iphone", "ipad"]
+    devices = default_devs if args.device == "all" else [args.device]
 
     # Determine languages
     all_config_langs = [l["code"] for l in config.get("languages", DEFAULT_LANGUAGES)]
