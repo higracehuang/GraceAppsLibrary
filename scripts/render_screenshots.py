@@ -379,6 +379,7 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
       width: 330px !important;
       max-width: 330px !important;
       height: 716px !important;
+      display: block !important;
       position: relative !important;
       overflow: visible !important;
       margin: 0 !important;
@@ -1820,9 +1821,16 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
     // Horizontal wheel scrolling for App Store carousel
     const galleryEl = document.getElementById("gallery");
     galleryEl.addEventListener("wheel", (evt) => {{
-      if (evt.deltaY !== 0 && evt.deltaX === 0) {{
-        evt.preventDefault();
-        galleryEl.scrollLeft += evt.deltaY;
+      if (document.body.getAttribute("data-view") === "appstore") {{
+        if (evt.deltaY !== 0 && evt.deltaX === 0) {{
+          const maxScrollLeft = galleryEl.scrollWidth - galleryEl.clientWidth;
+          const atEdge = (evt.deltaY > 0 && galleryEl.scrollLeft >= maxScrollLeft - 1) ||
+                         (evt.deltaY < 0 && galleryEl.scrollLeft <= 0);
+          if (!atEdge) {{
+            evt.preventDefault();
+            galleryEl.scrollLeft += evt.deltaY;
+          }}
+        }}
       }}
     }}, {{ passive: false }});
 
