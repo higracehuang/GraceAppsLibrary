@@ -1742,10 +1742,22 @@ def build_html(config: Dict[str, Any], project_root: Path, out_html_path: Path) 
                               (typeof slide.filename === 'object' ? slide.filename[currentDevice] : slide.filename);
           const imgSrc = getRawImagePath(currentDevice, currentLang, rawFilename);
           const subHtml = subText ? `<p class="caption-subtitle">${{subText}}</p>` : "";
+          let brandHtml = "";
+          if (slide.brand) {{
+            const bIcon = (typeof slide.brand.icon === 'object' ? slide.brand.icon[currentDevice] : slide.brand.icon) || "app_icon.png";
+            const bName = typeof slide.brand.name === 'object' ? (slide.brand.name[currentLang] || slide.brand.name["English"]) : (slide.brand.name || "");
+            brandHtml = `
+              <div class="brand-badge-header">
+                <img src="${{bIcon}}" alt="" class="brand-badge-icon" />
+                <span class="brand-badge-name">${{bName}}</span>
+              </div>
+            `;
+          }}
           slideContent = `
             <div class="canvas device-${{currentDevice}} theme-${{slide.theme || "default"}}">
               <div class="ambient-glow"></div>
               <div class="caption-header">
+                ${{brandHtml}}
                 <h2 class="caption-title">${{titleText}}</h2>
                 ${{subHtml}}
               </div>
