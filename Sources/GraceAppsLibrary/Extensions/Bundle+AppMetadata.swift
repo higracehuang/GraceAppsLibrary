@@ -21,9 +21,14 @@ extension Bundle {
     /// Returns a formatted display version string for settings/about screens.
     public var displayVersionString: String {
         #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-SCREENSHOT_PRESET") ||
+           ProcessInfo.processInfo.arguments.contains("-SCREENSHOT_CAPTURE") ||
+           ProcessInfo.processInfo.environment["SCREENSHOT_MODE"] == "1" {
+            return "\(releaseVersionNumber) (\(buildVersionNumber))"
+        }
         return "Debug - \(releaseVersionNumber) (\(buildVersionNumber))"
         #else
-        return "Release - \(releaseVersionNumber) (\(buildVersionNumber))"
+        return "\(releaseVersionNumber) (\(buildVersionNumber))"
         #endif
     }
 }
