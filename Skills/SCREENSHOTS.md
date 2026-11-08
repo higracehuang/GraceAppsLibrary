@@ -242,7 +242,7 @@ flowchart TD
     end
 
     subgraph Marketing Track (GitHub Actions)
-        D["Actions: 'Run workflow'"] --> E["GitHub Actions (macos-14)"]
+        D["Actions: 'Run workflow'"] --> E["GitHub Actions (macos-15)"]
         F["GitHub Secrets<br/>ASC_KEY_ID, ASC_ISSUER_ID, ASC_PRIVATE_KEY"] --> E
         E -->|"export_to_fastlane.py"| G["Refreshes metadata & screenshots"]
         E -->|"fastlane deliver"| H["App Store Connect API"]
