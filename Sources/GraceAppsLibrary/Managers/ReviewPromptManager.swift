@@ -504,7 +504,11 @@ Device: \(deviceModel) (\(osVersion))
         topVC.present(hostingController, animated: true, completion: nil)
     }
 
-    private func showNativeReviewPrompt(retryCount: Int = 0) {
+    private func showNativeReviewPrompt() {
+        showNativeReviewPrompt(retryCount: 0)
+    }
+
+    private func showNativeReviewPrompt(retryCount: Int) {
         guard let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene else {
             GraceLogger.warning("Could not find active UIWindowScene to request native review.", category: .review)
             return
