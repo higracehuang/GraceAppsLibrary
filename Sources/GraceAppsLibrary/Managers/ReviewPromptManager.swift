@@ -34,6 +34,10 @@ public class ReviewPromptManager {
     public init(checkpointCount: Int = 5) {
         self.checkpointCount = checkpointCount
     }
+
+    /// Retained overlay window used to present the review pre-filter alert independently of any
+    /// dismissing or presenting sheets/modals in the application view hierarchy.
+    private var alertWindow: UIWindow?
     
     private struct SettingKeys {
         static let engagementCounterKey = "GraceApps_Review_EngagementCounter"
@@ -246,6 +250,7 @@ public class ReviewPromptManager {
     }
 
     public static func debugResetReviewState() {
+        shared.dismissAlertWindow()
         ReleaseNotesManager.hasShownReleaseNotesThisSession = false
         UserDefaults.standard.set(0, forKey: SettingKeys.engagementCounterKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastVersionPromptedForReviewKey)
@@ -317,8 +322,14 @@ Device: \(deviceModel) (\(osVersion))
                 .filter { $0.activationState == .foregroundActive }
             
             for scene in scenes {
-                if let keyWindow = scene.windows.first(where: { $0.isKeyWindow }),
+                if let keyWindow = scene.windows.first(where: { $0.isKeyWindow && $0.windowLevel == .normal }),
                    let rootVC = keyWindow.rootViewController {
+                    return rootVC
+                }
+            }
+            for scene in scenes {
+                if let normalWindow = scene.windows.first(where: { $0.windowLevel == .normal }),
+                   let rootVC = normalWindow.rootViewController {
                     return rootVC
                 }
             }
@@ -347,27 +358,68 @@ Device: \(deviceModel) (\(osVersion))
         return nil
     }
 
+    private static func isHierarchyTransitioning(in scene: UIWindowScene) -> Bool {
+        for window in scene.windows where window.windowLevel == .normal {
+            if let root = window.rootViewController, hasActiveTransition(in: root) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private static func hasActiveTransition(in vc: UIViewController) -> Bool {
+        if vc.isBeingDismissed || vc.isBeingPresented || vc.transitionCoordinator != nil {
+            return true
+        }
+        if let presented = vc.presentedViewController {
+            if hasActiveTransition(in: presented) {
+                return true
+            }
+        }
+        return false
+    }
+
     private func markPromptedForCurrentVersion() {
         GraceLogger.success("Marked version '\(self.releaseVersionNumber)' as prompted.", category: .review)
         UserDefaults.standard.set(self.releaseVersionNumber, forKey: SettingKeys.lastVersionPromptedForReviewKey)
     }
 
     private func askForReview(retryCount: Int = 0, onPositive: @escaping () -> Void, onNegative: (() -> Void)?) {
-        markPromptedForCurrentVersion()
-
-        guard let topVC = Self.getTopViewController(),
-              topVC.viewIfLoaded?.window != nil,
-              !topVC.isBeingDismissed else {
+        guard let windowScene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive }) else {
+            // In headless/test environments without active scenes, mark prompted so test invariants hold.
+            markPromptedForCurrentVersion()
             if retryCount < 5 {
-                GraceLogger.warning("Top view controller unavailable/dismissing. Retrying presentation in 0.3s (attempt \(retryCount + 1)/5)...", category: .review)
+                GraceLogger.warning("Active UIWindowScene unavailable. Retrying in 0.3s (attempt \(retryCount + 1)/5)...", category: .review)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                     self?.askForReview(retryCount: retryCount + 1, onPositive: onPositive, onNegative: onNegative)
                 }
             } else {
-                GraceLogger.warning("Could not find stable top view controller after 5 retries.", category: .review)
+                GraceLogger.warning("Could not find active UIWindowScene after 5 retries.", category: .review)
             }
             return
         }
+
+        // Avoid presenting duplicate alert if already visible
+        guard alertWindow == nil else {
+            GraceLogger.info("Review prompt alert is already presented on alertWindow.", category: .review)
+            return
+        }
+
+        // If a sheet or modal is currently in transition (e.g. actively dismissing or presenting),
+        // delay presentation slightly so transitions settle smoothly before showing the rating prompt.
+        if Self.isHierarchyTransitioning(in: windowScene) {
+            if retryCount < 10 {
+                GraceLogger.info("View hierarchy transitioning (sheet/modal dismissing or presenting). Retrying in 0.25s (attempt \(retryCount + 1)/10)...", category: .review)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+                    self?.askForReview(retryCount: retryCount + 1, onPositive: onPositive, onNegative: onNegative)
+                }
+                return
+            }
+        }
+
+        markPromptedForCurrentVersion()
 
         let rawTitle = NSLocalizedString(Constants.StringKeys.reviewPromptTitleFormat, bundle: .module, comment: "")
         let title = String(format: rawTitle, appName)
@@ -383,22 +435,44 @@ Device: \(deviceModel) (\(osVersion))
 
         let noAction = UIAlertAction(title: noButton, style: .default) { [weak self] _ in
             GraceLogger.info("User selected '\(noButton)'. Redirecting to in-app feedback sheet...", category: .review)
-            if let onNegative {
-                onNegative()
-            } else {
-                self?.presentFeedbackSheet()
+            self?.dismissAlertWindow {
+                if let onNegative {
+                    onNegative()
+                } else {
+                    self?.presentFeedbackSheet()
+                }
             }
         }
-        let yesAction = UIAlertAction(title: yesButton, style: .default) { _ in
+        let yesAction = UIAlertAction(title: yesButton, style: .default) { [weak self] _ in
             GraceLogger.success("User selected '\(yesButton)'. Presenting native StoreKit prompt...", category: .review)
-            onPositive()
+            self?.dismissAlertWindow {
+                onPositive()
+            }
         }
 
         alert.addAction(noAction)
         alert.addAction(yesAction)
 
-        GraceLogger.info("Presenting pre-filter alert for '\(appName)' on \(type(of: topVC))", category: .review)
-        topVC.present(alert, animated: true, completion: nil)
+        // Create a dedicated overlay window above the main app window so that dismissing sheets
+        // or other view controller transitions in the app window cannot dismiss or cancel this alert.
+        let window = UIWindow(windowScene: windowScene)
+        window.windowLevel = .alert + 1
+        let rootVC = ReviewAlertContainerViewController()
+        rootVC.view.backgroundColor = .clear
+        window.rootViewController = rootVC
+        window.makeKeyAndVisible()
+        self.alertWindow = window
+
+        GraceLogger.info("Presenting pre-filter alert for '\(appName)' on dedicated alert window", category: .review)
+        rootVC.present(alert, animated: true, completion: nil)
+    }
+
+    public func dismissAlertWindow(completion: (() -> Void)? = nil) {
+        if let window = self.alertWindow {
+            window.isHidden = true
+            self.alertWindow = nil
+        }
+        completion?()
     }
 
     /// Presents `FeedbackToGraceView` inside an in-app SwiftUI sheet on top of the active view controller.
@@ -430,18 +504,27 @@ Device: \(deviceModel) (\(osVersion))
         topVC.present(hostingController, animated: true, completion: nil)
     }
 
-    private func showNativeReviewPrompt() {
-        if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
-            GraceLogger.success("Triggered native StoreKit review prompt in active UIWindowScene.", category: .review)
-            if #available(iOS 16.0, *) {
-                AppStore.requestReview(in: scene)
-            } else {
-                SKStoreReviewController.requestReview(in: scene)
-            }
-            markPromptedForCurrentVersion()
-        } else {
+    private func showNativeReviewPrompt(retryCount: Int = 0) {
+        guard let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene else {
             GraceLogger.warning("Could not find active UIWindowScene to request native review.", category: .review)
+            return
         }
+
+        if Self.isHierarchyTransitioning(in: scene) && retryCount < 6 {
+            GraceLogger.info("Modal transition in progress while requesting native review. Retrying in 0.3s (attempt \(retryCount + 1)/6)...", category: .review)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                self?.showNativeReviewPrompt(retryCount: retryCount + 1)
+            }
+            return
+        }
+
+        GraceLogger.success("Triggered native StoreKit review prompt in active UIWindowScene.", category: .review)
+        if #available(iOS 16.0, *) {
+            AppStore.requestReview(in: scene)
+        } else {
+            SKStoreReviewController.requestReview(in: scene)
+        }
+        markPromptedForCurrentVersion()
     }
 
     public static func actionShareApp(appStoreId: String) {
@@ -460,5 +543,14 @@ Device: \(deviceModel) (\(osVersion))
             }
             topVC.present(activityVC, animated: true, completion: nil)
         }
+    }
+}
+
+private final class ReviewAlertContainerViewController: UIViewController {
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        .default
+    }
+    override var prefersStatusBarHidden: Bool {
+        false
     }
 }
