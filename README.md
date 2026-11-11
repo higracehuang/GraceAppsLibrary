@@ -13,7 +13,7 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 - Shared Onboarding framework (`OnboardingContainer`, `OnboardingSlideLayout`, `OnboardingCoordinator`)
 - Smart review prompting (`ReviewPromptManager`) with 2-step pre-filter & feedback redirection
 - Automated App Store Screenshot framework (`ScreenshotPresetProvider`, `ScreenshotEngine`, `DebugScreenshotSection`, and CLI runner script)
-- Action-agnostic presentation & ad-pacing orchestrator (`UXFlowOrchestrator`, `UXPolicy`, `AdPacingEngine`, `.withUXFlowOrchestrator()`) preventing prompt collisions, premature sheet cancel-outs, and wasted ad requests
+- Action-agnostic presentation, smart paywall & ad-pacing orchestrator (`UXFlowOrchestrator`, `UXPolicy`, `PaywallPacingEngine`, `AdPacingEngine`, `.withUXFlowOrchestrator()`) preventing prompt collisions, premature sheet cancel-outs, and wasted ad requests
 
 ## Installation
 
@@ -728,10 +728,11 @@ A unified, action-agnostic presentation and ad-pacing framework that prevents pr
 ---
 
 ##### Architecture & Key Components
-- **`UXAction`**: Action-agnostic model representing any presentation item. Supports `.sheet`, `.fullScreenCover`, `.systemDialog` (StoreKit review, system alerts), and `.customAsync` (AdMob, custom view controller workflows). Prioritized via `UXActionPriority` (`.critical`, `.milestone`, `.paywall`, `.review`, `.ad`).
+- **`UXAction`**: Action-agnostic model representing any presentation item. Supports `.sheet`, `.fullScreenCover`, `.systemDialog` (StoreKit review, system alerts), and `.customAsync` (AdMob, custom view controller workflows). Prioritized via `UXActionPriority` (`.critical`, `.milestone`, `.paywall`, `.review`, `.ad`). Includes standardized factories such as `UXAction.ratingPrompt(...)`.
 - **`UXPolicy`**: Declarative rule engine managing mutual exclusions (e.g., paywall suppresses ads), global debounces, tag cooldowns, session impression caps, and app preconditions.
+- **`PaywallPacingEngine`**: Smart paywall conversion engine that balances monetisation and retention. Evaluates trigger categories (`.directIntent`, `.endowmentThreshold`, `.milestoneAchievement`), enforces milestone completion intervals (`default: 3`), time interval fallback (`default: 7 days`), session capping (`1 per session`), and tracks per-trigger analytics (`shown`, `purchased`, `dismissed`).
 - **`AdPacingEngine`**: Ad gatekeeper decoupled from Google Mobile Ads. Enforces pre-request checks, 50-minute TTL cache expiration, 20-second safety debouncing, and first-run onboarding exemptions.
-- **`UXFlowOrchestrator`**: The central conductor. Maintains a prioritized queue and enforces an automatic **0.25-second settling window** between consecutive presentations so UIKit/SwiftUI transitions complete cleanly before the next modal mounts.
+- **`UXFlowOrchestrator`**: The central conductor. Maintains a prioritized queue and enforces an automatic **0.25-second settling window** between consecutive presentations so UIKit/SwiftUI transitions complete cleanly before the next modal mounts. Provides convenience orchestration via `requestCompletionFlow(...)`.
 - **`.withUXFlowOrchestrator()`**: SwiftUI view modifier that hosts a single presentation slot across the view hierarchy.
 - **`GraceLogger`**: Extended with `.orchestrator`, `.ads`, and `.paywall` categories with automatic Xcode debug console output.
 
@@ -784,37 +785,39 @@ struct MyApp: App {
 ```
 
 ###### Step 2: Triggering Flows at Peak Completion Moments
-When an activity completes (e.g. quiz finished, workout logged, deck mastered), pass all candidate actions to `UXFlowOrchestrator`. It evaluates eligibility, sorts by priority, and executes them serially without collisions:
+When an activity completes (e.g. quiz finished, workout logged, deck mastered), pass candidate actions to `UXFlowOrchestrator.shared.requestCompletionFlow(...)`. It evaluates eligibility, sorts by priority, and executes them serially without collisions:
 
 ```swift
 func onActivityCompleted(score: Int) {
     let orchestrator = UXFlowOrchestrator.shared
     orchestrator.resetFlowState()
     
-    orchestrator.triggerFlow(actions: [
+    orchestrator.requestCompletionFlow(
         // 1. Milestone Celebration Sheet (Priority: 750)
-        UXAction(id: "results_sheet", priority: .milestone, kind: .sheet, tags: ["celebration"]) {
+        milestoneSheet: UXAction(id: "results_sheet", priority: .milestone, kind: .sheet, tags: ["celebration"]) {
             QuizResultsView(score: score)
         },
         
         // 2. Conversion Paywall (Priority: 500)
-        UXAction(id: "milestone_paywall", priority: .paywall, kind: .sheet, tags: ["paywall"]) {
+        paywallSheet: shouldOfferPaywall ? UXAction(id: "milestone_paywall", priority: .paywall, kind: .sheet, tags: ["paywall"]) {
             PaywallView()
-        },
+        } : nil,
         
         // 3. StoreKit Rating Prompt (Priority: 250) - Runs only AFTER sheets dismiss cleanly!
-        UXAction(id: "rating_prompt", priority: .review, kind: .systemDialog, tags: ["feedback"]) { completion in
+        reviewAction: shouldPromptReview ? UXAction.ratingPrompt {
             ReviewPromptManager.shared.requestDirectNativeReview()
-            completion(.completed)
-        },
+        } : nil,
         
         // 4. Interstitial Ad (Priority: 100) - Automatically dropped if paywall was shown!
-        UXAction(id: "interstitial_ad", priority: .ad, kind: .customAsync, tags: ["ad"]) { completion in
+        adAction: UXAction(id: "interstitial_ad", priority: .ad, kind: .customAsync, tags: ["ad"]) { completion in
             UniversalAdCoordinator.shared.present(for: "after_quiz") { shown in
                 completion(shown ? .completed : .skipped)
             }
         }
-    ])
+    ) {
+        // Called when all modals and async actions in the flow finish
+        dismiss()
+    }
 }
 ```
 
@@ -900,6 +903,42 @@ final class UniversalAdCoordinator: NSObject, ObservableObject, FullScreenConten
         onDismiss = nil
     }
 }
+```
+
+###### Step 4: Smart Paywall Pacing Engine (`PaywallPacingEngine`)
+`PaywallPacingEngine` manages conversion timing across three trigger categories:
+
+1. `.directIntent`: Direct user taps (e.g. Settings "Upgrade", locked feature teaser). Always approved for non-Pro users.
+2. `.endowmentThreshold`: Value limit reached (e.g. 5 free bookmarks saved). Always approved for non-Pro users.
+3. `.milestoneAchievement`: Natural achievement moments (e.g. deck/quiz finished). Enforces smart pacing:
+   - Max 1 milestone paywall per app session.
+   - Throttled until 3 subsequent activity completions (`milestoneCompletionInterval = 3`) or 7 days (`milestoneDayInterval = 7 * 86400`) have elapsed since the last offer.
+
+```swift
+let engine = PaywallPacingEngine.shared
+engine.isProUser = { PurchaseManager.shared.isPro }
+
+// 1. Evaluate Paywall Eligibility
+let canShow = engine.canPresentPaywall(category: .milestoneAchievement)
+
+// 2. Track Completions & Offers
+engine.recordActivityCompletion()
+engine.recordMilestoneOfferPresented()
+
+// 3. Analytics & Stats Tracking
+engine.recordTriggerShown("deck_completion")
+engine.recordTriggerPurchased("deck_completion")
+engine.recordTriggerDismissed("deck_completion")
+let stats = engine.getTriggerStats(for: "deck_completion") // (shown, purchased, dismissed)
+```
+
+###### Step 5: Native App Store Review Prompt Helpers
+```swift
+// Check if the current app release version has already been prompted
+let alreadyPrompted = ReviewPromptManager.shared.hasPromptedForCurrentVersion
+
+// Directly open the App Store Write a Review page (e.g. for manual Settings "Rate Us" buttons)
+ReviewPromptManager.openAppStoreReviewPage(appStoreId: "id6478243260")
 ```
 
 ---
