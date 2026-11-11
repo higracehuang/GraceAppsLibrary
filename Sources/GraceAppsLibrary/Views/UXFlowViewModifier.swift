@@ -29,11 +29,7 @@ public struct UXFlowViewModifier: ViewModifier {
                         orchestrator.onModalDismissed(actionId: item.id)
                     }
                 }
-            ), onDismiss: {
-                if let item = orchestrator.activeSheetItem {
-                    orchestrator.onModalDismissed(actionId: item.id)
-                }
-            }) { item in
+            )) { item in
                 if let builder = item.action.viewBuilder {
                     builder()
                 } else {
@@ -47,11 +43,7 @@ public struct UXFlowViewModifier: ViewModifier {
                         orchestrator.onModalDismissed(actionId: item.id)
                     }
                 }
-            ), onDismiss: {
-                if let item = orchestrator.activeCoverItem {
-                    orchestrator.onModalDismissed(actionId: item.id)
-                }
-            }) { item in
+            )) { item in
                 if let builder = item.action.viewBuilder {
                     builder()
                 } else {
