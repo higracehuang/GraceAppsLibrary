@@ -219,4 +219,54 @@ final class UXFlowOrchestratorTests: XCTestCase {
         }
         wait(for: [exp], timeout: 1.0)
     }
+
+    func testRatingPromptFactoryAction() {
+        var promptCalled = false
+        let ratingAction = UXAction.ratingPrompt {
+            promptCalled = true
+            return true
+        }
+
+        XCTAssertEqual(ratingAction.id, "rating_prompt")
+        XCTAssertEqual(ratingAction.priority, .review)
+        XCTAssertTrue(ratingAction.tags.contains("review"))
+
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.triggerFlow(actions: [ratingAction])
+        XCTAssertTrue(promptCalled)
+    }
+
+    func testRequestCompletionFlowConvenience() {
+        let orchestrator = UXFlowOrchestrator.shared
+        var flowCompleted = false
+        var adExecuted = false
+
+        let milestone = UXAction(id: "results", priority: .milestone, kind: .sheet) {
+            Text("Done")
+        }
+        let ad = UXAction(id: "ad", priority: .ad, kind: .customAsync) { completion in
+            adExecuted = true
+            completion(.completed)
+        }
+
+        orchestrator.requestCompletionFlow(
+            milestoneSheet: milestone,
+            paywallSheet: nil,
+            reviewAction: nil,
+            adAction: ad
+        ) {
+            flowCompleted = true
+        }
+
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, "results")
+        orchestrator.dismissCurrentAction()
+
+        let exp = expectation(description: "Completion flow finishes")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            XCTAssertTrue(adExecuted)
+            XCTAssertTrue(flowCompleted)
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+    }
 }

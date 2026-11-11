@@ -284,9 +284,38 @@ public class ReviewPromptManager {
         return lastVersionPrompted == releaseVersionNumber
     }
 
+    /// Whether the current release version of the app has already been prompted for review.
+    public var hasPromptedForCurrentVersion: Bool {
+        hasPromptYet()
+    }
+
     nonisolated public static func getReviewURL(appStoreId: String) -> URL? {
         let cleanId = appStoreId.hasPrefix("id") ? appStoreId : "id\(appStoreId)"
         return URL(string: "https://apps.apple.com/app/\(cleanId)?action=write-review")
+    }
+
+    /// Opens the App Store page directly to the Write a Review form.
+    @discardableResult
+    @MainActor
+    public static func openAppStoreReviewPage(appStoreId: String) -> Bool {
+        guard let url = getReviewURL(appStoreId: appStoreId) else { return false }
+        GraceLogger.info("Opening App Store write-review URL: \(url)", category: .review)
+        #if canImport(UIKit)
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+            return true
+        }
+        return false
+        #else
+        return false
+        #endif
+    }
+
+    /// Opens the App Store page directly to the Write a Review form.
+    @discardableResult
+    @MainActor
+    public func openAppStoreReviewPage(appStoreId: String) -> Bool {
+        Self.openAppStoreReviewPage(appStoreId: appStoreId)
     }
 
     nonisolated public static func getShareURL(appStoreId: String) -> URL? {

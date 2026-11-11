@@ -59,7 +59,7 @@ public struct UXAction: Identifiable {
     public let tags: Set<String>
     
     let viewBuilder: (() -> AnyView)?
-    let executionBlock: ((_ completion: @escaping (UXActionOutcome) -> Void) -> Void)?
+    let executionBlock: (@MainActor (_ completion: @escaping (UXActionOutcome) -> Void) -> Void)?
     
     /// Initializer for visual SwiftUI views (.sheet / .fullScreenCover)
     public init(
@@ -83,7 +83,7 @@ public struct UXAction: Identifiable {
         priority: UXActionPriority,
         kind: UXPresentationKind,
         tags: Set<String> = [],
-        execute: @escaping (_ completion: @escaping (UXActionOutcome) -> Void) -> Void
+        execute: @escaping @MainActor (_ completion: @escaping (UXActionOutcome) -> Void) -> Void
     ) {
         self.id = id
         self.priority = priority
@@ -101,5 +101,37 @@ public struct UXActionItem: Identifiable {
     
     public init(action: UXAction) {
         self.action = action
+    }
+}
+
+// MARK: - Factory Helpers
+
+extension UXAction {
+    /// Creates a standard StoreKit native review prompt action with priority `.review`.
+    ///
+    /// - Parameters:
+    ///   - id: Action identifier (default: `"rating_prompt"`).
+    ///   - tags: Action tags (default: `["review"]`).
+    ///   - onPrompt: Optional closure invoked to execute review prompt evaluation. If nil, invokes `ReviewPromptManager.shared.requestDirectNativeReview()`.
+    @MainActor
+    public static func ratingPrompt(
+        id: String = "rating_prompt",
+        tags: Set<String> = ["review"],
+        onPrompt: (@MainActor () -> Bool)? = nil
+    ) -> UXAction {
+        UXAction(
+            id: id,
+            priority: .review,
+            kind: .customAsync,
+            tags: tags
+        ) { completion in
+            if let onPrompt = onPrompt {
+                let approved = onPrompt()
+                completion(approved ? .completed : .skipped)
+            } else {
+                ReviewPromptManager.shared.requestDirectNativeReview()
+                completion(.completed)
+            }
+        }
     }
 }

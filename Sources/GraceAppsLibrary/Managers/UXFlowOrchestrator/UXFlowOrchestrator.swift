@@ -239,3 +239,29 @@ public final class UXFlowOrchestrator: ObservableObject {
         interPresentationDelay = 0.25
     }
 }
+
+// MARK: - Completion Flow Orchestration
+
+extension UXFlowOrchestrator {
+    /// Requests a structured activity completion flow combining celebration/milestone,
+    /// milestone paywall, review prompt, and ad actions in accordance with priority policy.
+    public func requestCompletionFlow(
+        milestoneSheet: UXAction,
+        paywallSheet: UXAction? = nil,
+        reviewAction: UXAction? = nil,
+        adAction: UXAction? = nil,
+        onFlowComplete: (() -> Void)? = nil
+    ) {
+        var actions: [UXAction] = [milestoneSheet]
+        if let paywallSheet = paywallSheet {
+            actions.append(paywallSheet)
+        }
+        if let reviewAction = reviewAction {
+            actions.append(reviewAction)
+        }
+        if let adAction = adAction {
+            actions.append(adAction)
+        }
+        requestActions(actions, onFlowComplete: onFlowComplete)
+    }
+}

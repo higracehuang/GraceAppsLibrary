@@ -211,5 +211,19 @@ final class ReviewPromptManagerTests: XCTestCase {
         let alreadyPrompted = manager.requestDirectReviewIfEligible(currentCount: 5, threshold: 2, delay: 0)
         XCTAssertFalse(alreadyPrompted)
     }
+
+    func testHasPromptedForCurrentVersion() {
+        let manager = ReviewPromptManager.shared
+        XCTAssertFalse(manager.hasPromptedForCurrentVersion)
+
+        let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        UserDefaults.standard.set(currentVersion, forKey: lastVersionKey)
+        XCTAssertTrue(manager.hasPromptedForCurrentVersion)
+    }
+
+    func testOpenAppStoreReviewPageReturnsFalseForInvalidId() {
+        let opened = ReviewPromptManager.openAppStoreReviewPage(appStoreId: "")
+        XCTAssertFalse(opened)
+    }
 }
 
