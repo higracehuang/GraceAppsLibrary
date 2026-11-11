@@ -14,6 +14,9 @@ public struct GraceLogger {
         case feedback = "📧 Feedback"
         case debug = "🛠️ Debug"
         case app = "📱 App"
+        case orchestrator = "🎭 Orchestrator"
+        case ads = "📢 Ads"
+        case paywall = "💎 Paywall"
 
         var logger: Logger {
             Logger(subsystem: GraceLogger.subsystem, category: rawValue)
@@ -41,10 +44,13 @@ public struct GraceLogger {
         }
     }
 
-    /// Core logging method using Apple's os.Logger
+    /// Core logging method using Apple's os.Logger and stdout in DEBUG
     public static func log(_ message: String, level: Level = .info, category: Category = .app) {
         let formatted = "\(level.emoji) \(message)"
         category.logger.log(level: level.logType, "\(formatted, privacy: .public)")
+        #if DEBUG
+        print("[\(category.rawValue)] \(formatted)")
+        #endif
     }
 
     // MARK: - Convenience Methods by Level
@@ -73,5 +79,17 @@ public struct GraceLogger {
 
     public static func debug(_ message: String) {
         log(message, level: .info, category: .debug)
+    }
+
+    public static func orchestrator(_ message: String, level: Level = .info) {
+        log(message, level: level, category: .orchestrator)
+    }
+
+    public static func ads(_ message: String, level: Level = .info) {
+        log(message, level: level, category: .ads)
+    }
+
+    public static func paywall(_ message: String, level: Level = .info) {
+        log(message, level: level, category: .paywall)
     }
 }

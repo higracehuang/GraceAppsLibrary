@@ -1,0 +1,209 @@
+//
+//  UXFlowOrchestrator.swift
+//  GraceAppsLibrary
+//
+//  Created by Grace Huang on 11/11/26.
+//
+
+import SwiftUI
+import Combine
+
+/// Action-agnostic presentation orchestrator that sequences sheets, covers, alerts, and ads.
+/// Enforces single-slot presentation and inter-presentation settling delays to eliminate modal collisions and cancellations.
+@MainActor
+public final class UXFlowOrchestrator: ObservableObject {
+    public static let shared = UXFlowOrchestrator()
+    
+    // MARK: - Published State
+    
+    /// The active sheet item bound to SwiftUI's `.sheet(item:)` modifier.
+    @Published public private(set) var activeSheetItem: UXActionItem?
+    
+    /// The active fullScreenCover item bound to SwiftUI's `.fullScreenCover(item:)` modifier.
+    @Published public private(set) var activeCoverItem: UXActionItem?
+    
+    /// Indicates whether a modal is currently presenting or transitioning.
+    @Published public private(set) var isBusy: Bool = false
+    
+    /// The identifier of the action currently active on screen.
+    @Published public private(set) var currentActionId: String?
+    
+    // MARK: - Configuration
+    
+    /// Declarative policy rules governing priorities, cooldowns, and exclusions.
+    public var policy = UXPolicy()
+    
+    /// Delay between consecutive presentations allowing UIKit dismiss animations to complete (default: 0.25s).
+    public var interPresentationDelay: TimeInterval = 0.25
+    
+    // MARK: - Internal State
+    
+    private var actionQueue: [UXAction] = []
+    private var sessionActionCounts: [String: Int] = [:]
+    private var lastPresentedTimes: [String: Date] = [:]
+    private var executedTagsThisFlow: Set<String> = []
+    
+    public init() {}
+    
+    // MARK: - Flow Execution
+    
+    /// Evaluates candidate actions, sorts them by priority, and begins serial execution.
+    /// - Parameter actions: Array of candidate actions eligible at this trigger point.
+    public func triggerFlow(actions: [UXAction]) {
+        GraceLogger.orchestrator("Triggering flow with \(actions.count) candidate actions: \(actions.map { $0.id })", level: .info)
+        
+        let eligible = actions
+            .filter { evaluateEligibility(for: $0) }
+            .sorted(by: { $0.priority > $1.priority })
+        
+        guard !eligible.isEmpty else {
+            GraceLogger.orchestrator("No candidate actions passed policy eligibility check.", level: .info)
+            return
+        }
+        
+        GraceLogger.orchestrator("Enqueued \(eligible.count) approved actions in priority order: \(eligible.map { "\($0.id)(\($0.priority.rawValue))" })", level: .success)
+        actionQueue.append(contentsOf: eligible)
+        processNextInQueue()
+    }
+    
+    /// Processes the next item in the prioritized queue.
+    private func processNextInQueue() {
+        guard !isBusy else {
+            GraceLogger.orchestrator("Pipeline busy (action: '\(currentActionId ?? "none")'). Next action will wait in queue.", level: .info)
+            return
+        }
+        
+        guard !actionQueue.isEmpty else {
+            isBusy = false
+            currentActionId = nil
+            GraceLogger.orchestrator("Presentation queue completed. Pipeline idle.", level: .info)
+            return
+        }
+        
+        let nextAction = actionQueue.removeFirst()
+        
+        // Check mutual exclusion against tags already displayed in this flow
+        guard evaluateFlowMutualExclusion(for: nextAction) else {
+            GraceLogger.orchestrator("Action '\(nextAction.id)' dropped due to flow mutual exclusion with executed tags: \(executedTagsThisFlow)", level: .warning)
+            processNextInQueue()
+            return
+        }
+        
+        isBusy = true
+        currentActionId = nextAction.id
+        recordActionStart(nextAction)
+        
+        GraceLogger.orchestrator("Presenting '\(nextAction.id)' (kind: \(nextAction.kind), priority: \(nextAction.priority.rawValue))...", level: .success)
+        
+        switch nextAction.kind {
+        case .sheet:
+            activeSheetItem = UXActionItem(action: nextAction)
+            
+        case .fullScreenCover:
+            activeCoverItem = UXActionItem(action: nextAction)
+            
+        case .systemDialog, .customAsync:
+            nextAction.executionBlock? { [weak self] outcome in
+                guard let self = self else { return }
+                GraceLogger.orchestrator("Custom/System action '\(nextAction.id)' completed with outcome: \(outcome)", level: .info)
+                self.completeAction(nextAction)
+            }
+        }
+    }
+    
+    /// Handles dismissal of visual sheets and full-screen covers.
+    /// Intercepted by `UXFlowViewModifier` to guarantee clean transitions.
+    public func onModalDismissed(actionId: String) {
+        guard let current = (activeSheetItem?.action ?? activeCoverItem?.action), current.id == actionId else {
+            GraceLogger.orchestrator("Received onModalDismissed for '\(actionId)' but active item was different.", level: .warning)
+            return
+        }
+        
+        activeSheetItem = nil
+        activeCoverItem = nil
+        GraceLogger.orchestrator("Visual modal '\(actionId)' dismissed. Entering \(interPresentationDelay)s settling window...", level: .info)
+        completeAction(current)
+    }
+    
+    private func completeAction(_ action: UXAction) {
+        // Enforce settling window so the UIKit transition completes cleanly before next modal mounts
+        DispatchQueue.main.asyncAfter(deadline: .now() + interPresentationDelay) { [weak self] in
+            guard let self = self else { return }
+            self.isBusy = false
+            self.currentActionId = nil
+            self.processNextInQueue()
+        }
+    }
+    
+    /// Resets tags executed in the current flow. Call when starting a new activity or screen.
+    public func resetFlowState() {
+        executedTagsThisFlow.removeAll()
+        actionQueue.removeAll()
+        GraceLogger.orchestrator("Flow state reset.", level: .info)
+    }
+    
+    // MARK: - Policy Filtering
+    
+    private func evaluateEligibility(for action: UXAction) -> Bool {
+        // 1. App-level precondition
+        if let precondition = policy.preconditions[action.id], !precondition() {
+            GraceLogger.orchestrator("Action '\(action.id)' rejected: Precondition returned false.", level: .info)
+            return false
+        }
+        
+        // 2. Session cap
+        if let cap = policy.sessionCaps[action.id] {
+            let count = sessionActionCounts[action.id] ?? 0
+            if count >= cap {
+                GraceLogger.orchestrator("Action '\(action.id)' rejected: Session cap reached (\(count)/\(cap)).", level: .info)
+                return false
+            }
+        }
+        
+        // 3. Tag cooldowns
+        for tag in action.tags {
+            if let cooldown = policy.tagCooldowns[tag],
+               let lastTime = lastPresentedTimes[tag] {
+                let elapsed = Date().timeIntervalSince(lastTime)
+                if elapsed < cooldown {
+                    GraceLogger.orchestrator("Action '\(action.id)' rejected: Tag '\(tag)' cooldown active (\(Int(elapsed))s < \(Int(cooldown))s).", level: .info)
+                    return false
+                }
+            }
+        }
+        
+        return true
+    }
+    
+    private func evaluateFlowMutualExclusion(for action: UXAction) -> Bool {
+        for executedTag in executedTagsThisFlow {
+            if let excluded = policy.mutualExclusions[executedTag], !action.tags.isDisjoint(with: excluded) {
+                return false
+            }
+        }
+        return true
+    }
+    
+    private func recordActionStart(_ action: UXAction) {
+        sessionActionCounts[action.id, default: 0] += 1
+        let now = Date()
+        for tag in action.tags {
+            lastPresentedTimes[tag] = now
+            executedTagsThisFlow.insert(tag)
+        }
+    }
+    
+    // MARK: - Testing Helpers
+    
+    public func resetForTesting() {
+        activeSheetItem = nil
+        activeCoverItem = nil
+        isBusy = false
+        currentActionId = nil
+        actionQueue.removeAll()
+        sessionActionCounts.removeAll()
+        lastPresentedTimes.removeAll()
+        executedTagsThisFlow.removeAll()
+        policy = UXPolicy()
+    }
+}
