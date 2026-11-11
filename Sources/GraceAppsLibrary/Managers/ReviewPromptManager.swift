@@ -277,9 +277,11 @@ public class ReviewPromptManager {
     }
 
     public func hasPromptYet() -> Bool {
-        let lastVersionPrompted = UserDefaults.standard.string(forKey: SettingKeys.lastVersionPromptedForReviewKey) ?? ""
-        let currentVersion = releaseVersionNumber
-        return lastVersionPrompted == currentVersion
+        guard let lastVersionPrompted = UserDefaults.standard.string(forKey: SettingKeys.lastVersionPromptedForReviewKey),
+              !lastVersionPrompted.isEmpty else {
+            return false
+        }
+        return lastVersionPrompted == releaseVersionNumber
     }
 
     nonisolated public static func getReviewURL(appStoreId: String) -> URL? {
@@ -509,6 +511,13 @@ Device: \(deviceModel) (\(osVersion))
     }
 
     private func showNativeReviewPrompt(retryCount: Int) {
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil &&
+              NSClassFromString("XCTestCase") == nil else {
+            GraceLogger.info("Unit test detected: skipping StoreKit UI presentation and marking prompted.", category: .review)
+            markPromptedForCurrentVersion()
+            return
+        }
+
         guard let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene else {
             GraceLogger.warning("Could not find active UIWindowScene to request native review.", category: .review)
             return

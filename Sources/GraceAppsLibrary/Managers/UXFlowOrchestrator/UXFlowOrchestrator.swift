@@ -236,5 +236,6 @@ public final class UXFlowOrchestrator: ObservableObject {
         executedTagsThisFlow.removeAll()
         flowCompletionCallback = nil
         policy = UXPolicy()
+        interPresentationDelay = 0.25
     }
 }
