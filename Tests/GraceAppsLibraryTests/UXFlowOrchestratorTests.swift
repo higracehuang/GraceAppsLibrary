@@ -186,4 +186,37 @@ final class UXFlowOrchestratorTests: XCTestCase {
         }
         wait(for: [exp], timeout: 1.0)
     }
+    
+    func testFlowCompletionCallbackInvokedWhenQueueEmpties() {
+        let orchestrator = UXFlowOrchestrator.shared
+        
+        var flowCompleted = false
+        var executionOrder: [String] = []
+        
+        let sheetAction = UXAction(id: "celebration", priority: .milestone, kind: .sheet) {
+            Text("Celebration")
+        }
+        let asyncAction = UXAction(id: "ad", priority: .ad, kind: .customAsync) { completion in
+            executionOrder.append("ad")
+            completion(.completed)
+        }
+        
+        orchestrator.requestActions([sheetAction, asyncAction]) {
+            flowCompleted = true
+        }
+        
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, "celebration")
+        XCTAssertFalse(flowCompleted)
+        
+        // Dismiss sheet using programmatic dismissCurrentAction
+        orchestrator.dismissCurrentAction()
+        
+        let exp = expectation(description: "Flow completion callback")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            XCTAssertEqual(executionOrder, ["ad"])
+            XCTAssertTrue(flowCompleted, "onFlowComplete callback must be invoked when all actions finish.")
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+    }
 }

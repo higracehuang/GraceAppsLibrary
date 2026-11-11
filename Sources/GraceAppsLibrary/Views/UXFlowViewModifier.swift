@@ -24,7 +24,11 @@ public struct UXFlowViewModifier: ViewModifier {
         content
             .sheet(item: Binding<UXActionItem?>(
                 get: { orchestrator.activeSheetItem },
-                set: { _ in }
+                set: { newValue in
+                    if newValue == nil, let item = orchestrator.activeSheetItem {
+                        orchestrator.onModalDismissed(actionId: item.id)
+                    }
+                }
             ), onDismiss: {
                 if let item = orchestrator.activeSheetItem {
                     orchestrator.onModalDismissed(actionId: item.id)
@@ -38,7 +42,11 @@ public struct UXFlowViewModifier: ViewModifier {
             }
             .fullScreenCover(item: Binding<UXActionItem?>(
                 get: { orchestrator.activeCoverItem },
-                set: { _ in }
+                set: { newValue in
+                    if newValue == nil, let item = orchestrator.activeCoverItem {
+                        orchestrator.onModalDismissed(actionId: item.id)
+                    }
+                }
             ), onDismiss: {
                 if let item = orchestrator.activeCoverItem {
                     orchestrator.onModalDismissed(actionId: item.id)

@@ -42,14 +42,18 @@ public final class UXFlowOrchestrator: ObservableObject {
     private var sessionActionCounts: [String: Int] = [:]
     private var lastPresentedTimes: [String: Date] = [:]
     private var executedTagsThisFlow: Set<String> = []
+    private var flowCompletionCallback: (() -> Void)?
     
     public init() {}
     
     // MARK: - Flow Execution
     
     /// Evaluates candidate actions, sorts them by priority, and begins serial execution.
-    /// - Parameter actions: Array of candidate actions eligible at this trigger point.
-    public func triggerFlow(actions: [UXAction]) {
+    /// - Parameters:
+    ///   - actions: Array of candidate actions eligible at this trigger point.
+    ///   - onFlowComplete: Optional callback executed when all actions in this flow have finished.
+    public func triggerFlow(actions: [UXAction], onFlowComplete: (() -> Void)? = nil) {
+        self.flowCompletionCallback = onFlowComplete
         GraceLogger.orchestrator("Triggering flow with \(actions.count) candidate actions: \(actions.map { $0.id })", level: .info)
         
         let eligible = actions
@@ -58,12 +62,34 @@ public final class UXFlowOrchestrator: ObservableObject {
         
         guard !eligible.isEmpty else {
             GraceLogger.orchestrator("No candidate actions passed policy eligibility check.", level: .info)
+            let callback = flowCompletionCallback
+            self.flowCompletionCallback = nil
+            callback?()
             return
         }
         
         GraceLogger.orchestrator("Enqueued \(eligible.count) approved actions in priority order: \(eligible.map { "\($0.id)(\($0.priority.rawValue))" })", level: .success)
         actionQueue.append(contentsOf: eligible)
         processNextInQueue()
+    }
+    
+    /// Convenience alias for triggerFlow.
+    public func requestActions(_ actions: [UXAction], onFlowComplete: (() -> Void)? = nil) {
+        triggerFlow(actions: actions, onFlowComplete: onFlowComplete)
+    }
+    
+    /// Convenience method to request a single action.
+    public func requestAction(_ action: UXAction, onFlowComplete: (() -> Void)? = nil) {
+        triggerFlow(actions: [action], onFlowComplete: onFlowComplete)
+    }
+    
+    /// Programmatically dismisses the active visual modal (sheet or cover) and transitions to the next queued action.
+    public func dismissCurrentAction() {
+        if let sheet = activeSheetItem {
+            onModalDismissed(actionId: sheet.id)
+        } else if let cover = activeCoverItem {
+            onModalDismissed(actionId: cover.id)
+        }
     }
     
     /// Processes the next item in the prioritized queue.
@@ -77,6 +103,9 @@ public final class UXFlowOrchestrator: ObservableObject {
             isBusy = false
             currentActionId = nil
             GraceLogger.orchestrator("Presentation queue completed. Pipeline idle.", level: .info)
+            let callback = flowCompletionCallback
+            flowCompletionCallback = nil
+            callback?()
             return
         }
         
@@ -139,6 +168,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     public func resetFlowState() {
         executedTagsThisFlow.removeAll()
         actionQueue.removeAll()
+        flowCompletionCallback = nil
         GraceLogger.orchestrator("Flow state reset.", level: .info)
     }
     
@@ -204,6 +234,7 @@ public final class UXFlowOrchestrator: ObservableObject {
         sessionActionCounts.removeAll()
         lastPresentedTimes.removeAll()
         executedTagsThisFlow.removeAll()
+        flowCompletionCallback = nil
         policy = UXPolicy()
     }
 }
