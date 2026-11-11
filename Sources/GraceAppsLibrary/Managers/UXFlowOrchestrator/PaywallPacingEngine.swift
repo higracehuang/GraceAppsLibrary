@@ -182,6 +182,19 @@ public final class PaywallPacingEngine {
             dismissed: UserDefaults.standard.integer(forKey: StorageKeys.statsDismissedPrefix + triggerId)
         )
     }
+
+    public func resetTriggerStats(for triggerId: String? = nil) {
+        if let triggerId = triggerId {
+            UserDefaults.standard.removeObject(forKey: StorageKeys.statsShownPrefix + triggerId)
+            UserDefaults.standard.removeObject(forKey: StorageKeys.statsPurchasedPrefix + triggerId)
+            UserDefaults.standard.removeObject(forKey: StorageKeys.statsDismissedPrefix + triggerId)
+        } else {
+            let dict = UserDefaults.standard.dictionaryRepresentation()
+            for key in dict.keys where key.hasPrefix("GraceApps_Paywall_Stats_") {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
+    }
     
     // MARK: - Testing Helpers
     
@@ -191,5 +204,6 @@ public final class PaywallPacingEngine {
         config = PaywallPacingConfig()
         UserDefaults.standard.removeObject(forKey: StorageKeys.completionsCountKey)
         UserDefaults.standard.removeObject(forKey: StorageKeys.lastOfferDateKey)
+        resetTriggerStats()
     }
 }
