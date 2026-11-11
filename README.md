@@ -13,6 +13,7 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 - Shared Onboarding framework (`OnboardingContainer`, `OnboardingSlideLayout`, `OnboardingCoordinator`)
 - Smart review prompting (`ReviewPromptManager`) with 2-step pre-filter & feedback redirection
 - Automated App Store Screenshot framework (`ScreenshotPresetProvider`, `ScreenshotEngine`, `DebugScreenshotSection`, and CLI runner script)
+- Action-agnostic presentation & ad-pacing orchestrator (`UXFlowOrchestrator`, `UXPolicy`, `AdPacingEngine`, `.withUXFlowOrchestrator()`) preventing prompt collisions, premature sheet cancel-outs, and wasted ad requests
 
 ## Installation
 
@@ -714,6 +715,194 @@ Automate Apple-compliant App Store Preview videos across multiple languages with
   }
 }
 ```
+
+#### 12. UX Flow & Ad Pacing Orchestration (Zero-Clash Presentation & Ad Engine)
+
+A unified, action-agnostic presentation and ad-pacing framework that prevents prompt clashes, eliminates sheet cancellations, standardizes ad policies, and guarantees zero wasted ad requests across all your apps.
+
+##### The Problems It Solves
+1. **Modal Clashes & Cancel-Outs**: In SwiftUI, presenting a sheet while another is dismissing (e.g. dismissing a quiz results sheet and attempting to show a paywall or StoreKit review prompt) cancels out the presentation or throws `Attempt to present ... while presentation is in progress`.
+2. **Priority Cannibalization**: Showing an interstitial ad right after or during a paywall or celebration sheet damages conversion funnels and user sentiment.
+3. **Wasted Ad Requests**: Requesting AdMob ads eagerly on app launch, when the user is Pro, or during rapid sessions results in expired cache (AdMob ads expire after 1 hour), low Impression-to-Request ratios, and lower eCPMs.
+
+---
+
+##### Architecture & Key Components
+- **`UXAction`**: Action-agnostic model representing any presentation item. Supports `.sheet`, `.fullScreenCover`, `.systemDialog` (StoreKit review, system alerts), and `.customAsync` (AdMob, custom view controller workflows). Prioritized via `UXActionPriority` (`.critical`, `.milestone`, `.paywall`, `.review`, `.ad`).
+- **`UXPolicy`**: Declarative rule engine managing mutual exclusions (e.g., paywall suppresses ads), global debounces, tag cooldowns, session impression caps, and app preconditions.
+- **`AdPacingEngine`**: Ad gatekeeper decoupled from Google Mobile Ads. Enforces pre-request checks, 50-minute TTL cache expiration, 20-second safety debouncing, and first-run onboarding exemptions.
+- **`UXFlowOrchestrator`**: The central conductor. Maintains a prioritized queue and enforces an automatic **0.25-second settling window** between consecutive presentations so UIKit/SwiftUI transitions complete cleanly before the next modal mounts.
+- **`.withUXFlowOrchestrator()`**: SwiftUI view modifier that hosts a single presentation slot across the view hierarchy.
+- **`GraceLogger`**: Extended with `.orchestrator`, `.ads`, and `.paywall` categories with automatic Xcode debug console output.
+
+---
+
+##### Step-by-Step Implementation
+
+###### Step 1: Configure App Rules & Policies at Launch
+In your root `App.swift`, define your flow policies and ad units:
+
+```swift
+import SwiftUI
+import GraceAppsLibrary
+
+@main
+struct MyApp: App {
+    init() {
+        configureUXPolicies()
+    }
+    
+    private func configureUXPolicies() {
+        var policy = UXPolicy()
+        
+        // 1. Mutual Exclusions: Paywalls and celebration sheets suppress ads in the same flow
+        policy.mutuallyExclude(triggerTag: "paywall", suppressTag: "ad")
+        policy.mutuallyExclude(triggerTag: "celebration", suppressTag: "ad")
+        
+        // 2. Frequency Capping & Cooldowns
+        policy.setSessionCap(actionId: "milestone_paywall", maxCount: 1)
+        policy.setCooldown(tag: "ad", interval: 180) // 3 minutes between ads
+        
+        // 3. App Preconditions (Decoupled from GAL!)
+        policy.setPrecondition(actionId: "milestone_paywall") { !AppStoreManager.shared.isPro }
+        policy.setPrecondition(actionId: "interstitial_ad")   { !AppStoreManager.shared.isPro }
+        policy.setPrecondition(actionId: "rating_prompt")    { !ReviewPromptManager.shared.hasPromptYet() }
+        
+        UXFlowOrchestrator.shared.policy = policy
+        
+        // 4. Configure Ad Pacing Gatekeeper
+        AdPacingEngine.shared.isProUser = { AppStoreManager.shared.isPro }
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .withUXFlowOrchestrator() // Mounts the single-slot presentation container
+        }
+    }
+}
+```
+
+###### Step 2: Triggering Flows at Peak Completion Moments
+When an activity completes (e.g. quiz finished, workout logged, deck mastered), pass all candidate actions to `UXFlowOrchestrator`. It evaluates eligibility, sorts by priority, and executes them serially without collisions:
+
+```swift
+func onActivityCompleted(score: Int) {
+    let orchestrator = UXFlowOrchestrator.shared
+    orchestrator.resetFlowState()
+    
+    orchestrator.triggerFlow(actions: [
+        // 1. Milestone Celebration Sheet (Priority: 750)
+        UXAction(id: "results_sheet", priority: .milestone, kind: .sheet, tags: ["celebration"]) {
+            QuizResultsView(score: score)
+        },
+        
+        // 2. Conversion Paywall (Priority: 500)
+        UXAction(id: "milestone_paywall", priority: .paywall, kind: .sheet, tags: ["paywall"]) {
+            PaywallView()
+        },
+        
+        // 3. StoreKit Rating Prompt (Priority: 250) - Runs only AFTER sheets dismiss cleanly!
+        UXAction(id: "rating_prompt", priority: .review, kind: .systemDialog, tags: ["feedback"]) { completion in
+            ReviewPromptManager.shared.requestDirectNativeReview()
+            completion(.completed)
+        },
+        
+        // 4. Interstitial Ad (Priority: 100) - Automatically dropped if paywall was shown!
+        UXAction(id: "interstitial_ad", priority: .ad, kind: .customAsync, tags: ["ad"]) { completion in
+            UniversalAdCoordinator.shared.present(for: "after_quiz") { shown in
+                completion(shown ? .completed : .skipped)
+            }
+        }
+    ])
+}
+```
+
+###### Step 3: Reusable Zero-Waste AdMob Adapter
+In client apps, implement this thin adapter. It contains **no policy or timing logic**—it delegates 100% of decisions to GAL's `AdPacingEngine`:
+
+```swift
+import SwiftUI
+import GoogleMobileAds
+import GraceAppsLibrary
+
+@MainActor
+final class UniversalAdCoordinator: NSObject, ObservableObject, FullScreenContentDelegate {
+    static let shared = UniversalAdCoordinator()
+    
+    private var cachedAds: [String: InterstitialAd] = [:]
+    private var adLoadDates: [String: Date] = [:]
+    private var adUnitMap: [String: String] = [
+        "after_quiz": "ca-app-pub-3940256099942544/4411468910"
+    ]
+    private var onDismiss: (() -> Void)?
+    
+    private let engine = AdPacingEngine.shared
+    
+    // MARK: - JIT Preloading (Zero Wasted Requests)
+    
+    func preloadJIT(for trigger: String) {
+        let isFresh = isAdReady(for: trigger)
+        guard engine.canPreloadAd(for: trigger, isCacheValid: isFresh) else { return }
+        guard let unitId = adUnitMap[trigger] else { return }
+        
+        InterstitialAd.load(with: unitId, request: Request()) { [weak self] ad, error in
+            guard let self = self, let ad = ad, error == nil else { return }
+            ad.fullScreenContentDelegate = self
+            self.cachedAds[trigger] = ad
+            self.adLoadDates[trigger] = Date()
+        }
+    }
+    
+    // MARK: - Presentation
+    
+    func present(for trigger: String, completion: @escaping (Bool) -> Void) {
+        cleanExpiredAds()
+        guard engine.canPresentAd(for: trigger), let ad = cachedAds[trigger] else {
+            completion(false)
+            return
+        }
+        guard let rootVC = UIApplication.shared.firstKeyWindowRootViewController else {
+            completion(false)
+            return
+        }
+        
+        self.onDismiss = { completion(true) }
+        cachedAds.removeValue(forKey: trigger)
+        engine.recordAdPresented(for: trigger)
+        ad.present(from: rootVC)
+    }
+    
+    // MARK: - 50-Minute Cache TTL Hygiene
+    
+    func cleanExpiredAds() {
+        let now = Date()
+        for (trigger, date) in adLoadDates {
+            if now.timeIntervalSince(date) >= engine.config.cacheTTL {
+                cachedAds.removeValue(forKey: trigger)
+                adLoadDates.removeValue(forKey: trigger)
+            }
+        }
+    }
+    
+    func isAdReady(for trigger: String) -> Bool {
+        cleanExpiredAds()
+        return cachedAds[trigger] != nil
+    }
+    
+    func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
+        onDismiss?()
+        onDismiss = nil
+    }
+    
+    func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
+        onDismiss?()
+        onDismiss = nil
+    }
+}
+```
+
+---
 
 ## Development
 
