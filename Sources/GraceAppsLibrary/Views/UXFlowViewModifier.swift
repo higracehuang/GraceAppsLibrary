@@ -8,11 +8,16 @@
 import SwiftUI
 
 /// View modifier binding `UXFlowOrchestrator`'s presentation items to a single presentation container.
+@MainActor
 public struct UXFlowViewModifier: ViewModifier {
     @ObservedObject var orchestrator: UXFlowOrchestrator
     
-    public init(orchestrator: UXFlowOrchestrator = .shared) {
+    public init(orchestrator: UXFlowOrchestrator) {
         self.orchestrator = orchestrator
+    }
+
+    public init() {
+        self.orchestrator = .shared
     }
     
     public func body(content: Content) -> some View {
@@ -50,7 +55,14 @@ public struct UXFlowViewModifier: ViewModifier {
 
 public extension View {
     /// Mounts the single-slot `UXFlowOrchestrator` presentation container to avoid sheet collisions and premature cancel-outs.
-    func withUXFlowOrchestrator(_ orchestrator: UXFlowOrchestrator = .shared) -> some View {
+    @MainActor
+    func withUXFlowOrchestrator(_ orchestrator: UXFlowOrchestrator) -> some View {
         self.modifier(UXFlowViewModifier(orchestrator: orchestrator))
+    }
+
+    /// Mounts the single-slot `UXFlowOrchestrator.shared` presentation container to avoid sheet collisions and premature cancel-outs.
+    @MainActor
+    func withUXFlowOrchestrator() -> some View {
+        self.withUXFlowOrchestrator(.shared)
     }
 }

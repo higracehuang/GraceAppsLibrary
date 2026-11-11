@@ -2,6 +2,7 @@ import XCTest
 import SwiftUI
 @testable import GraceAppsLibrary
 
+@MainActor
 final class DebugViewsTests: XCTestCase {
     
     func testDebugStatusBadge() {
@@ -22,10 +23,11 @@ final class DebugViewsTests: XCTestCase {
             includeReviews: true,
             entitlementOverride: binding,
             effectiveIsPro: true,
-            tierName: "Pro Tier"
-        ) {
-            Text("Custom Dev Section")
-        }
+            tierName: "Pro Tier",
+            customContent: {
+                Text("Custom Dev Section")
+            }
+        )
         
         XCTAssertEqual(navView.systemImage, "wrench")
         XCTAssertEqual(navView.includeReviews, true)
@@ -64,10 +66,11 @@ final class DebugViewsTests: XCTestCase {
     func testDebugSectionView() {
         let sectionView = DebugSectionView(
             sectionHeader: "Dev Tools",
-            title: "Debug Options"
-        ) {
-            Text("Section Item")
-        }
+            title: "Debug Options",
+            customContent: {
+                Text("Section Item")
+            }
+        )
         
         XCTAssertEqual(sectionView.title, "Debug Options")
         XCTAssertTrue(sectionView.includeAppearance)

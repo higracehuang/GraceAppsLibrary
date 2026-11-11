@@ -1,4 +1,8 @@
 import XCTest
+import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 @testable import GraceAppsLibrary
 
 final class ReleaseNotesTests: XCTestCase {
@@ -413,7 +417,13 @@ final class ReleaseNotesTests: XCTestCase {
     @MainActor
     func testDebugReleaseNotesSectionBodyRendering() {
         let section = DebugReleaseNotesSection(releaseNotes: [])
-        XCTAssertNotNil(section.body)
+        let hostingController = UIHostingController(rootView: section)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        window.rootViewController = hostingController
+        window.makeKeyAndVisible()
+        hostingController.view.setNeedsLayout()
+        hostingController.view.layoutIfNeeded()
+        XCTAssertNotNil(hostingController.rootView)
         
         let sectionWithNotes = DebugReleaseNotesSection(
             releaseNotes: [ReleaseNote(version: "1.0.0", notes: ["New"])],
@@ -421,6 +431,10 @@ final class ReleaseNotesTests: XCTestCase {
             tierName: "Pro Tier",
             paywallAction: {}
         )
-        XCTAssertNotNil(sectionWithNotes.body)
+        let hostingControllerWithNotes = UIHostingController(rootView: sectionWithNotes)
+        window.rootViewController = hostingControllerWithNotes
+        hostingControllerWithNotes.view.setNeedsLayout()
+        hostingControllerWithNotes.view.layoutIfNeeded()
+        XCTAssertNotNil(hostingControllerWithNotes.rootView)
     }
 }
