@@ -547,6 +547,14 @@ Device: \(deviceModel) (\(osVersion))
             return
         }
 
+        if ProcessInfo.processInfo.arguments.contains("-UITesting") ||
+           ProcessInfo.processInfo.arguments.contains("-MockReviewPrompt") {
+            GraceLogger.info("UI test mode detected: presenting MockReviewPromptViewController.", category: .review)
+            Self.presentMockReviewPrompt()
+            markPromptedForCurrentVersion()
+            return
+        }
+
         guard let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene else {
             GraceLogger.warning("Could not find active UIWindowScene to request native review.", category: .review)
             return
@@ -567,6 +575,17 @@ Device: \(deviceModel) (\(osVersion))
             SKStoreReviewController.requestReview(in: scene)
         }
         markPromptedForCurrentVersion()
+    }
+
+    /// Presents the automated UI testing mock review prompt on the settled root view controller.
+    @MainActor
+    public static func presentMockReviewPrompt(onDismiss: (() -> Void)? = nil) {
+        let promptVC = MockReviewPromptViewController(onDismiss: onDismiss)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if let topVC = UIApplication.getTopViewController() {
+                topVC.present(promptVC, animated: true)
+            }
+        }
     }
 
     public static func actionShareApp(appStoreId: String) {
