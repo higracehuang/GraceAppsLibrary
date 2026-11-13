@@ -19,10 +19,10 @@ public struct UXPolicy {
     public private(set) var tagCooldowns: [UXTag: TimeInterval] = [:]
     
     /// Maximum times an action ID can be executed within a single app session.
-    public private(set) var sessionCaps: [String: Int] = [:]
+    public private(set) var sessionCaps: [UXActionID: Int] = [:]
     
     /// App-level preconditions (e.g., Pro subscription status, release version checks).
-    public private(set) var preconditions: [String: () -> Bool] = [:]
+    public private(set) var preconditions: [UXActionID: () -> Bool] = [:]
     
     public init() {}
     
@@ -51,12 +51,22 @@ public struct UXPolicy {
     }
     
     /// Sets a maximum impression count per session for a specific action ID.
-    public mutating func setSessionCap(actionId: String, maxCount: Int) {
+    public mutating func setSessionCap(actionId: UXActionID, maxCount: Int) {
         sessionCaps[actionId] = maxCount
+    }
+
+    /// Backward-compatible overload for string action IDs.
+    public mutating func setSessionCap(actionId: String, maxCount: Int) {
+        sessionCaps[UXActionID(actionId)] = maxCount
     }
     
     /// Registers an app-level precondition closure that must return true for the action to be eligible.
-    public mutating func setPrecondition(actionId: String, condition: @escaping () -> Bool) {
+    public mutating func setPrecondition(actionId: UXActionID, condition: @escaping () -> Bool) {
         preconditions[actionId] = condition
+    }
+
+    /// Backward-compatible overload for string action IDs.
+    public mutating func setPrecondition(actionId: String, condition: @escaping () -> Bool) {
+        preconditions[UXActionID(actionId)] = condition
     }
 }

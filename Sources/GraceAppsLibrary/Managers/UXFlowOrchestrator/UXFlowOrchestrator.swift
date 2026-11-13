@@ -26,7 +26,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     @Published public private(set) var isBusy: Bool = false
     
     /// The identifier of the action currently active on screen.
-    @Published public private(set) var currentActionId: String?
+    @Published public private(set) var currentActionId: UXActionID?
     
     /// Indicates whether a view modifier host (`scopedUXFlow`) is actively mounted.
     @Published public internal(set) var isHostMounted: Bool = false
@@ -48,7 +48,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     // MARK: - Internal State
     
     private var actionQueue: [UXAction] = []
-    private var sessionActionCounts: [String: Int] = [:]
+    private var sessionActionCounts: [UXActionID: Int] = [:]
     private var lastPresentedTimes: [UXTag: Date] = [:]
     private var executedTagsThisFlow: Set<UXTag> = []
     private var flowCompletionCallback: (() -> Void)?
@@ -171,7 +171,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     
     /// Handles dismissal of visual sheets and full-screen covers.
     /// Intercepted by `UXFlowViewModifier` to guarantee clean transitions.
-    internal func onModalDismissed(actionId: String) {
+    internal func onModalDismissed(actionId: UXActionID) {
         guard let current = (activeSheetItem?.action ?? activeCoverItem?.action), current.id == actionId else {
             GraceLogger.orchestrator("Received onModalDismissed for '\(actionId)' but active item was different.", level: .warning)
             return
@@ -181,6 +181,11 @@ public final class UXFlowOrchestrator: ObservableObject {
         activeCoverItem = nil
         GraceLogger.orchestrator("Visual modal '\(actionId)' dismissed. Entering \(interPresentationDelay)s settling window...", level: .info)
         completeAction(current)
+    }
+
+    /// Backward-compatible overload for string action IDs.
+    internal func onModalDismissed(actionId: String) {
+        onModalDismissed(actionId: UXActionID(actionId))
     }
     
     private func completeAction(_ action: UXAction) {

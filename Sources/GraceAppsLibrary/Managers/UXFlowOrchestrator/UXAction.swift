@@ -53,7 +53,7 @@ public enum UXActionOutcome: Sendable {
 
 /// An action-agnostic presentation unit managed by UXFlowOrchestrator.
 public struct UXAction: Identifiable {
-    public let id: String
+    public let id: UXActionID
     public let priority: UXActionPriority
     public let kind: UXPresentationKind
     public let tags: Set<UXTag>
@@ -63,7 +63,7 @@ public struct UXAction: Identifiable {
     
     /// Initializer for visual SwiftUI views (.sheet / .fullScreenCover)
     public init(
-        id: String,
+        id: UXActionID,
         priority: UXActionPriority = .milestone,
         kind: UXPresentationKind = .sheet,
         tags: Set<UXTag> = [],
@@ -75,6 +75,17 @@ public struct UXAction: Identifiable {
         self.tags = tags
         self.viewBuilder = { AnyView(content()) }
         self.executionBlock = nil
+    }
+
+    /// Backward-compatible initializer for visual SwiftUI views with String id
+    public init(
+        id: String,
+        priority: UXActionPriority = .milestone,
+        kind: UXPresentationKind = .sheet,
+        tags: Set<UXTag> = [],
+        @ViewBuilder content: @escaping () -> some View
+    ) {
+        self.init(id: UXActionID(id), priority: priority, kind: kind, tags: tags, content: content)
     }
 
     /// Backward-compatible initializer for visual SwiftUI views with Set<String> tags
@@ -85,7 +96,7 @@ public struct UXAction: Identifiable {
         tags: Set<String>,
         @ViewBuilder content: @escaping () -> some View
     ) {
-        self.id = id
+        self.id = UXActionID(id)
         self.priority = priority
         self.kind = kind
         self.tags = Set(tags.map { UXTag($0) })
@@ -95,7 +106,7 @@ public struct UXAction: Identifiable {
     
     /// Initializer for system prompts (.systemDialog) and custom vendor actions (.customAsync)
     public init(
-        id: String,
+        id: UXActionID,
         priority: UXActionPriority,
         kind: UXPresentationKind,
         tags: Set<UXTag> = [],
@@ -109,6 +120,17 @@ public struct UXAction: Identifiable {
         self.executionBlock = execute
     }
 
+    /// Backward-compatible initializer for system prompts and custom vendor actions with String id
+    public init(
+        id: String,
+        priority: UXActionPriority,
+        kind: UXPresentationKind,
+        tags: Set<UXTag> = [],
+        execute: @escaping @MainActor (_ completion: @escaping (UXActionOutcome) -> Void) -> Void
+    ) {
+        self.init(id: UXActionID(id), priority: priority, kind: kind, tags: tags, execute: execute)
+    }
+
     /// Backward-compatible initializer for system prompts and custom vendor actions with Set<String> tags
     public init(
         id: String,
@@ -117,7 +139,7 @@ public struct UXAction: Identifiable {
         tags: Set<String>,
         execute: @escaping @MainActor (_ completion: @escaping (UXActionOutcome) -> Void) -> Void
     ) {
-        self.id = id
+        self.id = UXActionID(id)
         self.priority = priority
         self.kind = kind
         self.tags = Set(tags.map { UXTag($0) })
@@ -128,7 +150,7 @@ public struct UXAction: Identifiable {
 
 /// Identifiable wrapper for binding an active UXAction to SwiftUI presentation modifiers.
 public struct UXActionItem: Identifiable {
-    public var id: String { action.id }
+    public var id: UXActionID { action.id }
     public let action: UXAction
     
     internal init(action: UXAction) {
@@ -142,7 +164,7 @@ extension UXAction {
     /// Creates a standard milestone or celebration results sheet action with priority `.milestone` (750).
     @MainActor
     public static func milestone(
-        id: String = "milestone_sheet",
+        id: UXActionID = .milestoneSheet,
         tags: Set<UXTag> = [.celebration],
         @ViewBuilder content: @escaping () -> some View
     ) -> UXAction {
@@ -158,12 +180,12 @@ extension UXAction {
     /// Creates a standard StoreKit native review prompt action with priority `.review` (250).
     ///
     /// - Parameters:
-    ///   - id: Action identifier (default: `"rating_prompt"`).
+    ///   - id: Action identifier (default: `.ratingPrompt`).
     ///   - tags: Action tags (default: `[.review]`).
     ///   - onPrompt: Optional closure invoked to execute review prompt evaluation. If nil, invokes `ReviewPromptManager.shared.requestDirectNativeReview()`.
     @MainActor
     public static func ratingPrompt(
-        id: String = "rating_prompt",
+        id: UXActionID = .ratingPrompt,
         tags: Set<UXTag> = [.review],
         onPrompt: (@MainActor () -> Bool)? = nil
     ) -> UXAction {
@@ -186,14 +208,14 @@ extension UXAction {
     /// Creates a standard interstitial ad action with priority `.ad` (100).
     ///
     /// - Parameters:
-    ///   - id: Action identifier (default: `"interstitial_ad"`).
+    ///   - id: Action identifier (default: `.interstitialAd`).
     ///   - tags: Action tags (default: `[.ad]`).
     ///   - present: Async closure to trigger the vendor ad presentation. Invokes `completion(true)` if presented, or `completion(false)` if skipped/throttled.
     @MainActor
     public static func ad(
-        id: String = "interstitial_ad",
+        id: UXActionID = .interstitialAd,
         tags: Set<UXTag> = [.ad],
-        present: @escaping (@MainActor @escaping (_ wasPresented: Bool) -> Void) -> Void
+        present: @MainActor @escaping (@MainActor @escaping (_ wasPresented: Bool) -> Void) -> Void
     ) -> UXAction {
         UXAction(
             id: id,
@@ -205,5 +227,15 @@ extension UXAction {
                 completion(wasPresented ? .completed : .skipped)
             }
         }
+    }
+
+    /// Convenience overload supporting `actionId:` label.
+    @MainActor
+    public static func ad(
+        actionId: UXActionID,
+        tags: Set<UXTag> = [.ad],
+        present: @MainActor @escaping (@MainActor @escaping (_ wasPresented: Bool) -> Void) -> Void
+    ) -> UXAction {
+        ad(id: actionId, tags: tags, present: present)
     }
 }

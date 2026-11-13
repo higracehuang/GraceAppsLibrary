@@ -372,4 +372,27 @@ final class UXFlowOrchestratorTests: XCTestCase {
         orchestrator.interPresentationDelay = 0.5
         XCTAssertEqual(orchestrator.interPresentationDelay, 0.5)
     }
+
+    func testUXActionIDConstantsAndPolicyIntegration() {
+        XCTAssertEqual(UXActionID.interstitialAd.rawValue, "interstitial_ad")
+        XCTAssertEqual(UXActionID.ratingPrompt.rawValue, "rating_prompt")
+        XCTAssertEqual(UXActionID.milestoneSheet.rawValue, "milestone_sheet")
+        XCTAssertEqual(UXActionID.paywall.rawValue, "paywall")
+        XCTAssertEqual(UXActionID.celebration.rawValue, "milestone_sheet")
+
+        var policy = UXPolicy()
+        policy.setSessionCap(actionId: .interstitialAd, maxCount: 2)
+        XCTAssertEqual(policy.sessionCaps[.interstitialAd], 2)
+
+        var conditionMet = false
+        policy.setPrecondition(actionId: .interstitialAd) { conditionMet }
+        XCTAssertFalse(policy.preconditions[.interstitialAd]?() ?? true)
+        conditionMet = true
+        XCTAssertTrue(policy.preconditions[.interstitialAd]?() ?? false)
+
+        let adAction = UXAction.ad(id: .interstitialAd) { completion in
+            completion(true)
+        }
+        XCTAssertEqual(adAction.id, .interstitialAd)
+    }
 }
