@@ -27,15 +27,13 @@ public struct UXPolicy {
     public init() {}
     
     /// Standard production policy:
-    /// - Showing a review suppresses ads and paywalls in the same flow.
-    /// - Showing a paywall suppresses ads and reviews in the same flow.
+    /// - Showing a review suppresses ads in the same flow.
+    /// - Showing a paywall suppresses ads in the same flow.
     /// - 20s cooldown between consecutive ads.
     public static var standard: UXPolicy {
         var policy = UXPolicy()
         policy.mutuallyExclude(triggerTag: .review, suppressTag: .ad)
         policy.mutuallyExclude(triggerTag: .paywall, suppressTag: .ad)
-        policy.mutuallyExclude(triggerTag: .paywall, suppressTag: .review)
-        policy.mutuallyExclude(triggerTag: .review, suppressTag: .paywall)
         policy.setCooldown(tag: .ad, interval: 20)
         return policy
     }

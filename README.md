@@ -728,14 +728,13 @@ A unified, action-agnostic presentation and ad-pacing framework that prevents pr
 ---
 
 ##### Architecture & Key Components
-- **`UXAction`**: Action-agnostic model representing any presentation item. Supports `.sheet`, `.fullScreenCover`, `.systemDialog` (StoreKit review, system alerts), and `.customAsync` (AdMob, custom view controller workflows). Prioritized via `UXActionPriority` (`.critical`, `.milestone`, `.paywall`, `.review`, `.ad`). Includes standardized factory methods:
+- **`UXAction`**: Action-agnostic model representing any presentation item. Supports `.sheet`, `.fullScreenCover`, `.systemDialog` (StoreKit review, system alerts), and `.customAsync` (AdMob, custom view controller workflows). Prioritized via `UXActionPriority` (`.critical`, `.milestone`, `.review`, `.ad`). Includes standardized factory methods:
   - `UXAction.milestone(id:tags:content:)` for achievement/celebration modals (Priority 750).
-  - `UXAction.paywall(id:kind:tags:content:)` for commercial conversion sheets (Priority 500).
   - `UXAction.ratingPrompt(id:tags:onPrompt:)` for native App Store reviews (Priority 250).
   - `UXAction.ad(id:tags:present:)` for interstitial/rewarded ads with automatic completion mapping (Priority 100).
 - **`UXTag`**: Strongly-typed categorization tags (`.celebration`, `.paywall`, `.review`, `.ad`) with `ExpressibleByStringLiteral` support. Eliminates magic strings and typo bugs in policy rules.
-- **`UXPolicy`**: Declarative rule engine managing mutual exclusions (e.g., paywall suppresses ads; paywall and review mutually exclude each other), global debounces, tag cooldowns, session impression caps, and app preconditions. Includes `UXPolicy.standard` preconfigured with industry best practices (reviews & paywalls suppress ads; paywalls and reviews mutually suppress each other; 20-second ad cooldown).
-- **`PaywallPacingEngine`**: Smart paywall conversion engine that balances monetisation and retention. Evaluates trigger categories (`.directIntent`, `.endowmentThreshold`, `.milestoneAchievement`), enforces milestone completion intervals (`default: 3`), time interval fallback (`default: 7 days`), session capping (`1 per session`), and tracks per-trigger analytics (`shown`, `purchased`, `dismissed`).
+- **`UXPolicy`**: Declarative rule engine managing mutual exclusions (e.g., paywall and review suppress ads), global debounces, tag cooldowns, session impression caps, and app preconditions. Includes `UXPolicy.standard` preconfigured with industry best practices (reviews & paywalls suppress ads; 20-second ad cooldown).
+- **`PaywallPacingEngine`**: Smart paywall conversion engine that balances monetisation and retention. Evaluates trigger categories (`.directIntent`, `.endowmentThreshold`, `.milestoneAchievement`), enforces milestone completion intervals (`default: 3`), time interval fallback (`default: 7 days`), session capping (`1 per session`), and tracks per-trigger analytics (`shown`, `purchased`, `dismissed`). Used to conditionally offer in-card upgrade CTAs without auto-popping modal paywalls.
 - **`AdPacingEngine`**: Ad gatekeeper decoupled from Google Mobile Ads. Enforces pre-request checks, 50-minute TTL cache expiration, 20-second safety debouncing, and first-run onboarding exemptions.
 - **`UXFlowOrchestrator`**: The central conductor. Maintains a prioritized queue and enforces an automatic settling window between consecutive presentations so UIKit/SwiftUI transitions complete cleanly before the next modal mounts. Provides convenience orchestration via `requestCompletionFlow(...)`, and atomic early termination via `cancelFlowAndDismiss()`.
 - **`.scopedUXFlow()`**: SwiftUI view modifier hosting the single-slot presentation container across the view hierarchy. Binds directly to the view's lifecycle and automatically resets idle flow state on appear/disappear, eliminating repetitive manual lifecycle cleanup and preventing stale flow tags from leaking. Presentation bindings (`UXActionItem`, `activeSheetItem`, `onModalDismissed`) are encapsulated internally to prevent direct misuse.
@@ -805,15 +804,10 @@ func onActivityCompleted(score: Int) {
             )
         },
         
-        // 2. Conversion Paywall (Priority: 500)
-        paywallSheet: shouldOfferPaywall ? UXAction.paywall(id: "milestone_paywall") {
-            PaywallView()
-        } : nil,
-        
-        // 3. StoreKit Rating Prompt (Priority: 250) - Runs only AFTER sheets dismiss cleanly!
+        // 2. StoreKit Rating Prompt (Priority: 250) - Runs only AFTER sheets dismiss cleanly!
         reviewAction: shouldPromptReview ? UXAction.ratingPrompt() : nil,
         
-        // 4. Interstitial Ad (Priority: 100) - Automatically suppressed if review or paywall executed!
+        // 3. Interstitial Ad (Priority: 100) - Automatically suppressed if review was presented!
         adAction: UXAction.ad { completion in
             let presented = UniversalAdCoordinator.shared.present(for: "after_quiz") {
                 completion(true)

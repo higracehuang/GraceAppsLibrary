@@ -155,23 +155,6 @@ extension UXAction {
         )
     }
 
-    /// Creates a standard commercial paywall modal action with priority `.paywall` (500).
-    @MainActor
-    public static func paywall(
-        id: String = "paywall_sheet",
-        kind: UXPresentationKind = .sheet,
-        tags: Set<UXTag> = [.paywall],
-        @ViewBuilder content: @escaping () -> some View
-    ) -> UXAction {
-        UXAction(
-            id: id,
-            priority: .paywall,
-            kind: kind,
-            tags: tags,
-            content: content
-        )
-    }
-
     /// Creates a standard StoreKit native review prompt action with priority `.review` (250).
     ///
     /// - Parameters:

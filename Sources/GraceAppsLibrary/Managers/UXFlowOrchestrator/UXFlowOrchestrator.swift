@@ -279,18 +279,14 @@ public final class UXFlowOrchestrator: ObservableObject {
 
 extension UXFlowOrchestrator {
     /// Requests a structured activity completion flow combining celebration/milestone,
-    /// optional milestone paywall, review prompt, and ad actions in accordance with priority policy.
+    /// review prompt, and ad actions in accordance with priority policy.
     public func requestCompletionFlow(
         milestoneSheet: UXAction,
-        paywallSheet: UXAction? = nil,
         reviewAction: UXAction? = nil,
         adAction: UXAction? = nil,
         onFlowComplete: (() -> Void)? = nil
     ) {
         var actions: [UXAction] = [milestoneSheet]
-        if let paywallSheet = paywallSheet {
-            actions.append(paywallSheet)
-        }
         if let reviewAction = reviewAction {
             actions.append(reviewAction)
         }
