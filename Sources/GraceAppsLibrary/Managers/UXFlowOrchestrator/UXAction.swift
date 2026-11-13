@@ -76,6 +76,22 @@ public struct UXAction: Identifiable {
         self.viewBuilder = { AnyView(content()) }
         self.executionBlock = nil
     }
+
+    /// Backward-compatible initializer for visual SwiftUI views with Set<String> tags
+    public init(
+        id: String,
+        priority: UXActionPriority = .milestone,
+        kind: UXPresentationKind = .sheet,
+        tags: Set<String>,
+        @ViewBuilder content: @escaping () -> some View
+    ) {
+        self.id = id
+        self.priority = priority
+        self.kind = kind
+        self.tags = Set(tags.map { UXTag($0) })
+        self.viewBuilder = { AnyView(content()) }
+        self.executionBlock = nil
+    }
     
     /// Initializer for system prompts (.systemDialog) and custom vendor actions (.customAsync)
     public init(
@@ -89,6 +105,22 @@ public struct UXAction: Identifiable {
         self.priority = priority
         self.kind = kind
         self.tags = tags
+        self.viewBuilder = nil
+        self.executionBlock = execute
+    }
+
+    /// Backward-compatible initializer for system prompts and custom vendor actions with Set<String> tags
+    public init(
+        id: String,
+        priority: UXActionPriority,
+        kind: UXPresentationKind,
+        tags: Set<String>,
+        execute: @escaping @MainActor (_ completion: @escaping (UXActionOutcome) -> Void) -> Void
+    ) {
+        self.id = id
+        self.priority = priority
+        self.kind = kind
+        self.tags = Set(tags.map { UXTag($0) })
         self.viewBuilder = nil
         self.executionBlock = execute
     }
