@@ -6,7 +6,7 @@
 import Foundation
 import os
 
-public struct GraceLogger {
+public enum GraceLogger {
     private static let subsystem = "com.graceapps.library"
 
     public enum Category: String {

@@ -9,7 +9,7 @@ import SwiftUI
 import UIKit
 
 /// A specialized UITextField that forces the emoji keyboard.
-public class UIEmojiTextField: UITextField {
+public final class UIEmojiTextField: UITextField {
     public override func awakeFromNib() {
         super.awakeFromNib()
     }
@@ -86,7 +86,7 @@ public struct EmojiTextField: UIViewRepresentable {
         Coordinator(parent: self)
     }
     
-    public class Coordinator: NSObject, UITextFieldDelegate {
+    public final class Coordinator: NSObject, UITextFieldDelegate {
         var parent: EmojiTextField
         
         init(parent: EmojiTextField) {

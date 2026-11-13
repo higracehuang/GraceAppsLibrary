@@ -1,6 +1,6 @@
 import Foundation
 
-public class ReleaseNotesManager {
+public final class ReleaseNotesManager {
     public static let shared = ReleaseNotesManager()
     
     private let lastViewedVersionKey = "GraceAppsLibrary_LastViewedReleaseNotesVersion"

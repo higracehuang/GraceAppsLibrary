@@ -25,7 +25,7 @@ public struct PositiveValueMoment: RawRepresentable, Equatable, Hashable, Expres
 }
 
 @MainActor
-public class ReviewPromptManager {
+public final class ReviewPromptManager {
 
     public static let shared = ReviewPromptManager()
 

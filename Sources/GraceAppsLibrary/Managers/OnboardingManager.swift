@@ -1,7 +1,7 @@
 import Foundation
 
 /// Helper utility for managing persistence and version-based onboarding presentation logic.
-public struct OnboardingManager {
+public enum OnboardingManager {
     public static let defaultStorageKey = "gal_has_completed_onboarding"
     public static let defaultVersionKey = "gal_last_completed_onboarding_version"
     
