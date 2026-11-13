@@ -28,6 +28,9 @@ public final class UXFlowOrchestrator: ObservableObject {
     /// The identifier of the action currently active on screen.
     @Published public private(set) var currentActionId: String?
     
+    /// Indicates whether a view modifier host (`scopedUXFlow` or `withUXFlowOrchestrator`) is actively mounted.
+    @Published public internal(set) var isHostMounted: Bool = false
+    
     // MARK: - Configuration
     
     /// Declarative policy rules governing priorities, cooldowns, and exclusions.
@@ -40,8 +43,8 @@ public final class UXFlowOrchestrator: ObservableObject {
     
     private var actionQueue: [UXAction] = []
     private var sessionActionCounts: [String: Int] = [:]
-    private var lastPresentedTimes: [String: Date] = [:]
-    private var executedTagsThisFlow: Set<String> = []
+    private var lastPresentedTimes: [UXTag: Date] = [:]
+    private var executedTagsThisFlow: Set<UXTag> = []
     private var flowCompletionCallback: (() -> Void)?
     
     public init() {}
@@ -53,6 +56,12 @@ public final class UXFlowOrchestrator: ObservableObject {
     ///   - actions: Array of candidate actions eligible at this trigger point.
     ///   - onFlowComplete: Optional callback executed when all actions in this flow have finished.
     public func triggerFlow(actions: [UXAction], onFlowComplete: (() -> Void)? = nil) {
+        #if DEBUG
+        if !isHostMounted && actions.contains(where: { $0.kind == .sheet || $0.kind == .fullScreenCover }) {
+            GraceLogger.orchestrator("⚠️ Warning: Triggered modal actions without an active host. Ensure .scopedUXFlow() or .withUXFlowOrchestrator() is attached to your view hierarchy.", level: .warning)
+        }
+        #endif
+        
         self.flowCompletionCallback = onFlowComplete
         GraceLogger.orchestrator("Triggering flow with \(actions.count) candidate actions: \(actions.map { $0.id })", level: .info)
         
@@ -90,6 +99,20 @@ public final class UXFlowOrchestrator: ObservableObject {
         } else if let cover = activeCoverItem {
             onModalDismissed(actionId: cover.id)
         }
+    }
+    
+    /// Atomically cancels all pending actions in the current flow and dismisses the currently active modal.
+    /// Use this when the user chooses an action that terminates the sequence (e.g. "Practice Again" or "Review Mistakes").
+    public func cancelFlowAndDismiss() {
+        actionQueue.removeAll()
+        flowCompletionCallback = nil
+        dismissCurrentAction()
+    }
+    
+    /// Cancels any remaining queued actions in this flow without dismissing the currently active modal.
+    public func cancelRemainingActions() {
+        actionQueue.removeAll()
+        flowCompletionCallback = nil
     }
     
     /// Processes the next item in the prioritized queue.
@@ -230,6 +253,7 @@ public final class UXFlowOrchestrator: ObservableObject {
         activeCoverItem = nil
         isBusy = false
         currentActionId = nil
+        isHostMounted = false
         actionQueue.removeAll()
         sessionActionCounts.removeAll()
         lastPresentedTimes.removeAll()
@@ -244,7 +268,7 @@ public final class UXFlowOrchestrator: ObservableObject {
 
 extension UXFlowOrchestrator {
     /// Requests a structured activity completion flow combining celebration/milestone,
-    /// milestone paywall, review prompt, and ad actions in accordance with priority policy.
+    /// optional milestone paywall, review prompt, and ad actions in accordance with priority policy.
     public func requestCompletionFlow(
         milestoneSheet: UXAction,
         paywallSheet: UXAction? = nil,

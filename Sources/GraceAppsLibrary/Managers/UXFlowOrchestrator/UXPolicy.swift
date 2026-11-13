@@ -10,13 +10,13 @@ import Foundation
 /// Declarative rules governing presentation priority, mutual exclusions, cooldowns, and preconditions.
 public struct UXPolicy {
     /// Mutual exclusions: If an action with tag A executes, suppress any action with tag B in the same flow.
-    public var mutualExclusions: [String: Set<String>] = [:]
+    public var mutualExclusions: [UXTag: Set<UXTag>] = [:]
     
     /// Global minimum interval between consecutive modals/ads (anti-rapid-fire debounce).
     public var globalDebounce: TimeInterval = 15.0
     
     /// Minimum time in seconds required between executions of specific tags.
-    public var tagCooldowns: [String: TimeInterval] = [:]
+    public var tagCooldowns: [UXTag: TimeInterval] = [:]
     
     /// Maximum times an action ID can be executed within a single app session.
     public var sessionCaps: [String: Int] = [:]
@@ -26,15 +26,27 @@ public struct UXPolicy {
     
     public init() {}
     
+    /// Standard production policy:
+    /// - Showing a review suppresses ads in the same flow.
+    /// - Showing a paywall suppresses ads in the same flow.
+    /// - 20s cooldown between consecutive ads.
+    public static var standard: UXPolicy {
+        var policy = UXPolicy()
+        policy.mutuallyExclude(triggerTag: .review, suppressTag: .ad)
+        policy.mutuallyExclude(triggerTag: .paywall, suppressTag: .ad)
+        policy.setCooldown(tag: .ad, interval: 20)
+        return policy
+    }
+    
     /// Adds a mutual exclusion rule. When `triggerTag` is executed, any action tagged with `suppressTag` is dropped.
-    public mutating func mutuallyExclude(triggerTag: String, suppressTag: String) {
+    public mutating func mutuallyExclude(triggerTag: UXTag, suppressTag: UXTag) {
         var existing = mutualExclusions[triggerTag] ?? []
         existing.insert(suppressTag)
         mutualExclusions[triggerTag] = existing
     }
     
     /// Sets a cooldown interval for a specific tag.
-    public mutating func setCooldown(tag: String, interval: TimeInterval) {
+    public mutating func setCooldown(tag: UXTag, interval: TimeInterval) {
         tagCooldowns[tag] = interval
     }
     

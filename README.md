@@ -728,12 +728,17 @@ A unified, action-agnostic presentation and ad-pacing framework that prevents pr
 ---
 
 ##### Architecture & Key Components
-- **`UXAction`**: Action-agnostic model representing any presentation item. Supports `.sheet`, `.fullScreenCover`, `.systemDialog` (StoreKit review, system alerts), and `.customAsync` (AdMob, custom view controller workflows). Prioritized via `UXActionPriority` (`.critical`, `.milestone`, `.paywall`, `.review`, `.ad`). Includes standardized factories such as `UXAction.ratingPrompt(...)`.
-- **`UXPolicy`**: Declarative rule engine managing mutual exclusions (e.g., paywall suppresses ads), global debounces, tag cooldowns, session impression caps, and app preconditions.
+- **`UXAction`**: Action-agnostic model representing any presentation item. Supports `.sheet`, `.fullScreenCover`, `.systemDialog` (StoreKit review, system alerts), and `.customAsync` (AdMob, custom view controller workflows). Prioritized via `UXActionPriority` (`.critical`, `.milestone`, `.paywall`, `.review`, `.ad`). Includes standardized factory methods:
+  - `UXAction.milestone(id:tags:content:)` for achievement/celebration modals (Priority 750).
+  - `UXAction.paywall(id:kind:tags:content:)` for commercial conversion sheets (Priority 500).
+  - `UXAction.ratingPrompt(id:tags:onPrompt:)` for native App Store reviews (Priority 250).
+  - `UXAction.ad(id:tags:present:)` for interstitial/rewarded ads with automatic completion mapping (Priority 100).
+- **`UXTag`**: Strongly-typed categorization tags (`.celebration`, `.paywall`, `.review`, `.ad`) with `ExpressibleByStringLiteral` support. Eliminates magic strings and typo bugs in policy rules.
+- **`UXPolicy`**: Declarative rule engine managing mutual exclusions (e.g., paywall suppresses ads), global debounces, tag cooldowns, session impression caps, and app preconditions. Includes `UXPolicy.standard` preconfigured with industry best practices (reviews & paywalls suppress ads; 20-second ad cooldown).
 - **`PaywallPacingEngine`**: Smart paywall conversion engine that balances monetisation and retention. Evaluates trigger categories (`.directIntent`, `.endowmentThreshold`, `.milestoneAchievement`), enforces milestone completion intervals (`default: 3`), time interval fallback (`default: 7 days`), session capping (`1 per session`), and tracks per-trigger analytics (`shown`, `purchased`, `dismissed`).
 - **`AdPacingEngine`**: Ad gatekeeper decoupled from Google Mobile Ads. Enforces pre-request checks, 50-minute TTL cache expiration, 20-second safety debouncing, and first-run onboarding exemptions.
-- **`UXFlowOrchestrator`**: The central conductor. Maintains a prioritized queue and enforces an automatic **0.25-second settling window** between consecutive presentations so UIKit/SwiftUI transitions complete cleanly before the next modal mounts. Provides convenience orchestration via `requestCompletionFlow(...)`.
-- **`.withUXFlowOrchestrator()`**: SwiftUI view modifier that hosts a single presentation slot across the view hierarchy.
+- **`UXFlowOrchestrator`**: The central conductor. Maintains a prioritized queue and enforces an automatic settling window between consecutive presentations so UIKit/SwiftUI transitions complete cleanly before the next modal mounts. Provides convenience orchestration via `requestCompletionFlow(...)`, and atomic early termination via `cancelFlowAndDismiss()`.
+- **`.scopedUXFlow()` & `.withUXFlowOrchestrator()`**: SwiftUI view modifiers hosting the presentation slot across the view hierarchy. `.scopedUXFlow()` automatically resets idle flow state on appear/disappear, eliminating repetitive lifecycle cleanup.
 - **`GraceLogger`**: Extended with `.orchestrator`, `.ads`, and `.paywall` categories with automatic Xcode debug console output.
 
 ---
@@ -741,7 +746,7 @@ A unified, action-agnostic presentation and ad-pacing framework that prevents pr
 ##### Step-by-Step Implementation
 
 ###### Step 1: Configure App Rules & Policies at Launch
-In your root `App.swift`, define your flow policies and ad units:
+In your root `App.swift`, set your flow policy:
 
 ```swift
 import SwiftUI
@@ -754,31 +759,23 @@ struct MyApp: App {
     }
     
     private func configureUXPolicies() {
-        var policy = UXPolicy()
+        // Start from standard policy (Reviews & Paywalls suppress Ads; 20s Ad cooldown)
+        var policy = UXPolicy.standard
         
-        // 1. Mutual Exclusions: Paywalls and celebration sheets suppress ads in the same flow
-        policy.mutuallyExclude(triggerTag: "paywall", suppressTag: "ad")
-        policy.mutuallyExclude(triggerTag: "celebration", suppressTag: "ad")
-        
-        // 2. Frequency Capping & Cooldowns
-        policy.setSessionCap(actionId: "milestone_paywall", maxCount: 1)
-        policy.setCooldown(tag: "ad", interval: 180) // 3 minutes between ads
-        
-        // 3. App Preconditions (Decoupled from GAL!)
-        policy.setPrecondition(actionId: "milestone_paywall") { !AppStoreManager.shared.isPro }
-        policy.setPrecondition(actionId: "interstitial_ad")   { !AppStoreManager.shared.isPro }
-        policy.setPrecondition(actionId: "rating_prompt")    { !ReviewPromptManager.shared.hasPromptYet() }
+        // App Preconditions
+        policy.setPrecondition(actionId: "interstitial_ad") { !AppStoreManager.shared.isPro }
+        policy.setPrecondition(actionId: "rating_prompt")   { !ReviewPromptManager.shared.hasPromptYet() }
         
         UXFlowOrchestrator.shared.policy = policy
         
-        // 4. Configure Ad Pacing Gatekeeper
+        // Configure Ad Pacing Gatekeeper
         AdPacingEngine.shared.isProUser = { AppStoreManager.shared.isPro }
     }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .withUXFlowOrchestrator() // Mounts the single-slot presentation container
+                .withUXFlowOrchestrator() // Or use .scopedUXFlow() on individual feature views
         }
     }
 }
@@ -790,29 +787,37 @@ When an activity completes (e.g. quiz finished, workout logged, deck mastered), 
 ```swift
 func onActivityCompleted(score: Int) {
     let orchestrator = UXFlowOrchestrator.shared
-    orchestrator.resetFlowState()
     
     orchestrator.requestCompletionFlow(
         // 1. Milestone Celebration Sheet (Priority: 750)
-        milestoneSheet: UXAction(id: "results_sheet", priority: .milestone, kind: .sheet, tags: ["celebration"]) {
-            QuizResultsView(score: score)
+        milestoneSheet: UXAction.milestone(id: "results_sheet") {
+            QuizResultsView(
+                score: score,
+                onRetry: {
+                    // Atomically dismisses the sheet AND purges queued reviews/ads:
+                    UXFlowOrchestrator.shared.cancelFlowAndDismiss()
+                },
+                onDone: {
+                    // Dismisses and proceeds to the next queued action (review/ad):
+                    UXFlowOrchestrator.shared.dismissCurrentAction()
+                }
+            )
         },
         
         // 2. Conversion Paywall (Priority: 500)
-        paywallSheet: shouldOfferPaywall ? UXAction(id: "milestone_paywall", priority: .paywall, kind: .sheet, tags: ["paywall"]) {
+        paywallSheet: shouldOfferPaywall ? UXAction.paywall(id: "milestone_paywall") {
             PaywallView()
         } : nil,
         
         // 3. StoreKit Rating Prompt (Priority: 250) - Runs only AFTER sheets dismiss cleanly!
-        reviewAction: shouldPromptReview ? UXAction.ratingPrompt {
-            ReviewPromptManager.shared.requestDirectNativeReview()
-        } : nil,
+        reviewAction: shouldPromptReview ? UXAction.ratingPrompt() : nil,
         
-        // 4. Interstitial Ad (Priority: 100) - Automatically dropped if paywall was shown!
-        adAction: UXAction(id: "interstitial_ad", priority: .ad, kind: .customAsync, tags: ["ad"]) { completion in
-            UniversalAdCoordinator.shared.present(for: "after_quiz") { shown in
-                completion(shown ? .completed : .skipped)
+        // 4. Interstitial Ad (Priority: 100) - Automatically suppressed if review or paywall executed!
+        adAction: UXAction.ad { completion in
+            let presented = UniversalAdCoordinator.shared.present(for: "after_quiz") {
+                completion(true)
             }
+            if !presented { completion(false) }
         }
     ) {
         // Called when all modals and async actions in the flow finish

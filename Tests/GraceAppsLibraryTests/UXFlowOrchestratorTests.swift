@@ -269,4 +269,75 @@ final class UXFlowOrchestratorTests: XCTestCase {
         }
         wait(for: [exp], timeout: 1.0)
     }
+
+    func testCancelFlowAndDismissCancelsRemainingActions() {
+        let orchestrator = UXFlowOrchestrator.shared
+        var adExecuted = false
+        var flowCompleted = false
+
+        let milestone = UXAction.milestone(id: "results") {
+            Text("Celebration")
+        }
+        let ad = UXAction.ad(id: "post_ad") { completion in
+            adExecuted = true
+            completion(true)
+        }
+
+        orchestrator.requestCompletionFlow(
+            milestoneSheet: milestone,
+            adAction: ad
+        ) {
+            flowCompleted = true
+        }
+
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, "results")
+
+        // User hits "Practice Again" or "Retry Quiz" -> cancel flow & dismiss
+        orchestrator.cancelFlowAndDismiss()
+
+        XCTAssertNil(orchestrator.activeSheetItem)
+
+        let exp = expectation(description: "Ensure ad and completion callback never run")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            XCTAssertFalse(adExecuted, "Trailing ad must NOT run after flow is cancelled.")
+            XCTAssertFalse(flowCompleted, "Completion callback must NOT fire after cancellation.")
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+    }
+
+    func testStandardPolicyEnforcement() {
+        let policy = UXPolicy.standard
+        XCTAssertTrue(policy.mutualExclusions[.review]?.contains(.ad) == true)
+        XCTAssertTrue(policy.mutualExclusions[.paywall]?.contains(.ad) == true)
+        XCTAssertEqual(policy.tagCooldowns[.ad], 20)
+    }
+
+    func testStandardActionFactories() {
+        let milestone = UXAction.milestone { Text("Done") }
+        XCTAssertEqual(milestone.id, "milestone_sheet")
+        XCTAssertEqual(milestone.priority, .milestone)
+        XCTAssertEqual(milestone.kind, .sheet)
+        XCTAssertTrue(milestone.tags.contains(.celebration))
+
+        let paywall = UXAction.paywall { Text("Pro") }
+        XCTAssertEqual(paywall.id, "paywall_sheet")
+        XCTAssertEqual(paywall.priority, .paywall)
+        XCTAssertEqual(paywall.kind, .sheet)
+        XCTAssertTrue(paywall.tags.contains(.paywall))
+
+        var adPresented = false
+        let adAction = UXAction.ad { completion in
+            adPresented = true
+            completion(true)
+        }
+        XCTAssertEqual(adAction.id, "interstitial_ad")
+        XCTAssertEqual(adAction.priority, .ad)
+        XCTAssertEqual(adAction.kind, .customAsync)
+        XCTAssertTrue(adAction.tags.contains(.ad))
+
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.triggerFlow(actions: [adAction])
+        XCTAssertTrue(adPresented)
+    }
 }

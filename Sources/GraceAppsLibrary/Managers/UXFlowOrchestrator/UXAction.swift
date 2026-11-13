@@ -56,7 +56,7 @@ public struct UXAction: Identifiable {
     public let id: String
     public let priority: UXActionPriority
     public let kind: UXPresentationKind
-    public let tags: Set<String>
+    public let tags: Set<UXTag>
     
     let viewBuilder: (() -> AnyView)?
     let executionBlock: (@MainActor (_ completion: @escaping (UXActionOutcome) -> Void) -> Void)?
@@ -66,7 +66,7 @@ public struct UXAction: Identifiable {
         id: String,
         priority: UXActionPriority = .milestone,
         kind: UXPresentationKind = .sheet,
-        tags: Set<String> = [],
+        tags: Set<UXTag> = [],
         @ViewBuilder content: @escaping () -> some View
     ) {
         self.id = id
@@ -82,7 +82,7 @@ public struct UXAction: Identifiable {
         id: String,
         priority: UXActionPriority,
         kind: UXPresentationKind,
-        tags: Set<String> = [],
+        tags: Set<UXTag> = [],
         execute: @escaping @MainActor (_ completion: @escaping (UXActionOutcome) -> Void) -> Void
     ) {
         self.id = id
@@ -104,19 +104,52 @@ public struct UXActionItem: Identifiable {
     }
 }
 
-// MARK: - Factory Helpers
+// MARK: - Standard Action Factories
 
 extension UXAction {
-    /// Creates a standard StoreKit native review prompt action with priority `.review`.
+    /// Creates a standard milestone or celebration results sheet action with priority `.milestone` (750).
+    @MainActor
+    public static func milestone(
+        id: String = "milestone_sheet",
+        tags: Set<UXTag> = [.celebration],
+        @ViewBuilder content: @escaping () -> some View
+    ) -> UXAction {
+        UXAction(
+            id: id,
+            priority: .milestone,
+            kind: .sheet,
+            tags: tags,
+            content: content
+        )
+    }
+
+    /// Creates a standard commercial paywall modal action with priority `.paywall` (500).
+    @MainActor
+    public static func paywall(
+        id: String = "paywall_sheet",
+        kind: UXPresentationKind = .sheet,
+        tags: Set<UXTag> = [.paywall],
+        @ViewBuilder content: @escaping () -> some View
+    ) -> UXAction {
+        UXAction(
+            id: id,
+            priority: .paywall,
+            kind: kind,
+            tags: tags,
+            content: content
+        )
+    }
+
+    /// Creates a standard StoreKit native review prompt action with priority `.review` (250).
     ///
     /// - Parameters:
     ///   - id: Action identifier (default: `"rating_prompt"`).
-    ///   - tags: Action tags (default: `["review"]`).
+    ///   - tags: Action tags (default: `[.review]`).
     ///   - onPrompt: Optional closure invoked to execute review prompt evaluation. If nil, invokes `ReviewPromptManager.shared.requestDirectNativeReview()`.
     @MainActor
     public static func ratingPrompt(
         id: String = "rating_prompt",
-        tags: Set<String> = ["review"],
+        tags: Set<UXTag> = [.review],
         onPrompt: (@MainActor () -> Bool)? = nil
     ) -> UXAction {
         UXAction(
@@ -131,6 +164,30 @@ extension UXAction {
             } else {
                 ReviewPromptManager.shared.requestDirectNativeReview()
                 completion(.completed)
+            }
+        }
+    }
+
+    /// Creates a standard interstitial ad action with priority `.ad` (100).
+    ///
+    /// - Parameters:
+    ///   - id: Action identifier (default: `"interstitial_ad"`).
+    ///   - tags: Action tags (default: `[.ad]`).
+    ///   - present: Async closure to trigger the vendor ad presentation. Invokes `completion(true)` if presented, or `completion(false)` if skipped/throttled.
+    @MainActor
+    public static func ad(
+        id: String = "interstitial_ad",
+        tags: Set<UXTag> = [.ad],
+        present: @escaping (@MainActor @escaping (_ wasPresented: Bool) -> Void) -> Void
+    ) -> UXAction {
+        UXAction(
+            id: id,
+            priority: .ad,
+            kind: .customAsync,
+            tags: tags
+        ) { completion in
+            present { wasPresented in
+                completion(wasPresented ? .completed : .skipped)
             }
         }
     }
