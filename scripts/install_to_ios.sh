@@ -113,22 +113,39 @@ except Exception:
     sys.exit(0)
 
 connected = []
+standby = []
+
 for d in data.get("result", {}).get("devices", []):
     conn = d.get("connectionProperties", {})
     hard = d.get("hardwareProperties", {})
     dev = d.get("deviceProperties", {})
-    if hard.get("reality") == "physical" and conn.get("tunnelState") == "connected":
-        connected.append({
-            "id": d.get("identifier"),
-            "name": dev.get("name", "Unknown"),
-            "model": hard.get("marketingName") or hard.get("deviceType", "iOS Device")
-        })
 
-for item in connected:
+    # Match physical iOS devices (iPhone / iPad) that are paired and reachable
+    if hard.get("reality") == "physical" and hard.get("platform") == "iOS":
+        tunnel = conn.get("tunnelState", "")
+        pairing = conn.get("pairingState", "")
+        
+        info = {
+            "id": d.get("identifier"),
+            "name": dev.get("name", "Unknown").strip(),
+            "model": hard.get("marketingName") or hard.get("deviceType", "iPhone"),
+            "status": "connected" if tunnel == "connected" else "standby"
+        }
+
+        if tunnel == "connected":
+            connected.append(info)
+        elif pairing == "paired" and tunnel != "unavailable":
+            standby.append(info)
+
+# Prefer currently connected over standby
+available = connected if connected else standby
+
+for item in available:
     dev_id = item["id"]
     dev_name = item["name"]
     dev_model = item["model"]
-    print(f"{dev_id}\t{dev_name}\t{dev_model}")
+    status = item["status"]
+    print(f"{dev_id}\t{dev_name}\t{dev_model}\t{status}")
 ' <<< "$DEVICES_JSON")
 
     DEVICE_COUNT=$(echo -n "$DEVICE_INFO" | grep -c '^' || true)
@@ -141,18 +158,27 @@ for item in connected:
         TARGET_DEVICE=$(echo "$DEVICE_INFO" | cut -f1)
         DEVICE_NAME=$(echo "$DEVICE_INFO" | cut -f2)
         DEVICE_MODEL=$(echo "$DEVICE_INFO" | cut -f3)
-        echo -e "${GREEN}✓${NC} Found device: ${BOLD}${DEVICE_NAME}${NC} (${DEVICE_MODEL}) [${TARGET_DEVICE}]"
+        DEVICE_STATUS=$(echo "$DEVICE_INFO" | cut -f4)
+        if [[ "$DEVICE_STATUS" == "standby" ]]; then
+            echo -e "${GREEN}✓${NC} Found device: ${BOLD}${DEVICE_NAME}${NC} (${DEVICE_MODEL}) via Wi-Fi [Standby]"
+            echo -e "${CYAN}==>${NC} Connecting Wi-Fi tunnel to ${DEVICE_NAME}..."
+            xcrun devicectl device info lockState --device "$TARGET_DEVICE" >/dev/null 2>&1 || true
+        else
+            echo -e "${GREEN}✓${NC} Found device: ${BOLD}${DEVICE_NAME}${NC} (${DEVICE_MODEL}) [Connected]"
+        fi
     else
         echo -e "${YELLOW}Multiple connected devices found:${NC}"
         INDEX=1
-        while IFS=$'\t' read -r id name model; do
-            echo "  [$INDEX] $name ($model) - $id"
+        while IFS=$'\t' read -r id name model status; do
+            echo "  [$INDEX] $name ($model) - $status ($id)"
             INDEX=$((INDEX + 1))
         done <<< "$DEVICE_INFO"
         read -r -p "Select device [1-$DEVICE_COUNT]: " SELECTION
         TARGET_DEVICE=$(echo "$DEVICE_INFO" | sed -n "${SELECTION}p" | cut -f1)
         DEVICE_NAME=$(echo "$DEVICE_INFO" | sed -n "${SELECTION}p" | cut -f2)
         echo -e "${GREEN}✓${NC} Selected: ${BOLD}${DEVICE_NAME}${NC}"
+        echo -e "${CYAN}==>${NC} Connecting Wi-Fi tunnel to ${DEVICE_NAME}..."
+        xcrun devicectl device info lockState --device "$TARGET_DEVICE" >/dev/null 2>&1 || true
     fi
 fi
 
