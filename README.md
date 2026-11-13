@@ -13,7 +13,7 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 - Shared Onboarding framework (`OnboardingContainer`, `OnboardingSlideLayout`, `OnboardingCoordinator`)
 - Smart review prompting (`ReviewPromptManager`) with 2-step pre-filter & feedback redirection
 - Automated App Store Screenshot framework (`ScreenshotPresetProvider`, `ScreenshotEngine`, `DebugScreenshotSection`, and CLI runner script)
-- Action-agnostic presentation, smart paywall & ad-pacing orchestrator (`UXFlowOrchestrator`, `UXPolicy`, `PaywallPacingEngine`, `AdPacingEngine`, `.withUXFlowOrchestrator()`) preventing prompt collisions, premature sheet cancel-outs, and wasted ad requests
+- Action-agnostic presentation, smart paywall & ad-pacing orchestrator (`UXFlowOrchestrator`, `UXPolicy`, `PaywallPacingEngine`, `AdPacingEngine`, `.scopedUXFlow()`) preventing prompt collisions, premature sheet cancel-outs, and wasted ad requests
 
 ## Installation
 
@@ -738,7 +738,8 @@ A unified, action-agnostic presentation and ad-pacing framework that prevents pr
 - **`PaywallPacingEngine`**: Smart paywall conversion engine that balances monetisation and retention. Evaluates trigger categories (`.directIntent`, `.endowmentThreshold`, `.milestoneAchievement`), enforces milestone completion intervals (`default: 3`), time interval fallback (`default: 7 days`), session capping (`1 per session`), and tracks per-trigger analytics (`shown`, `purchased`, `dismissed`).
 - **`AdPacingEngine`**: Ad gatekeeper decoupled from Google Mobile Ads. Enforces pre-request checks, 50-minute TTL cache expiration, 20-second safety debouncing, and first-run onboarding exemptions.
 - **`UXFlowOrchestrator`**: The central conductor. Maintains a prioritized queue and enforces an automatic settling window between consecutive presentations so UIKit/SwiftUI transitions complete cleanly before the next modal mounts. Provides convenience orchestration via `requestCompletionFlow(...)`, and atomic early termination via `cancelFlowAndDismiss()`.
-- **`.scopedUXFlow()` & `.withUXFlowOrchestrator()`**: SwiftUI view modifiers hosting the presentation slot across the view hierarchy. `.scopedUXFlow()` automatically resets idle flow state on appear/disappear, eliminating repetitive lifecycle cleanup.
+- **`.scopedUXFlow()`**: SwiftUI view modifier hosting the single-slot presentation container across the view hierarchy. Binds directly to the view's lifecycle and automatically resets idle flow state on appear/disappear, eliminating repetitive manual lifecycle cleanup and preventing stale flow tags from leaking. Presentation bindings (`UXActionItem`, `activeSheetItem`, `onModalDismissed`) are encapsulated internally to prevent direct misuse.
+- **`Encapsulated Policies & Singletons`**: `UXFlowOrchestrator`, `PaywallPacingEngine`, and `AdPacingEngine` enforce singleton usage (`internal init()`), preventing rogue instances from colliding. `UXPolicy` rule sets (`mutualExclusions`, `tagCooldowns`, etc.) are `public private(set)` and must be configured through validated builder APIs. Settling intervals are automatically clamped to prevent UIKit collision crashes.
 - **`GraceLogger`**: Extended with `.orchestrator`, `.ads`, and `.paywall` categories with automatic Xcode debug console output.
 
 ---
@@ -775,7 +776,7 @@ struct MyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .withUXFlowOrchestrator() // Or use .scopedUXFlow() on individual feature views
+                .scopedUXFlow() // Mounts the single-slot presentation container
         }
     }
 }

@@ -77,7 +77,7 @@ public final class PaywallPacingEngine {
     /// Whether a milestone paywall has already been presented during this app session.
     public private(set) var hasShownMilestoneThisSession: Bool = false
     
-    public init() {}
+    internal init() {}
     
     // MARK: - Session & Activity Lifecycle
     

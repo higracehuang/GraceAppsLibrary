@@ -340,4 +340,43 @@ final class UXFlowOrchestratorTests: XCTestCase {
         orchestrator.triggerFlow(actions: [adAction])
         XCTAssertTrue(adPresented)
     }
+    
+    func testResetFlowStateWhileBusyCancelsAndDismisses() {
+        let orchestrator = UXFlowOrchestrator.shared
+        let action1 = UXAction(id: "sheet_1", priority: .milestone, kind: .sheet) {
+            Text("Sheet 1")
+        }
+        let action2 = UXAction(id: "sheet_2", priority: .ad, kind: .sheet) {
+            Text("Sheet 2")
+        }
+        
+        orchestrator.triggerFlow(actions: [action1, action2])
+        XCTAssertNotNil(orchestrator.activeSheetItem)
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, "sheet_1")
+        XCTAssertTrue(orchestrator.isBusy)
+        
+        // Calling resetFlowState while busy should self-heal by dismissing the active modal and cancelling queued actions
+        orchestrator.resetFlowState()
+        XCTAssertNil(orchestrator.activeSheetItem)
+        
+        let expectation = expectation(description: "Wait for settling window to finish")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            XCTAssertFalse(orchestrator.isBusy)
+            XCTAssertNil(orchestrator.activeSheetItem)
+            expectation.fulfill()
+        }
+        waitForExpectations(timeout: 1.0)
+    }
+    
+    func testInterPresentationDelayClamping() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.interPresentationDelay = -1.0
+        XCTAssertEqual(orchestrator.interPresentationDelay, 0.01)
+        
+        orchestrator.interPresentationDelay = 0.0
+        XCTAssertEqual(orchestrator.interPresentationDelay, 0.01)
+        
+        orchestrator.interPresentationDelay = 0.5
+        XCTAssertEqual(orchestrator.interPresentationDelay, 0.5)
+    }
 }

@@ -9,14 +9,14 @@ import SwiftUI
 
 /// View modifier binding `UXFlowOrchestrator`'s presentation items to a single presentation container.
 @MainActor
-public struct UXFlowViewModifier: ViewModifier {
+internal struct UXFlowViewModifier: ViewModifier {
     @ObservedObject var orchestrator: UXFlowOrchestrator
     
-    public init(orchestrator: UXFlowOrchestrator = .shared) {
+    internal init(orchestrator: UXFlowOrchestrator = .shared) {
         self.orchestrator = orchestrator
     }
     
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .sheet(item: Binding<UXActionItem?>(
                 get: { orchestrator.activeSheetItem },
@@ -72,17 +72,5 @@ public extension View {
                     orchestrator.resetFlowState()
                 }
             }
-    }
-
-    /// Mounts the single-slot `UXFlowOrchestrator` presentation container to avoid sheet collisions and premature cancel-outs.
-    @MainActor
-    func withUXFlowOrchestrator(_ orchestrator: UXFlowOrchestrator) -> some View {
-        self.modifier(UXFlowViewModifier(orchestrator: orchestrator))
-    }
-
-    /// Mounts the single-slot `UXFlowOrchestrator.shared` presentation container to avoid sheet collisions and premature cancel-outs.
-    @MainActor
-    func withUXFlowOrchestrator() -> some View {
-        self.withUXFlowOrchestrator(.shared)
     }
 }

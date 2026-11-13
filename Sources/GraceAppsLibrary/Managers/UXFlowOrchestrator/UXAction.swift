@@ -127,11 +127,11 @@ public struct UXAction: Identifiable {
 }
 
 /// Identifiable wrapper for binding an active UXAction to SwiftUI presentation modifiers.
-public struct UXActionItem: Identifiable {
-    public var id: String { action.id }
-    public let action: UXAction
+internal struct UXActionItem: Identifiable {
+    var id: String { action.id }
+    let action: UXAction
     
-    public init(action: UXAction) {
+    internal init(action: UXAction) {
         self.action = action
     }
 }

@@ -10,19 +10,19 @@ import Foundation
 /// Declarative rules governing presentation priority, mutual exclusions, cooldowns, and preconditions.
 public struct UXPolicy {
     /// Mutual exclusions: If an action with tag A executes, suppress any action with tag B in the same flow.
-    public var mutualExclusions: [UXTag: Set<UXTag>] = [:]
+    public private(set) var mutualExclusions: [UXTag: Set<UXTag>] = [:]
     
     /// Global minimum interval between consecutive modals/ads (anti-rapid-fire debounce).
     public var globalDebounce: TimeInterval = 15.0
     
     /// Minimum time in seconds required between executions of specific tags.
-    public var tagCooldowns: [UXTag: TimeInterval] = [:]
+    public private(set) var tagCooldowns: [UXTag: TimeInterval] = [:]
     
     /// Maximum times an action ID can be executed within a single app session.
-    public var sessionCaps: [String: Int] = [:]
+    public private(set) var sessionCaps: [String: Int] = [:]
     
     /// App-level preconditions (e.g., Pro subscription status, release version checks).
-    public var preconditions: [String: () -> Bool] = [:]
+    public private(set) var preconditions: [String: () -> Bool] = [:]
     
     public init() {}
     

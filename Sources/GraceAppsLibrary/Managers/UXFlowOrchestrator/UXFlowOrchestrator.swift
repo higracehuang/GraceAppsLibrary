@@ -17,10 +17,10 @@ public final class UXFlowOrchestrator: ObservableObject {
     // MARK: - Published State
     
     /// The active sheet item bound to SwiftUI's `.sheet(item:)` modifier.
-    @Published public private(set) var activeSheetItem: UXActionItem?
+    @Published internal private(set) var activeSheetItem: UXActionItem?
     
     /// The active fullScreenCover item bound to SwiftUI's `.fullScreenCover(item:)` modifier.
-    @Published public private(set) var activeCoverItem: UXActionItem?
+    @Published internal private(set) var activeCoverItem: UXActionItem?
     
     /// Indicates whether a modal is currently presenting or transitioning.
     @Published public private(set) var isBusy: Bool = false
@@ -28,7 +28,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     /// The identifier of the action currently active on screen.
     @Published public private(set) var currentActionId: String?
     
-    /// Indicates whether a view modifier host (`scopedUXFlow` or `withUXFlowOrchestrator`) is actively mounted.
+    /// Indicates whether a view modifier host (`scopedUXFlow`) is actively mounted.
     @Published public internal(set) var isHostMounted: Bool = false
     
     // MARK: - Configuration
@@ -37,7 +37,13 @@ public final class UXFlowOrchestrator: ObservableObject {
     public var policy = UXPolicy()
     
     /// Delay between consecutive presentations allowing UIKit dismiss animations to complete (default: 0.45s).
-    public var interPresentationDelay: TimeInterval = 0.45
+    public var interPresentationDelay: TimeInterval = 0.45 {
+        didSet {
+            if interPresentationDelay < 0.01 {
+                interPresentationDelay = 0.01
+            }
+        }
+    }
     
     // MARK: - Internal State
     
@@ -47,7 +53,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     private var executedTagsThisFlow: Set<UXTag> = []
     private var flowCompletionCallback: (() -> Void)?
     
-    public init() {}
+    internal init() {}
     
     // MARK: - Flow Execution
     
@@ -165,7 +171,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     
     /// Handles dismissal of visual sheets and full-screen covers.
     /// Intercepted by `UXFlowViewModifier` to guarantee clean transitions.
-    public func onModalDismissed(actionId: String) {
+    internal func onModalDismissed(actionId: String) {
         guard let current = (activeSheetItem?.action ?? activeCoverItem?.action), current.id == actionId else {
             GraceLogger.orchestrator("Received onModalDismissed for '\(actionId)' but active item was different.", level: .warning)
             return
@@ -189,6 +195,11 @@ public final class UXFlowOrchestrator: ObservableObject {
     
     /// Resets tags executed in the current flow. Call when starting a new activity or screen.
     public func resetFlowState() {
+        if isBusy {
+            GraceLogger.orchestrator("⚠️ Warning: resetFlowState() called while a presentation is active. Automatically invoking cancelFlowAndDismiss().", level: .warning)
+            cancelFlowAndDismiss()
+            return
+        }
         executedTagsThisFlow.removeAll()
         actionQueue.removeAll()
         flowCompletionCallback = nil
@@ -248,7 +259,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     
     // MARK: - Testing Helpers
     
-    public func resetForTesting() {
+    internal func resetForTesting() {
         activeSheetItem = nil
         activeCoverItem = nil
         isBusy = false

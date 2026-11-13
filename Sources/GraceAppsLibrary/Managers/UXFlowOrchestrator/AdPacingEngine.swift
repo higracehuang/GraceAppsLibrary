@@ -44,7 +44,7 @@ public final class AdPacingEngine: ObservableObject {
     
     private var triggerLastShown: [String: Date] = [:]
     
-    public init() {}
+    internal init() {}
     
     // MARK: - Flow & Session Management
     
