@@ -310,7 +310,74 @@ final class UXFlowOrchestratorTests: XCTestCase {
         let policy = UXPolicy.standard
         XCTAssertTrue(policy.mutualExclusions[.review]?.contains(.ad) == true)
         XCTAssertTrue(policy.mutualExclusions[.paywall]?.contains(.ad) == true)
+        XCTAssertTrue(policy.mutualExclusions[.paywall]?.contains(.review) == true)
+        XCTAssertTrue(policy.mutualExclusions[.review]?.contains(.paywall) == true)
         XCTAssertEqual(policy.tagCooldowns[.ad], 20)
+    }
+
+    func testStandardPolicyPaywallSuppressesReview() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.policy = .standard
+        
+        var reviewExecuted = false
+        
+        let paywallAction = UXAction(id: "paywall", priority: .paywall, kind: .sheet, tags: [.paywall]) {
+            Text("Go Pro")
+        }
+        let reviewAction = UXAction(id: "review", priority: .review, kind: .customAsync, tags: [.review]) { completion in
+            reviewExecuted = true
+            completion(.completed)
+        }
+        
+        orchestrator.triggerFlow(actions: [paywallAction, reviewAction])
+        
+        // Paywall is active first (priority 500)
+        XCTAssertNotNil(orchestrator.activeSheetItem)
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, "paywall")
+        XCTAssertFalse(reviewExecuted)
+        
+        // Dismiss paywall
+        orchestrator.dismissCurrentAction()
+        
+        let exp = expectation(description: "Wait for queue to finish settling")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            // Review action must have been dropped due to mutual exclusion with .paywall
+            XCTAssertFalse(reviewExecuted, "Review prompt must be suppressed after paywall was presented.")
+            XCTAssertFalse(orchestrator.isBusy)
+            exp.fulfill()
+        }
+        waitForExpectations(timeout: 1.0)
+    }
+
+    func testStandardPolicyReviewSuppressesPaywall() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.policy = .standard
+        
+        var reviewExecuted = false
+        var paywallPresented = false
+        
+        // Force review priority higher for this test to verify reverse suppression
+        let reviewAction = UXAction(id: "review", priority: UXActionPriority(rawValue: 600), kind: .customAsync, tags: [.review]) { completion in
+            reviewExecuted = true
+            completion(.completed)
+        }
+        let paywallAction = UXAction(id: "paywall", priority: .paywall, kind: .sheet, tags: [.paywall]) {
+            paywallPresented = true
+            return Text("Go Pro")
+        }
+        
+        orchestrator.triggerFlow(actions: [reviewAction, paywallAction])
+        XCTAssertTrue(reviewExecuted)
+        
+        let exp = expectation(description: "Wait for settling window to finish")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            // Paywall action must have been dropped due to mutual exclusion with .review
+            XCTAssertFalse(paywallPresented, "Paywall must be suppressed after review prompt was executed.")
+            XCTAssertNil(orchestrator.activeSheetItem)
+            XCTAssertFalse(orchestrator.isBusy)
+            exp.fulfill()
+        }
+        waitForExpectations(timeout: 1.0)
     }
 
     func testStandardActionFactories() {
