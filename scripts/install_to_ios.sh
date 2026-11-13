@@ -219,15 +219,21 @@ if [[ "$DO_BUILD" = true ]] || [[ -z "$APP_PATH" ]]; then
             SCHEME_ARG=(-scheme "$PROJECT_NAME")
         fi
 
-        BUILD_DIR="$(pwd)/.build_device"
+        # Build using standard Xcode DerivedData to keep repository and git status 100% clean
         xcodebuild \
             "${SCHEME_ARG[@]}" \
             -configuration "$BUILD_CONFIG" \
             -destination "generic/platform=iOS" \
-            -derivedDataPath "$BUILD_DIR" \
             build
 
-        APP_PATH=$(find "$BUILD_DIR/Build/Products/${BUILD_CONFIG}-iphoneos" -maxdepth 1 -name "*.app" | head -n 1)
+        # Locate the freshly built .app in DerivedData
+        FOUND_APP=$(find ~/Library/Developer/Xcode/DerivedData -not -path "*/Index.noindex/*" -maxdepth 6 -type d -path "*/${PROJECT_NAME}-*/Build/Products/${BUILD_CONFIG}-iphoneos/${PROJECT_NAME}.app" 2>/dev/null | head -n 1 || true)
+        if [[ -n "$FOUND_APP" ]]; then
+            APP_PATH="$FOUND_APP"
+        else
+            echo -e "${RED}Error: Build finished but could not locate .app in DerivedData.${NC}"
+            exit 1
+        fi
     else
         echo -e "${RED}Error: No .app specified and no Xcode project found in current directory.${NC}"
         usage
