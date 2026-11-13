@@ -17,10 +17,10 @@ public final class UXFlowOrchestrator: ObservableObject {
     // MARK: - Published State
     
     /// The active sheet item bound to SwiftUI's `.sheet(item:)` modifier.
-    @Published internal private(set) var activeSheetItem: UXActionItem?
+    @Published public private(set) var activeSheetItem: UXActionItem?
     
     /// The active fullScreenCover item bound to SwiftUI's `.fullScreenCover(item:)` modifier.
-    @Published internal private(set) var activeCoverItem: UXActionItem?
+    @Published public private(set) var activeCoverItem: UXActionItem?
     
     /// Indicates whether a modal is currently presenting or transitioning.
     @Published public private(set) var isBusy: Bool = false
@@ -259,7 +259,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     
     // MARK: - Testing Helpers
     
-    internal func resetForTesting() {
+    public func resetForTesting() {
         activeSheetItem = nil
         activeCoverItem = nil
         isBusy = false
