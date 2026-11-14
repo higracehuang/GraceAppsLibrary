@@ -374,11 +374,11 @@ capture_device() {
       if [[ "${preset_id}" == "4"* || "${preset_id}" == "6"* ]]; then
         sleep 8.5
       else
-        sleep 6.0
+        sleep 7.5
       fi
 
       # Verification loop: ensure the app has transitioned off the splash/launch screen
-      local max_retries=6
+      local max_retries=10
       local attempt=0
       while [[ ${attempt} -lt ${max_retries} ]]; do
         xcrun simctl io "${udid}" screenshot "${out_file}" >/dev/null 2>&1
@@ -391,13 +391,10 @@ import numpy as np
 try:
     img = Image.open(sys.argv[1]).convert('RGB')
     arr = np.array(img)
-    colors = len(np.unique(arr.reshape(-1, 3), axis=0))
-    bot_std = arr[-200:-50, :].std()
-    top_std = arr[60:180, :].std()
-    # Launch screen has <= 1800 colors and solid uniform top & bottom areas
-    if colors > 2000 and (bot_std > 2.0 or top_std > 2.0 or '${preset_id}' == '4b'):
-        print('ready')
-    elif colors > 3000:
+    mid_std = arr[int(arr.shape[0]*0.35):int(arr.shape[0]*0.65), :].std()
+    # Real content screens always have text/cards/charts in the middle (mid_std > 10.0)
+    # Launch screen has completely empty middle band (mid_std == 0.0)
+    if mid_std > 10.0 or '${preset_id}' == '4b':
         print('ready')
     else:
         print('waiting')
