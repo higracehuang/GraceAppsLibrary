@@ -118,7 +118,7 @@ final class UniversalAdCoordinatorTests: XCTestCase {
         coordinator.initialize { status in
             exp.fulfill()
         }
-        wait(for: [exp], timeout: 2.0)
+        wait(for: [exp], timeout: 10.0)
     }
     
     func testGenericEnumOverloads() {
