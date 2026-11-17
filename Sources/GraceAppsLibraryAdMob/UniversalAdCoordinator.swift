@@ -56,6 +56,12 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
 
     public let pacing = AdPacingEngine.shared
 
+    /// Formatted Google Mobile Ads SDK version string (e.g. "12.14.0" or "13.12.0").
+    public var sdkVersion: String {
+        let v = MobileAds.shared.versionNumber
+        return "\(v.majorVersion).\(v.minorVersion).\(v.patchVersion)"
+    }
+
     public override init() {
         super.init()
     }
