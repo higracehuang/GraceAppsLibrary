@@ -7,7 +7,7 @@ let package = Package(
     name: "GraceAppsLibrary",
     defaultLocalization: "en",
     platforms: [
-        .iOS(.v14)
+        .iOS(.v15)
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -17,11 +17,18 @@ let package = Package(
         .library(
             name: "GraceAppsLibraryAdMob",
             targets: ["GraceAppsLibraryAdMob"]),
+        .library(
+            name: "GraceAppsLibraryRevenueCat",
+            targets: ["GraceAppsLibraryRevenueCat"]),
     ],
     dependencies: [
         .package(
             url: "https://github.com/googleads/swift-package-manager-google-mobile-ads.git",
             "12.0.0"..<"15.0.0"
+        ),
+        .package(
+            url: "https://github.com/RevenueCat/purchases-ios.git",
+            "5.0.0"..<"6.0.0"
         ),
     ],
     targets: [
@@ -41,6 +48,14 @@ let package = Package(
                 .product(name: "GoogleMobileAds", package: "swift-package-manager-google-mobile-ads"),
             ]
         ),
+        .target(
+            name: "GraceAppsLibraryRevenueCat",
+            dependencies: [
+                "GraceAppsLibrary",
+                .product(name: "RevenueCat", package: "purchases-ios"),
+                .product(name: "RevenueCatUI", package: "purchases-ios"),
+            ]
+        ),
         .testTarget(
             name: "GraceAppsLibraryTests",
             dependencies: ["GraceAppsLibrary"]),
@@ -48,6 +63,12 @@ let package = Package(
             name: "GraceAppsLibraryAdMobTests",
             dependencies: [
                 "GraceAppsLibraryAdMob",
+                "GraceAppsLibrary",
+            ]),
+        .testTarget(
+            name: "GraceAppsLibraryRevenueCatTests",
+            dependencies: [
+                "GraceAppsLibraryRevenueCat",
                 "GraceAppsLibrary",
             ]),
     ]
