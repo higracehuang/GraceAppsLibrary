@@ -80,6 +80,32 @@ final class UXFlowOrchestratorTests: XCTestCase {
         }
         wait(for: [exp], timeout: 1.0)
     }
+
+    func testSkippedActionDoesNotTriggerMutualExclusion() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.policy.mutuallyExclude(triggerTag: "review", suppressTag: "ad")
+        
+        var adPresented = false
+        
+        let reviewAction = UXAction(id: "review", priority: .review, kind: .customAsync, tags: ["review"]) { completion in
+            // Simulated skipped review (e.g. checkpoint not reached)
+            completion(.skipped)
+        }
+        
+        let adAction = UXAction(id: "ad", priority: .ad, kind: .customAsync, tags: ["ad"]) { completion in
+            adPresented = true
+            completion(.completed)
+        }
+        
+        orchestrator.triggerFlow(actions: [reviewAction, adAction])
+        
+        let exp = expectation(description: "Wait for pipeline")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            XCTAssertTrue(adPresented, "Ad should be presented because review was skipped.")
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+    }
     
     func testPreconditionEvaluation() {
         let orchestrator = UXFlowOrchestrator.shared

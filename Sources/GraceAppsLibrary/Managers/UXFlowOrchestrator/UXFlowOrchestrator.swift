@@ -149,22 +149,27 @@ public final class UXFlowOrchestrator: ObservableObject {
         
         isBusy = true
         currentActionId = nextAction.id
-        recordActionStart(nextAction)
-        
-        GraceLogger.orchestrator("Presenting '\(nextAction.id)' (kind: \(nextAction.kind), priority: \(nextAction.priority.rawValue))...", level: .success)
-        
+
         switch nextAction.kind {
         case .sheet:
+            recordActionExecution(nextAction)
+            GraceLogger.orchestrator("Presenting '\(nextAction.id)' (kind: \(nextAction.kind), priority: \(nextAction.priority.rawValue))...", level: .success)
             activeSheetItem = UXActionItem(action: nextAction)
             
         case .fullScreenCover:
+            recordActionExecution(nextAction)
+            GraceLogger.orchestrator("Presenting '\(nextAction.id)' (kind: \(nextAction.kind), priority: \(nextAction.priority.rawValue))...", level: .success)
             activeCoverItem = UXActionItem(action: nextAction)
             
         case .systemDialog, .customAsync:
+            GraceLogger.orchestrator("Presenting '\(nextAction.id)' (kind: \(nextAction.kind), priority: \(nextAction.priority.rawValue))...", level: .success)
             nextAction.executionBlock? { [weak self] outcome in
                 guard let self = self else { return }
                 GraceLogger.orchestrator("Custom/System action '\(nextAction.id)' completed with outcome: \(outcome)", level: .info)
-                self.completeAction(nextAction)
+                if outcome == .completed {
+                    self.recordActionExecution(nextAction)
+                }
+                self.completeAction(nextAction, outcome: outcome)
             }
         }
     }
@@ -180,7 +185,7 @@ public final class UXFlowOrchestrator: ObservableObject {
         activeSheetItem = nil
         activeCoverItem = nil
         GraceLogger.orchestrator("Visual modal '\(actionId)' dismissed. Entering \(interPresentationDelay)s settling window...", level: .info)
-        completeAction(current)
+        completeAction(current, outcome: .completed)
     }
 
     /// Backward-compatible overload for string action IDs.
@@ -188,9 +193,10 @@ public final class UXFlowOrchestrator: ObservableObject {
         onModalDismissed(actionId: UXActionID(actionId))
     }
     
-    private func completeAction(_ action: UXAction) {
+    private func completeAction(_ action: UXAction, outcome: UXActionOutcome = .completed) {
         // Enforce settling window so the UIKit transition completes cleanly before next modal mounts
-        DispatchQueue.main.asyncAfter(deadline: .now() + interPresentationDelay) { [weak self] in
+        let delay = (outcome == .skipped) ? 0.0 : interPresentationDelay
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             guard let self = self else { return }
             self.isBusy = false
             self.currentActionId = nil
@@ -253,7 +259,7 @@ public final class UXFlowOrchestrator: ObservableObject {
         return true
     }
     
-    private func recordActionStart(_ action: UXAction) {
+    private func recordActionExecution(_ action: UXAction) {
         sessionActionCounts[action.id, default: 0] += 1
         let now = Date()
         for tag in action.tags {
