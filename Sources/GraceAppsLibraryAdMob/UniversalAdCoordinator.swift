@@ -7,7 +7,7 @@
 
 #if canImport(UIKit)
 import UIKit
-import GoogleMobileAds
+@_exported import GoogleMobileAds
 import GraceAppsLibrary
 
 /// A protocol abstracting full-screen presentable ads (such as GADInterstitialAd).
