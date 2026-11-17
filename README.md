@@ -908,6 +908,54 @@ public typealias AdCoordinator = UniversalAdCoordinator
 1. `.directIntent`: Direct user taps (e.g. Settings "Upgrade", locked feature teaser). Always approved for non-Pro users.
 2. `.endowmentThreshold`: Value limit reached (e.g. 5 free bookmarks saved). Always approved for non-Pro users.
 3. `.milestoneAchievement`: Natural achievement moments (e.g. deck/quiz finished). Enforces smart pacing:
+
+###### Step 5: UX Moments Documentation & Automated Enforcement (`GALDocValidator`)
+
+Every app integrating `GraceAppsLibrary` should maintain a canonical `UX_MOMENTS.md` documenting its action pipeline, paywalls, rating prompts, and ad pacing.
+
+1. **Catalog Contract Protocol (`UXTriggerCatalog`)**:
+Apps define strongly-typed trigger enums conforming to `UXTriggerCatalog`:
+```swift
+struct AppMoments: UXTriggerCatalog {
+    enum AdTrigger: String, CaseIterable, Sendable {
+        case fastCompleted = "fast_completed"
+        case startFast = "start_fast"
+    }
+    enum PaywallTrigger: String, CaseIterable, Sendable {
+        case settingsUpgrade = "settings_upgrade"
+    }
+}
+```
+
+2. **Automated Unit Test Verification (`GALDocValidator`)**:
+Add a test in the app's unit test target to ensure `UX_MOMENTS.md` exists and stays 100% in sync with code triggers:
+```swift
+import XCTest
+import GraceAppsLibrary
+
+final class UXMomentsIntegrityTests: XCTestCase {
+    func testUXMomentsDocumentIntegrity() throws {
+        let repoRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        
+        guard let docURL = GALDocValidator.locateUXMoments(in: repoRoot) else {
+            XCTFail("UX_MOMENTS.md must exist in repository root or AppInfo/ProjectInfo")
+            return
+        }
+        
+        try GALDocValidator.validate(
+            docURL: docURL,
+            adTriggers: AppMoments.AdTrigger.allCases,
+            paywallTriggers: AppMoments.PaywallTrigger.allCases
+        )
+    }
+}
+```
+If an undocumented trigger is introduced or a required section is missing from `UX_MOMENTS.md`, the test fails automatically.
+
+3. **Template**:
+Use `UX_MOMENTS_TEMPLATE.md` in the GraceAppsLibrary repository root as the baseline when onboarding or auditing an app.
    - Max 1 milestone paywall per app session.
    - Throttled until 3 subsequent activity completions (`milestoneCompletionInterval = 3`) or 7 days (`milestoneDayInterval = 7 * 86400`) have elapsed since the last offer.
 
