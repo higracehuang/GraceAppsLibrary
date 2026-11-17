@@ -110,7 +110,7 @@ public final class AdPacingEngine: ObservableObject {
         }
         
         // First-run exemption check
-        if config.isFirstRunExempt {
+        if config.isFirstRunExempt && !ProcessInfo.processInfo.arguments.contains("-MockAdPresentation") {
             let defaults = UserDefaults.standard
             let isFirstRun = !defaults.bool(forKey: StorageKeys.hasCompletedFirstRunAdExemptionKey)
             if isFirstRun {
