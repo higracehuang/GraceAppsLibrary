@@ -10,12 +10,26 @@ import UIKit
 import GoogleMobileAds
 import GraceAppsLibrary
 
+/// A protocol abstracting full-screen presentable ads (such as GADInterstitialAd).
+@MainActor
+public protocol UniversalPresentableAd: AnyObject {
+    var fullScreenContentDelegate: FullScreenContentDelegate? { get set }
+    func present(from rootViewController: UIViewController?)
+}
+
+extension InterstitialAd: UniversalPresentableAd {}
+
 /// Centralized, production-grade Google Mobile Ads (AdMob) interstitial coordinator.
 /// Encapsulates JIT preloading, 50-minute cache TTL hygiene, AdPacingEngine debouncing,
 /// top view controller presentation, automated UI test mock presentation, and full-screen delegate events.
 @MainActor
 public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, ObservableObject {
     public static let shared = UniversalAdCoordinator()
+
+    #if DEBUG
+    /// Allows enabling mock presentation programmatically in unit tests.
+    public static var isMockPresentationEnabled: Bool = false
+    #endif
 
     // MARK: - Published State
 
@@ -29,14 +43,16 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
     @Published public private(set) var isInterstitialLoading: Bool = false
 
     /// Read-only snapshot of cached interstitial ads by trigger.
-    @Published public private(set) var cachedAds: [String: InterstitialAd] = [:]
+    @Published public internal(set) var cachedAds: [String: UniversalPresentableAd] = [:]
 
     // MARK: - Internal State
 
-    private var adLoadDates: [String: Date] = [:]
-    private var activeLoadingTriggers: Set<String> = []
-    private var activeDismissalCallback: (@MainActor (Bool) -> Void)?
-    private var activePresentingTrigger: String?
+    internal var adLoadDates: [String: Date] = [:]
+    internal var activeLoadingTriggers: Set<String> = []
+    internal var activeDismissalCallback: (@MainActor (Bool) -> Void)?
+    internal var activePresentingTrigger: String?
+    internal var adLoader: ((String) async throws -> UniversalPresentableAd)?
+    internal var topViewControllerResolver: (() -> UIViewController?)?
 
     public let pacing = AdPacingEngine.shared
 
@@ -165,7 +181,12 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
         }
 
         do {
-            let ad = try await InterstitialAd.load(with: unitID, request: Request())
+            let ad: UniversalPresentableAd
+            if let loader = adLoader {
+                ad = try await loader(unitID)
+            } else {
+                ad = try await InterstitialAd.load(with: unitID, request: Request())
+            }
             ad.fullScreenContentDelegate = self
             self.cachedAds[trigger] = ad
             self.adLoadDates[trigger] = Date()
@@ -209,7 +230,7 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
 
         #if DEBUG
         // Support automated UI test mock presentation flag
-        if ProcessInfo.processInfo.arguments.contains("-MockAdPresentation") {
+        if ProcessInfo.processInfo.arguments.contains("-MockAdPresentation") || UniversalAdCoordinator.isMockPresentationEnabled {
             guard pacing.canPresentAd(for: trigger) else {
                 completion?(false)
                 return false
@@ -334,7 +355,7 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
     }
 
     private func resolveTopViewController() -> UIViewController? {
-        UIApplication.getTopViewController()
+        topViewControllerResolver?() ?? UIApplication.getTopViewController()
     }
 
     // MARK: - GADFullScreenContentDelegate

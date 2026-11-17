@@ -50,4 +50,9 @@ public final class MockInterstitialAdViewController: UIViewController {
             self?.onDismiss()
         }
     }
+
+    /// Simulates user tapping the close button for unit and UI tests.
+    public func simulateDismissal() {
+        onDismiss()
+    }
 }
