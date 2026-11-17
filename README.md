@@ -913,17 +913,15 @@ public typealias AdCoordinator = UniversalAdCoordinator
 
 Every app integrating `GraceAppsLibrary` should maintain a canonical `UX_MOMENTS.md` documenting its action pipeline, paywalls, rating prompts, and ad pacing.
 
-1. **Catalog Contract Protocol (`UXTriggerCatalog`)**:
-Apps define strongly-typed trigger enums conforming to `UXTriggerCatalog`:
+1. **App Triggers**:
+Apps define plain Swift trigger enums (with zero dependency on GAL in model/constants files):
 ```swift
-struct AppMoments: UXTriggerCatalog {
-    enum AdTrigger: String, CaseIterable, Sendable {
-        case fastCompleted = "fast_completed"
-        case startFast = "start_fast"
-    }
-    enum PaywallTrigger: String, CaseIterable, Sendable {
-        case settingsUpgrade = "settings_upgrade"
-    }
+enum AppAdTrigger: String, CaseIterable, Sendable {
+    case fastCompleted = "fast_completed"
+    case startFast = "start_fast"
+}
+enum AppPaywallTrigger: String, CaseIterable, Sendable {
+    case settingsUpgrade = "settings_upgrade"
 }
 ```
 
@@ -946,8 +944,8 @@ final class UXMomentsIntegrityTests: XCTestCase {
         
         try GALDocValidator.validate(
             docURL: docURL,
-            adTriggers: AppMoments.AdTrigger.allCases,
-            paywallTriggers: AppMoments.PaywallTrigger.allCases
+            adTriggers: AppAdTrigger.allCases,
+            paywallTriggers: AppPaywallTrigger.allCases
         )
     }
 }
