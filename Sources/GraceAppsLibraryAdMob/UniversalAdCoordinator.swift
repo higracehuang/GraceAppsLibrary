@@ -158,6 +158,13 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
         GraceLogger.ads("Cleared all cached ads in UniversalAdCoordinator.", level: .info)
     }
 
+    /// Resets per-session tracking in AdPacingEngine and clears cached ads.
+    public func resetSession() {
+        pacing.resetSession()
+        clearAllAds()
+        GraceLogger.ads("UniversalAdCoordinator: Session reset.", level: .info)
+    }
+
     // MARK: - JIT Preloading (Zero Wasted Requests)
 
     /// Evaluates `AdPacingEngine` gatekeepers and preloads an ad JIT only if eligible.
@@ -430,6 +437,13 @@ extension UniversalAdCoordinator {
     /// Preloads an interstitial ad Just-In-Time using any String-backed enum trigger.
     public func preloadJIT<T: RawRepresentable>(for trigger: T) async where T.RawValue == String {
         await preloadJIT(for: trigger.rawValue)
+    }
+
+    /// Fire-and-forget convenience overload for preloading an interstitial ad Just-In-Time using any String-backed enum trigger.
+    public func preloadJIT<T: RawRepresentable>(trigger: T) where T.RawValue == String {
+        Task {
+            await preloadJIT(for: trigger.rawValue)
+        }
     }
 
     /// Evaluates policy and presents an interstitial ad using any String-backed enum trigger.
