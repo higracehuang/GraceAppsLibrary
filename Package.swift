@@ -14,8 +14,16 @@ let package = Package(
         .library(
             name: "GraceAppsLibrary",
             targets: ["GraceAppsLibrary"]),
+        .library(
+            name: "GraceAppsLibraryAdMob",
+            targets: ["GraceAppsLibraryAdMob"]),
     ],
-    dependencies: [],
+    dependencies: [
+        .package(
+            url: "https://github.com/googleads/swift-package-manager-google-mobile-ads.git",
+            from: "12.0.0"
+        ),
+    ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
@@ -26,8 +34,21 @@ let package = Package(
                 .process("Resources"),
             ]
         ),
+        .target(
+            name: "GraceAppsLibraryAdMob",
+            dependencies: [
+                "GraceAppsLibrary",
+                .product(name: "GoogleMobileAds", package: "swift-package-manager-google-mobile-ads"),
+            ]
+        ),
         .testTarget(
             name: "GraceAppsLibraryTests",
             dependencies: ["GraceAppsLibrary"]),
+        .testTarget(
+            name: "GraceAppsLibraryAdMobTests",
+            dependencies: [
+                "GraceAppsLibraryAdMob",
+                "GraceAppsLibrary",
+            ]),
     ]
 )

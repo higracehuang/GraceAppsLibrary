@@ -18,10 +18,15 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 ## Installation
 
 1. Add this package to your Xcode project using Swift Package Manager.
-1. Import the package in your Swift file:
+2. Link the products based on your target's needs:
+   - **`GraceAppsLibrary`**: Core library with **zero external dependencies**. Safe and lightweight for iOS apps, watchOS apps, widgets, and app extensions.
+   - **`GraceAppsLibraryAdMob`**: Centralized Google Mobile Ads (AdMob) integration providing `UniversalAdCoordinator`. Link only to iOS main app targets displaying ads.
 
 ```swift
 import GraceAppsLibrary
+
+// In iOS targets needing AdMob interstitials:
+import GraceAppsLibraryAdMob
 ```
 ## Usage
 
@@ -808,12 +813,7 @@ func onActivityCompleted(score: Int) {
         reviewAction: shouldPromptReview ? UXAction.ratingPrompt() : nil,
         
         // 3. Interstitial Ad (Priority: 100) - Automatically suppressed if review was presented!
-        adAction: UXAction.ad { completion in
-            let presented = UniversalAdCoordinator.shared.present(for: "after_quiz") {
-                completion(true)
-            }
-            if !presented { completion(false) }
-        }
+        adAction: UXAction.universalAd(trigger: "after_quiz")
     ) {
         // Called when all modals and async actions in the flow finish
         dismiss()
@@ -821,88 +821,85 @@ func onActivityCompleted(score: Int) {
 }
 ```
 
-###### Step 3: Reusable Zero-Waste AdMob Adapter
-In client apps, implement this thin adapter. It contains **no policy or timing logic**—it delegates 100% of decisions to GAL's `AdPacingEngine`:
+###### Step 3: Centralized AdMob Coordinator (`GraceAppsLibraryAdMob`)
+Instead of duplicating ad loading and presentation code across client apps, link the **`GraceAppsLibraryAdMob`** library product. It provides `UniversalAdCoordinator`, which natively integrates with `AdPacingEngine`, manages 50-minute cache TTL hygiene, safely presents over top view controllers, buffers modal dismissal transitions, and supports automated UI test mocking.
 
+1. **One-Line Launch Configuration** (`App.swift`):
 ```swift
-import SwiftUI
-import GoogleMobileAds
 import GraceAppsLibrary
+import GraceAppsLibraryAdMob
 
-@MainActor
-final class UniversalAdCoordinator: NSObject, ObservableObject, FullScreenContentDelegate {
-    static let shared = UniversalAdCoordinator()
-    
-    private var cachedAds: [String: InterstitialAd] = [:]
-    private var adLoadDates: [String: Date] = [:]
-    private var adUnitMap: [String: String] = [
-        "after_quiz": "ca-app-pub-3940256099942544/4411468910"
-    ]
-    private var onDismiss: (() -> Void)?
-    
-    private let engine = AdPacingEngine.shared
-    
-    // MARK: - JIT Preloading (Zero Wasted Requests)
-    
-    func preloadJIT(for trigger: String) {
-        let isFresh = isAdReady(for: trigger)
-        guard engine.canPreloadAd(for: trigger, isCacheValid: isFresh) else { return }
-        guard let unitId = adUnitMap[trigger] else { return }
+@main
+struct MyApp: App {
+    init() {
+        // Configure triggers and entitlement check in one call:
+        UniversalAdCoordinator.shared.configure(
+            adUnits: [
+                AdTrigger.afterQuiz.rawValue: "ca-app-pub-3940256099942544/4411468910",
+                AdTrigger.afterGame.rawValue: "ca-app-pub-3940256099942544/4411468910"
+            ],
+            defaultUnitID: "ca-app-pub-3940256099942544/4411468910", // Fallback ad unit
+            isPro: { AppStoreManager.shared.isPro }
+        )
         
-        InterstitialAd.load(with: unitId, request: Request()) { [weak self] ad, error in
-            guard let self = self, let ad = ad, error == nil else { return }
-            ad.fullScreenContentDelegate = self
-            self.cachedAds[trigger] = ad
-            self.adLoadDates[trigger] = Date()
-        }
-    }
-    
-    // MARK: - Presentation
-    
-    func present(for trigger: String, completion: @escaping (Bool) -> Void) {
-        cleanExpiredAds()
-        guard engine.canPresentAd(for: trigger), let ad = cachedAds[trigger] else {
-            completion(false)
-            return
-        }
-        guard let rootVC = UIApplication.shared.firstKeyWindowRootViewController else {
-            completion(false)
-            return
-        }
-        
-        self.onDismiss = { completion(true) }
-        cachedAds.removeValue(forKey: trigger)
-        engine.recordAdPresented(for: trigger)
-        ad.present(from: rootVC)
-    }
-    
-    // MARK: - 50-Minute Cache TTL Hygiene
-    
-    func cleanExpiredAds() {
-        let now = Date()
-        for (trigger, date) in adLoadDates {
-            if now.timeIntervalSince(date) >= engine.config.cacheTTL {
-                cachedAds.removeValue(forKey: trigger)
-                adLoadDates.removeValue(forKey: trigger)
-            }
-        }
-    }
-    
-    func isAdReady(for trigger: String) -> Bool {
-        cleanExpiredAds()
-        return cachedAds[trigger] != nil
-    }
-    
-    func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
-        onDismiss?()
-        onDismiss = nil
-    }
-    
-    func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
-        onDismiss?()
-        onDismiss = nil
+        // Initialize Mobile Ads asynchronously
+        UniversalAdCoordinator.shared.initialize()
     }
 }
+```
+
+2. **JIT Preloading (Zero Wasted Requests)**:
+Evaluates `AdPacingEngine` gatekeepers before network calls to ensure requests are only sent if the user is non-Pro, the cache is stale/empty, and session caps aren't exceeded:
+```swift
+// Preload for a specific trigger (supports String or String-backed Enum):
+Task {
+    await UniversalAdCoordinator.shared.preloadJIT(for: AdTrigger.afterQuiz)
+}
+
+// Or batch preload all triggers defined in an Enum at once:
+UniversalAdCoordinator.shared.preloadAll(triggers: AdTrigger.self)
+```
+
+3. **Orchestrated Presentation with `UXFlowOrchestrator`**:
+Use the factory `UXAction.universalAd(trigger:)` to attach full-screen interstitial ads directly to your action pipelines:
+```swift
+orchestrator.requestCompletionFlow(
+    milestoneSheet: UXAction.milestone(id: "results_sheet") { ResultsView() },
+    reviewAction: UXAction.ratingPrompt(),
+    adAction: UXAction.universalAd(trigger: AdTrigger.afterQuiz) // Automatically debounced & suppressed if review was shown!
+)
+```
+
+4. **Direct / Manual Presentation**:
+For standalone screens (e.g. after sheet dismissal or button tap):
+```swift
+// Direct presentation with completion callback:
+UniversalAdCoordinator.shared.showAd(for: AdTrigger.afterQuiz) { presented in
+    print("Ad presentation finished: \(presented)")
+}
+
+// Synchronous check & presentation with return value:
+let initiated = UniversalAdCoordinator.shared.present(for: AdTrigger.afterQuiz) { presented in
+    // Callback invoked when ad finishes presentation
+}
+```
+
+5. **Modal Transition Safety**:
+If a sheet or modal is in the middle of dismissing (`hostVC.isBeingDismissed == true`), `UniversalAdCoordinator` automatically buffers presentation by 0.35s to prevent UIKit presentation drop collisions.
+
+6. **Automated UI Testing with Mock Ads**:
+Run automated tests or fast screenshot captures by passing the `-MockAdPresentation` launch argument:
+```swift
+// In Xcode Scheme or Fastlane / CLI test runners:
+// Arguments Passed On Launch: -MockAdPresentation
+```
+When this flag is active, `UniversalAdCoordinator` displays `MockInterstitialAdViewController` without calling external Google AdMob network servers.
+
+7. **Legacy Compatibility**:
+For codebases migrating from earlier implementations:
+```swift
+// Backwards compatibility alias:
+public typealias AdCoordinator = UniversalAdCoordinator
 ```
 
 ###### Step 4: Smart Paywall Pacing Engine (`PaywallPacingEngine`)
