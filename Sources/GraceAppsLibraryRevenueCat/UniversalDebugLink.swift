@@ -11,7 +11,7 @@ public struct UniversalDebugLink<OnboardingContent: View>: View {
     public let onReset: (() -> Void)?
 
     public init(
-        title: String = "Grace Developer Tools",
+        title: String = "Debug Menu",
         systemImage: String = "ladybug",
         onboardingStorageKey: String = OnboardingManager.defaultStorageKey,
         onboardingView: (() -> OnboardingContent)? = nil,
@@ -39,7 +39,7 @@ public struct UniversalDebugLink<OnboardingContent: View>: View {
 
 extension UniversalDebugLink where OnboardingContent == EmptyView {
     public init(
-        title: String = "Grace Developer Tools",
+        title: String = "Debug Menu",
         systemImage: String = "ladybug",
         onReset: (() -> Void)? = nil
     ) {

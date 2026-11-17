@@ -19,6 +19,8 @@ import GraceAppsLibrary
 /// ```
 public struct UniversalDeveloperSection<CustomContent: View, OnboardingContent: View>: View {
     public let title: String
+    public let debugLinkTitle: String
+    public let debugLinkSystemImage: String
     public let onboardingStorageKey: String
     public let onboardingView: (() -> OnboardingContent)?
     public let onReset: (() -> Void)?
@@ -26,12 +28,16 @@ public struct UniversalDeveloperSection<CustomContent: View, OnboardingContent: 
 
     public init(
         title: String = "Developer",
+        debugLinkTitle: String = "Debug Menu",
+        debugLinkSystemImage: String = "ladybug",
         onboardingStorageKey: String = OnboardingManager.defaultStorageKey,
         onboardingView: (() -> OnboardingContent)? = nil,
         onReset: (() -> Void)? = nil,
         @ViewBuilder customContent: () -> CustomContent
     ) {
         self.title = title
+        self.debugLinkTitle = debugLinkTitle
+        self.debugLinkSystemImage = debugLinkSystemImage
         self.onboardingStorageKey = onboardingStorageKey
         self.onboardingView = onboardingView
         self.onReset = onReset
@@ -43,6 +49,8 @@ public struct UniversalDeveloperSection<CustomContent: View, OnboardingContent: 
         #if DEBUG
         Section(header: Text(verbatim: title)) {
             UniversalDebugLink(
+                title: debugLinkTitle,
+                systemImage: debugLinkSystemImage,
                 onboardingStorageKey: onboardingStorageKey,
                 onboardingView: onboardingView,
                 onReset: onReset
@@ -58,10 +66,14 @@ public struct UniversalDeveloperSection<CustomContent: View, OnboardingContent: 
 extension UniversalDeveloperSection where CustomContent == EmptyView, OnboardingContent == EmptyView {
     public init(
         title: String = "Developer",
+        debugLinkTitle: String = "Debug Menu",
+        debugLinkSystemImage: String = "ladybug",
         onReset: (() -> Void)? = nil
     ) {
         self.init(
             title: title,
+            debugLinkTitle: debugLinkTitle,
+            debugLinkSystemImage: debugLinkSystemImage,
             onboardingStorageKey: OnboardingManager.defaultStorageKey,
             onboardingView: nil,
             onReset: onReset,
@@ -73,12 +85,16 @@ extension UniversalDeveloperSection where CustomContent == EmptyView, Onboarding
 extension UniversalDeveloperSection where CustomContent == EmptyView {
     public init(
         title: String = "Developer",
+        debugLinkTitle: String = "Debug Menu",
+        debugLinkSystemImage: String = "ladybug",
         onboardingStorageKey: String = OnboardingManager.defaultStorageKey,
         onboardingView: (() -> OnboardingContent)? = nil,
         onReset: (() -> Void)? = nil
     ) {
         self.init(
             title: title,
+            debugLinkTitle: debugLinkTitle,
+            debugLinkSystemImage: debugLinkSystemImage,
             onboardingStorageKey: onboardingStorageKey,
             onboardingView: onboardingView,
             onReset: onReset,
@@ -90,11 +106,15 @@ extension UniversalDeveloperSection where CustomContent == EmptyView {
 extension UniversalDeveloperSection where OnboardingContent == EmptyView {
     public init(
         title: String = "Developer",
+        debugLinkTitle: String = "Debug Menu",
+        debugLinkSystemImage: String = "ladybug",
         onReset: (() -> Void)? = nil,
         @ViewBuilder customContent: () -> CustomContent
     ) {
         self.init(
             title: title,
+            debugLinkTitle: debugLinkTitle,
+            debugLinkSystemImage: debugLinkSystemImage,
             onboardingStorageKey: OnboardingManager.defaultStorageKey,
             onboardingView: nil,
             onReset: onReset,

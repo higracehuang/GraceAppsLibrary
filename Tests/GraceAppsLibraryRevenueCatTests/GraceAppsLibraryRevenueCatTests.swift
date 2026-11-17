@@ -76,10 +76,10 @@ final class GraceAppsLibraryRevenueCatTests: XCTestCase {
 
     func testUniversalDebugViewsInitialization() {
         let menu = UniversalDebugMenu()
-        XCTAssertEqual(menu.navigationTitle, "Developer Tools")
+        XCTAssertEqual(menu.navigationTitle, "Debug Menu")
 
         let link = UniversalDebugLink()
-        XCTAssertEqual(link.title, "Grace Developer Tools")
+        XCTAssertEqual(link.title, "Debug Menu")
         XCTAssertEqual(link.systemImage, "ladybug")
 
         let section = UniversalDeveloperSection()

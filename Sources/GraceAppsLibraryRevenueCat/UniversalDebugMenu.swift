@@ -14,7 +14,7 @@ public struct UniversalDebugMenu<OnboardingContent: View>: View {
     @State private var sessionAdCount: Int = AdPacingEngine.shared.sessionAdCount
 
     public init(
-        navigationTitle: String = "Developer Tools",
+        navigationTitle: String = "Debug Menu",
         onboardingStorageKey: String = OnboardingManager.defaultStorageKey,
         onboardingView: (() -> OnboardingContent)? = nil,
         onReset: (() -> Void)? = nil
@@ -115,7 +115,7 @@ public struct UniversalDebugMenu<OnboardingContent: View>: View {
 
 extension UniversalDebugMenu where OnboardingContent == EmptyView {
     public init(
-        navigationTitle: String = "Developer Tools",
+        navigationTitle: String = "Debug Menu",
         onReset: (() -> Void)? = nil
     ) {
         self.init(
