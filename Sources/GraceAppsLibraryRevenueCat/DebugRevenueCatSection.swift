@@ -28,8 +28,8 @@ public struct DebugRevenueCatSection: View {
 
     public var body: some View {
         Section(
-            header: Text(title),
-            footer: Text("Override subscription checks to test free vs. pro gates throughout the app.")
+            header: Text(verbatim: title),
+            footer: Text(verbatim: "Override subscription checks to test free vs. pro gates throughout the app.")
         ) {
             #if DEBUG
             // MARK: - Status Badge & Tier Name

@@ -1,4 +1,5 @@
 import XCTest
+import SwiftUI
 import GraceAppsLibrary
 @testable import GraceAppsLibraryRevenueCat
 
@@ -71,5 +72,22 @@ final class GraceAppsLibraryRevenueCatTests: XCTestCase {
 
         coordinator.debugOverride = .forceFree
         XCTAssertEqual(callbackInvokedWith, false)
+    }
+
+    func testUniversalDebugViewsInitialization() {
+        let menu = UniversalDebugMenu()
+        XCTAssertEqual(menu.navigationTitle, "Developer Tools")
+
+        let link = UniversalDebugLink()
+        XCTAssertEqual(link.title, "Grace Developer Tools")
+        XCTAssertEqual(link.systemImage, "ladybug")
+
+        let section = UniversalDeveloperSection()
+        XCTAssertEqual(section.title, "Developer")
+
+        let sectionWithCustom = UniversalDeveloperSection(title: "Custom Developer") {
+            Text(verbatim: "Custom Tool")
+        }
+        XCTAssertEqual(sectionWithCustom.title, "Custom Developer")
     }
 }
