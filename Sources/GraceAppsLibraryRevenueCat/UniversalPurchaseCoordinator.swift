@@ -44,7 +44,7 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
 
     public private(set) var entitlementId: String = "pro"
     public private(set) var tierName: String = "Pro"
-    public private(set) var syncedStorageKey: String? = nil
+    public var syncedStorageKey: String? = nil
     public var overrideStorageKey: String = defaultOverrideStorageKey
 
     /// Custom closure to evaluate whether a user is entitled from `CustomerInfo`.
@@ -58,6 +58,12 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
 
     private override init() {
         super.init()
+        wirePacingEngines()
+    }
+
+    public func wirePacingEngines() {
+        PaywallPacingEngine.shared.isProUser = { [weak self] in self?.isPro ?? false }
+        AdPacingEngine.shared.isProUser = { [weak self] in self?.isPro ?? false }
     }
 
     // MARK: - Public Configuration

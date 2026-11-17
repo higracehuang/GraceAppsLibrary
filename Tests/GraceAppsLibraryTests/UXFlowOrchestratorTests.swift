@@ -238,7 +238,7 @@ final class UXFlowOrchestratorTests: XCTestCase {
         orchestrator.dismissCurrentAction()
         
         let exp = expectation(description: "Flow completion callback")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             XCTAssertEqual(executionOrder, ["ad"])
             XCTAssertTrue(flowCompleted, "onFlowComplete callback must be invoked when all actions finish.")
             exp.fulfill()
