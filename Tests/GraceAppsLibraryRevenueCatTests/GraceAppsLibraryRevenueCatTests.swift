@@ -122,4 +122,22 @@ final class GraceAppsLibraryRevenueCatTests: XCTestCase {
         let activeEn = bundle.localizedString(forKey: "subscription.active", value: nil, table: nil)
         XCTAssertEqual(activeEn, "Active")
     }
+
+    enum TestPaywallTrigger: String {
+        case settingsUpgrade = "settings_upgrade"
+        case statsUpgrade = "stats_upgrade"
+    }
+
+    func testUniversalPaywallModifierConfiguration() {
+        var isPresented = false
+        let binding = Binding(get: { isPresented }, set: { isPresented = $0 })
+
+        // String trigger
+        let viewWithString = EmptyView().universalPaywall(isPresented: binding, trigger: "test_trigger")
+        XCTAssertNotNil(viewWithString)
+
+        // RawRepresentable Enum trigger
+        let viewWithEnum = EmptyView().universalPaywall(isPresented: binding, trigger: TestPaywallTrigger.settingsUpgrade)
+        XCTAssertNotNil(viewWithEnum)
+    }
 }
