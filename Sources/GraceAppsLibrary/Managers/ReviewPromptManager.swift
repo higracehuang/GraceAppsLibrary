@@ -62,11 +62,13 @@ public final class ReviewPromptManager {
 
     public var config: ReviewPromptConfig = ReviewPromptConfig()
 
-    private var checkpointCount: Int
-
-    public init(checkpointCount: Int = 5, config: ReviewPromptConfig = ReviewPromptConfig()) {
-        self.checkpointCount = checkpointCount
+    public init(config: ReviewPromptConfig = ReviewPromptConfig()) {
         self.config = config
+    }
+
+    /// Backward-compatible initializer
+    public convenience init(checkpointCount: Int, config: ReviewPromptConfig = ReviewPromptConfig()) {
+        self.init(config: config)
     }
 
     public func configure(_ config: ReviewPromptConfig) {
@@ -78,7 +80,6 @@ public final class ReviewPromptManager {
     private var alertWindow: UIWindow?
     
     private struct SettingKeys {
-        static let engagementCounterKey = "GraceApps_Review_EngagementCounter"
         static let lastVersionPromptedForReviewKey = "GraceApps_Review_LastVersionPromptedForReview"
         static let appVersionForStorageKey = "GraceApps_Review_AppVersionForStorage"
         static let lastEngagementDateKey = "GraceApps_Review_LastEngagementDate"
@@ -94,14 +95,6 @@ public final class ReviewPromptManager {
 
     private var releaseVersionNumber: String {
         Bundle.main.releaseVersionNumber
-    }
-
-    private func recordEngagement() -> Int {
-        var count = UserDefaults.standard.integer(forKey: SettingKeys.engagementCounterKey)
-        count += 1
-        UserDefaults.standard.set(count, forKey: SettingKeys.engagementCounterKey)
-        GraceLogger.info("Recorded engagement count: \(count) / checkpoint: \(checkpointCount)", category: .review)
-        return count
     }
 
     /// Returns the major.minor segment of a version string (e.g. "2.1.0" -> "2.1").
@@ -167,11 +160,9 @@ public final class ReviewPromptManager {
     public func hasMetValueThreshold() -> Bool {
         let activeDays = activeDaysCount
         let milestones = milestoneCount
-        let engagements = UserDefaults.standard.integer(forKey: SettingKeys.engagementCounterKey)
 
         return activeDays >= config.minActiveDays ||
-               milestones >= config.minMilestoneEvents ||
-               engagements >= checkpointCount
+               milestones >= config.minMilestoneEvents
     }
 
     /// Comprehensive check evaluating all eligibility gates (release notes, cooldown, version).
@@ -193,9 +184,8 @@ public final class ReviewPromptManager {
 
     private func shouldPrompt(now: Date = Date()) -> Bool {
         guard isEligibleForPrompt(now: now) else { return false }
-        let count = recordEngagement()
-        let result = count >= checkpointCount
-        GraceLogger.info("Evaluate shouldPrompt: count=\(count), checkpoint=\(checkpointCount) -> \(result ? "SHOULD PROMPT" : "SKIP")", category: .review)
+        let result = hasMetValueThreshold()
+        GraceLogger.info("Evaluate shouldPrompt: valueThresholdMet=\(result) -> \(result ? "SHOULD PROMPT" : "SKIP")", category: .review)
         return result
     }
 
@@ -444,7 +434,6 @@ public final class ReviewPromptManager {
     public static func debugResetReviewState() {
         shared.dismissAlertWindow()
         ReleaseNotesManager.hasShownReleaseNotesThisSession = false
-        UserDefaults.standard.set(0, forKey: SettingKeys.engagementCounterKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastVersionPromptedForReviewKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastEngagementDateKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastPromptDateKey)
@@ -456,7 +445,7 @@ public final class ReviewPromptManager {
                 UserDefaults.standard.removeObject(forKey: key)
             }
         }
-        GraceLogger.info("Reset engagement counter to 0 and cleared prompted version status.", category: .debug)
+        GraceLogger.info("Reset active days, milestones, and cleared prompted version status.", category: .debug)
     }
 
     public static func appInit() {
@@ -471,10 +460,10 @@ public final class ReviewPromptManager {
                 majorMinorVersion(from: storedVersion) == majorMinorVersion(from: currentVersion)
 
             if isPatch {
-                GraceLogger.info("App patch version updated ('\(storedVersion)' -> '\(currentVersion)'). Retaining engagement state.", category: .app)
+                GraceLogger.info("App patch version updated ('\(storedVersion)' -> '\(currentVersion)'). Retaining review state.", category: .app)
             } else {
-                GraceLogger.info("App version changed ('\(storedVersion)' -> '\(currentVersion)'). Resetting engagement counter.", category: .app)
-                UserDefaults.standard.set(0, forKey: SettingKeys.engagementCounterKey)
+                GraceLogger.info("App version changed ('\(storedVersion)' -> '\(currentVersion)'). Resetting milestone counter.", category: .app)
+                UserDefaults.standard.set(0, forKey: SettingKeys.milestoneCountKey)
             }
             UserDefaults.standard.set(currentVersion, forKey: SettingKeys.appVersionForStorageKey)
         } else {

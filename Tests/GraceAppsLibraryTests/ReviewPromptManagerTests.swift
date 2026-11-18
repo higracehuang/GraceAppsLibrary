@@ -4,7 +4,6 @@ import XCTest
 @MainActor
 final class ReviewPromptManagerTests: XCTestCase {
     
-    private let engagementKey = "GraceApps_Review_EngagementCounter"
     private let lastVersionKey = "GraceApps_Review_LastVersionPromptedForReview"
     private let appVersionKey = "GraceApps_Review_AppVersionForStorage"
     private let lastDateKey = "GraceApps_Review_LastEngagementDate"
@@ -61,24 +60,23 @@ final class ReviewPromptManagerTests: XCTestCase {
     }
     
     func testDebugResetReviewState() {
-        UserDefaults.standard.set(7, forKey: engagementKey)
+        ReviewPromptManager.shared.recordMilestoneEvent("test")
+        UserDefaults.standard.set(5, forKey: "GraceApps_Review_ActiveDaysCount")
         ReviewPromptManager.debugResetReviewState()
-        let count = UserDefaults.standard.integer(forKey: engagementKey)
-        XCTAssertEqual(count, 0)
+        XCTAssertEqual(ReviewPromptManager.shared.milestoneCount, 0)
+        XCTAssertEqual(ReviewPromptManager.shared.activeDaysCount, 0)
     }
     
     func testAppInitResetsCounterOnNewVersion() {
-        UserDefaults.standard.set(10, forKey: engagementKey)
+        ReviewPromptManager.shared.recordMilestoneEvent("test")
         UserDefaults.standard.set("0.9.0", forKey: appVersionKey)
         
         ReviewPromptManager.appInit()
         
         let storedVersion = UserDefaults.standard.string(forKey: appVersionKey)
-        let count = UserDefaults.standard.integer(forKey: engagementKey)
-        
         let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
         XCTAssertEqual(storedVersion, currentVersion)
-        XCTAssertEqual(count, 0)
+        XCTAssertEqual(ReviewPromptManager.shared.milestoneCount, 0)
     }
     
     func testHasPromptYet() {
@@ -91,33 +89,37 @@ final class ReviewPromptManagerTests: XCTestCase {
         XCTAssertTrue(manager.hasPromptYet())
     }
     
-    func testCheckpointCountThresholdLogic() {
-        let manager = ReviewPromptManager(checkpointCount: 3)
+    func testMilestoneThresholdLogic() {
+        let manager = ReviewPromptManager.shared
+        manager.config = ReviewPromptConfig(minDaysBetweenPrompts: 0, minActiveDays: 999, minMilestoneEvents: 3)
         
-        // 1st call -> count = 1 -> should not prompt
-        XCTAssertFalse(manager.requestReviewIfNecessary())
-        XCTAssertEqual(UserDefaults.standard.integer(forKey: engagementKey), 1)
+        // 1st milestone -> count = 1 -> should not prompt
+        manager.recordMilestoneEvent("m1")
+        XCTAssertFalse(manager.requestReviewIfEligible())
+        XCTAssertEqual(manager.milestoneCount, 1)
         
-        // 2nd call -> count = 2 -> should not prompt
-        XCTAssertFalse(manager.requestReviewIfNecessary())
-        XCTAssertEqual(UserDefaults.standard.integer(forKey: engagementKey), 2)
+        // 2nd milestone -> count = 2 -> should not prompt
+        manager.recordMilestoneEvent("m2")
+        XCTAssertFalse(manager.requestReviewIfEligible())
+        XCTAssertEqual(manager.milestoneCount, 2)
         
-        // 3rd call -> count = 3 -> meets threshold, should prompt
-        XCTAssertTrue(manager.requestReviewIfNecessary())
-        XCTAssertEqual(UserDefaults.standard.integer(forKey: engagementKey), 3)
+        // 3rd milestone -> count = 3 -> meets threshold, should prompt
+        manager.recordMilestoneEvent("m3")
+        XCTAssertTrue(manager.requestReviewIfEligible())
         
-        // 4th call -> version marked as prompted, should not prompt again
-        XCTAssertFalse(manager.requestReviewIfNecessary())
+        // Version marked as prompted, milestoneCount reset, should not prompt again
+        XCTAssertFalse(manager.requestReviewIfEligible())
     }
     
     func testRequestReviewDailyThrottling() {
-        let manager = ReviewPromptManager(checkpointCount: 1)
+        let manager = ReviewPromptManager.shared
+        manager.config = ReviewPromptConfig(minDaysBetweenPrompts: 0, minActiveDays: 0, minMilestoneEvents: 0)
         
         // Yesterday date -> triggers prompt
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
         UserDefaults.standard.set(yesterday, forKey: lastDateKey)
         
-        XCTAssertTrue(manager.requestReviewIfNecessary())
+        XCTAssertTrue(manager.requestReviewIfEligible())
         manager.requestReviewDaily()
         
         let lastDate = UserDefaults.standard.object(forKey: lastDateKey) as? Date
@@ -148,13 +150,14 @@ final class ReviewPromptManagerTests: XCTestCase {
     }
     
     func testReviewPromptSuppressedIfReleaseNotesShownThisSession() {
-        let manager = ReviewPromptManager(checkpointCount: 1)
+        let manager = ReviewPromptManager.shared
+        manager.config = ReviewPromptConfig(minDaysBetweenPrompts: 0, minActiveDays: 0, minMilestoneEvents: 0)
         
         // When release notes have been presented in this session
         ReleaseNotesManager.hasShownReleaseNotesThisSession = true
         
-        // 1. requestReviewIfNecessary should be suppressed
-        XCTAssertFalse(manager.requestReviewIfNecessary(), "Review prompt should be suppressed if release notes were already shown this session")
+        // 1. requestReviewIfEligible should be suppressed
+        XCTAssertFalse(manager.requestReviewIfEligible(), "Review prompt should be suppressed if release notes were already shown this session")
         
         // 2. recordPositiveValueMoment should also be suppressed
         let momentPrompted = manager.recordPositiveValueMoment("milestone_event")
@@ -361,7 +364,7 @@ final class ReviewPromptManagerTests: XCTestCase {
     @MainActor
     func testUXActionRatingPromptWithMilestoneRecordsEvent() async {
         let manager = ReviewPromptManager.shared
-        manager.config = ReviewPromptConfig(minDaysBetweenPrompts: 0, minActiveDays: 0, minMilestoneEvents: 5)
+        manager.config = ReviewPromptConfig(minDaysBetweenPrompts: 0, minActiveDays: 999, minMilestoneEvents: 5)
         UserDefaults.standard.set(0, forKey: "GraceApps_Review_MilestoneCount")
         XCTAssertEqual(manager.milestoneCount, 0)
 
