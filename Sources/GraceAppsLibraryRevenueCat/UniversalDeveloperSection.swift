@@ -53,9 +53,9 @@ public struct UniversalDeveloperSection<CustomContent: View, OnboardingContent: 
                 systemImage: debugLinkSystemImage,
                 onboardingStorageKey: onboardingStorageKey,
                 onboardingView: onboardingView,
-                onReset: onReset
+                onReset: onReset,
+                customContent: { customContent }
             )
-            customContent
         }
         #else
         EmptyView()

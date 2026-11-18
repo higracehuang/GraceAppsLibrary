@@ -4,11 +4,12 @@ import GraceAppsLibrary
 /// Standard developer and QA debug screen for Grace Apps.
 /// Assembles turnkey sections for RevenueCat entitlements & 3-way override,
 /// review prompt pacing, ad pacing diagnostics, appearance, onboarding, and debug reset.
-public struct UniversalDebugMenu<OnboardingContent: View>: View {
+public struct UniversalDebugMenu<CustomContent: View, OnboardingContent: View>: View {
     public let navigationTitle: String
     public let onboardingStorageKey: String
     public let onboardingView: (() -> OnboardingContent)?
     public let onReset: (() -> Void)?
+    public let customContent: CustomContent
 
     @ObservedObject private var purchaseCoordinator = UniversalPurchaseCoordinator.shared
     @State private var sessionAdCount: Int = AdPacingEngine.shared.sessionAdCount
@@ -17,12 +18,14 @@ public struct UniversalDebugMenu<OnboardingContent: View>: View {
         navigationTitle: String = "Debug Menu",
         onboardingStorageKey: String = OnboardingManager.defaultStorageKey,
         onboardingView: (() -> OnboardingContent)? = nil,
-        onReset: (() -> Void)? = nil
+        onReset: (() -> Void)? = nil,
+        @ViewBuilder customContent: () -> CustomContent
     ) {
         self.navigationTitle = navigationTitle
         self.onboardingStorageKey = onboardingStorageKey
         self.onboardingView = onboardingView
         self.onReset = onReset
+        self.customContent = customContent()
     }
 
     public var body: some View {
@@ -51,7 +54,10 @@ public struct UniversalDebugMenu<OnboardingContent: View>: View {
             // MARK: - 5. Ad & Paywall Pacing Diagnostics
             pacingDiagnosticsSection
 
-            // MARK: - 6. Reset All Overrides
+            // MARK: - 6. Custom App-Specific Tools
+            customContent
+
+            // MARK: - 7. Reset All Overrides
             DebugResetSection(
                 entitlementOverride: $purchaseCoordinator.debugOverride,
                 onReset: {
@@ -113,7 +119,24 @@ public struct UniversalDebugMenu<OnboardingContent: View>: View {
     }
 }
 
-extension UniversalDebugMenu where OnboardingContent == EmptyView {
+extension UniversalDebugMenu where CustomContent == EmptyView {
+    public init(
+        navigationTitle: String = "Debug Menu",
+        onboardingStorageKey: String = OnboardingManager.defaultStorageKey,
+        onboardingView: (() -> OnboardingContent)? = nil,
+        onReset: (() -> Void)? = nil
+    ) {
+        self.init(
+            navigationTitle: navigationTitle,
+            onboardingStorageKey: onboardingStorageKey,
+            onboardingView: onboardingView,
+            onReset: onReset,
+            customContent: { EmptyView() }
+        )
+    }
+}
+
+extension UniversalDebugMenu where CustomContent == EmptyView, OnboardingContent == EmptyView {
     public init(
         navigationTitle: String = "Debug Menu",
         onReset: (() -> Void)? = nil
@@ -122,7 +145,8 @@ extension UniversalDebugMenu where OnboardingContent == EmptyView {
             navigationTitle: navigationTitle,
             onboardingStorageKey: OnboardingManager.defaultStorageKey,
             onboardingView: nil,
-            onReset: onReset
+            onReset: onReset,
+            customContent: { EmptyView() }
         )
     }
 }
