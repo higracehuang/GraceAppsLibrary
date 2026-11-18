@@ -84,8 +84,14 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
         self.onProStatusChanged = onProStatusChanged
 
         // 1. Seed store status synchronously from cached storage so UI doesn't flicker on launch
+        let args = ProcessInfo.processInfo.arguments
+        let isMockOrReset = args.contains("-USE_MOCK_DATA") || args.contains("-RESET_USER_DEFAULTS") || args.contains("-FORCE_FREE")
         if let key = syncedStorageKey {
-            self.storeIsPro = UserDefaults.standard.bool(forKey: key)
+            if isMockOrReset && !args.contains("-FORCE_PRO") && !args.contains("-ForcePro") {
+                self.storeIsPro = false
+            } else {
+                self.storeIsPro = UserDefaults.standard.bool(forKey: key)
+            }
         }
 
         // 2. Load debug override from arguments or storage
@@ -184,7 +190,13 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
         #endif
 
         if let key = syncedStorageKey {
-            UserDefaults.standard.set(self.isPro, forKey: key)
+            let isEphemeral = ProcessInfo.processInfo.arguments.contains("-FORCE_PRO")
+                || ProcessInfo.processInfo.arguments.contains("-ForcePro")
+                || ProcessInfo.processInfo.arguments.contains("-FORCE_FREE")
+                || ProcessInfo.processInfo.arguments.contains("-ForceFree")
+            if !isEphemeral {
+                UserDefaults.standard.set(self.isPro, forKey: key)
+            }
         }
 
         onProStatusChanged?(self.isPro)
@@ -194,12 +206,14 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
     private func initDebugOverride() {
         let args = ProcessInfo.processInfo.arguments
         if args.contains("-ForcePro") || args.contains("-FORCE_PRO") || args.contains("-forcePro") {
-            self.debugOverride = .forcePro
+            self._debugOverride = Published(wrappedValue: .forcePro)
         } else if args.contains("-ForceFree") || args.contains("-FORCE_FREE") || args.contains("-forceFree") || args.contains("-UI_TEST_FREE_TIER") {
-            self.debugOverride = .forceFree
+            self._debugOverride = Published(wrappedValue: .forceFree)
+        } else if args.contains("-USE_MOCK_DATA") || args.contains("-RESET_USER_DEFAULTS") {
+            self._debugOverride = Published(wrappedValue: .automatic)
         } else if let saved = UserDefaults.standard.string(forKey: overrideStorageKey),
                   let parsed = DebugEntitlementOverride(rawValue: saved) {
-            self.debugOverride = parsed
+            self._debugOverride = Published(wrappedValue: parsed)
         }
     }
     #endif
