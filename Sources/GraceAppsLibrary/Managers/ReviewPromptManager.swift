@@ -138,7 +138,8 @@ public final class ReviewPromptManager {
     }
 
     /// Records an active calendar day session for value gating.
-    public func recordDailySession(now: Date = Date()) {
+    /// Internal only: invoked automatically via `ReviewPromptManager.appInit()`.
+    internal func recordDailySession(now: Date = Date()) {
         let calendar = Calendar.current
         let lastActiveDate = UserDefaults.standard.object(forKey: SettingKeys.lastActiveDateKey) as? Date
         if lastActiveDate == nil || !calendar.isDate(now, inSameDayAs: lastActiveDate!) {
