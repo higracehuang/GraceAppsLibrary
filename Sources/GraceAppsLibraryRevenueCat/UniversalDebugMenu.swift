@@ -30,43 +30,58 @@ public struct UniversalDebugMenu<CustomContent: View, OnboardingContent: View>: 
 
     public var body: some View {
         Form {
-            // MARK: - 1. Entitlements & Paywall (3-Way Override + Offerings Tester)
-            DebugRevenueCatSection(
-                title: "Entitlements & Paywall",
-                showOfferingsTester: true,
-                showDiagnostics: true
-            )
-
-            // MARK: - 2. App Reviews & Prompts
-            DebugReviewPromptSection()
-
-            // MARK: - 3. Appearance (Light / Dark Mode)
-            DebugAppearanceSection()
-
-            // MARK: - 4. Onboarding Preview (if provided)
-            if let onboardingView = onboardingView {
-                DebugOnboardingSection(
-                    onboardingStorageKey: onboardingStorageKey,
-                    onboardingView: onboardingView
+            Group {
+                // MARK: - 1. Entitlements & Paywall (3-Way Override + Offerings Tester)
+                DebugRevenueCatSection(
+                    title: "Entitlements & Paywall",
+                    showOfferingsTester: true,
+                    showDiagnostics: true
                 )
+
+                // MARK: - 2. App Reviews & Prompts
+                DebugReviewPromptSection()
+
+                // MARK: - 3. Appearance (Light / Dark Mode)
+                DebugAppearanceSection()
+
+                // MARK: - 4. Onboarding Preview (if provided)
+                if let onboardingView = onboardingView {
+                    DebugOnboardingSection(
+                        onboardingStorageKey: onboardingStorageKey,
+                        onboardingView: onboardingView
+                    )
+                }
             }
 
-            // MARK: - 5. Ad & Paywall Pacing Diagnostics
-            pacingDiagnosticsSection
+            Group {
+                // MARK: - 5. Ad & Paywall Pacing Diagnostics
+                pacingDiagnosticsSection
 
-            // MARK: - 6. Custom App-Specific Tools
-            customContent
+                // MARK: - 6. Custom App-Specific Tools
+                customContent
 
-            // MARK: - 7. Reset All Overrides
-            DebugResetSection(
-                entitlementOverride: $purchaseCoordinator.debugOverride,
-                onReset: {
-                    purchaseCoordinator.debugOverride = .automatic
-                    AdPacingEngine.shared.resetSession()
-                    sessionAdCount = AdPacingEngine.shared.sessionAdCount
-                    onReset?()
-                }
-            )
+                // MARK: - 7. Reset All Overrides
+                #if DEBUG
+                DebugResetSection(
+                    entitlementOverride: $purchaseCoordinator.debugOverride,
+                    onReset: {
+                        purchaseCoordinator.debugOverride = .automatic
+                        AdPacingEngine.shared.resetSession()
+                        sessionAdCount = AdPacingEngine.shared.sessionAdCount
+                        onReset?()
+                    }
+                )
+                #else
+                DebugResetSection(
+                    entitlementOverride: nil,
+                    onReset: {
+                        AdPacingEngine.shared.resetSession()
+                        sessionAdCount = AdPacingEngine.shared.sessionAdCount
+                        onReset?()
+                    }
+                )
+                #endif
+            }
         }
         .navigationTitle(Text(verbatim: navigationTitle))
         .navigationBarTitleDisplayMode(.inline)
