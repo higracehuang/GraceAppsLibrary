@@ -53,6 +53,14 @@ public struct DebugReviewPromptSection: View {
             }
 
             Button {
+                ReviewPromptManager.shared.recordMilestoneEvent("debug_simulation")
+                alertMessage = "Recorded milestone event (total: \(ReviewPromptManager.shared.milestoneCount))."
+                showingAlert = true
+            } label: {
+                Label("Simulate Milestone Event (+1)", systemImage: "flag.checkered")
+            }
+
+            Button {
                 ReviewPromptManager.shared.requestDirectNativeReview()
             } label: {
                 Label("Force Native StoreKit Prompt", systemImage: "star.bubble")

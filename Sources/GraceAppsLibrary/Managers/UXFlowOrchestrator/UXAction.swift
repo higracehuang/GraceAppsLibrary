@@ -44,7 +44,7 @@ public struct UXActionPriority: Comparable, Sendable, Hashable {
 }
 
 /// The result returned by an action upon completion.
-public enum UXActionOutcome: Sendable {
+public enum UXActionOutcome: Sendable, Equatable {
     case completed
     case dismissed
     case cancelled
@@ -146,6 +146,16 @@ public struct UXAction: Identifiable {
         self.viewBuilder = nil
         self.executionBlock = execute
     }
+
+    /// Executes the action's execution block directly, returning its outcome via completion.
+    @MainActor
+    public func execute(completion: @escaping (UXActionOutcome) -> Void) {
+        if let executionBlock = executionBlock {
+            executionBlock(completion)
+        } else {
+            completion(.completed)
+        }
+    }
 }
 
 /// Identifiable wrapper for binding an active UXAction to SwiftUI presentation modifiers.
@@ -181,11 +191,13 @@ extension UXAction {
     ///
     /// - Parameters:
     ///   - id: Action identifier (default: `.ratingPrompt`).
+    ///   - milestone: Optional milestone event name to record (e.g. `"coins_awarded"`, `"reward_redeemed"`).
     ///   - tags: Action tags (default: `[.review]`).
     ///   - onPrompt: Optional closure invoked to execute review prompt evaluation. If nil, invokes `ReviewPromptManager.shared.requestReviewIfEligible()`.
     @MainActor
     public static func ratingPrompt(
         id: UXActionID = .ratingPrompt,
+        milestone: String? = nil,
         tags: Set<UXTag> = [.review],
         onPrompt: (@MainActor () -> Bool)? = nil
     ) -> UXAction {
@@ -195,6 +207,9 @@ extension UXAction {
             kind: .customAsync,
             tags: tags
         ) { completion in
+            if let milestone = milestone {
+                ReviewPromptManager.shared.recordMilestoneEvent(milestone)
+            }
             if let onPrompt = onPrompt {
                 let approved = onPrompt()
                 completion(approved ? .completed : .skipped)
@@ -203,6 +218,12 @@ extension UXAction {
                 completion(prompted ? .completed : .skipped)
             }
         }
+    }
+
+    /// Convenience static property for standard rating prompt without parameters.
+    @MainActor
+    public static var ratingPrompt: UXAction {
+        ratingPrompt()
     }
 
     /// Creates a standard interstitial ad action with priority `.ad` (100).

@@ -12,16 +12,26 @@ final class ReviewPromptManagerTests: XCTestCase {
     override func setUp() {
         super.setUp()
         ReviewPromptManager.debugResetReviewState()
+        ReviewPromptManager.shared.config = ReviewPromptConfig()
         UserDefaults.standard.removeObject(forKey: lastVersionKey)
         UserDefaults.standard.removeObject(forKey: appVersionKey)
         UserDefaults.standard.removeObject(forKey: lastDateKey)
+        UserDefaults.standard.removeObject(forKey: "GraceApps_Review_LastPromptDate")
+        UserDefaults.standard.removeObject(forKey: "GraceApps_Review_MilestoneCount")
+        UserDefaults.standard.removeObject(forKey: "GraceApps_Review_ActiveDaysCount")
+        ReleaseNotesManager.hasShownReleaseNotesThisSession = false
     }
     
     override func tearDown() {
         ReviewPromptManager.debugResetReviewState()
+        ReviewPromptManager.shared.config = ReviewPromptConfig()
         UserDefaults.standard.removeObject(forKey: lastVersionKey)
         UserDefaults.standard.removeObject(forKey: appVersionKey)
         UserDefaults.standard.removeObject(forKey: lastDateKey)
+        UserDefaults.standard.removeObject(forKey: "GraceApps_Review_LastPromptDate")
+        UserDefaults.standard.removeObject(forKey: "GraceApps_Review_MilestoneCount")
+        UserDefaults.standard.removeObject(forKey: "GraceApps_Review_ActiveDaysCount")
+        ReleaseNotesManager.hasShownReleaseNotesThisSession = false
         super.tearDown()
     }
     
@@ -324,6 +334,76 @@ final class ReviewPromptManagerTests: XCTestCase {
             negativeFeedbackInvoked = true
         }
         XCTAssertTrue(shownAlert)
+    }
+
+    func testMilestoneCountResetsWhenPromptedForVersion() {
+        let manager = ReviewPromptManager.shared
+        manager.config = ReviewPromptConfig(
+            minDaysBetweenPrompts: 0,
+            minActiveDays: 0,
+            minMilestoneEvents: 1,
+            ignorePatchVersions: true
+        )
+
+        // Set milestone count to 5
+        manager.recordMilestoneEvent("milestone_1")
+        manager.recordMilestoneEvent("milestone_2")
+        XCTAssertEqual(manager.milestoneCount, 2)
+
+        // Trigger prompt
+        let prompted = manager.requestReviewIfEligible()
+        XCTAssertTrue(prompted)
+
+        // In test mode, markPromptedForCurrentVersion() runs and resets milestoneCount to 0
+        XCTAssertEqual(manager.milestoneCount, 0, "Milestone count should reset to 0 after prompt is presented")
+    }
+
+    @MainActor
+    func testUXActionRatingPromptWithMilestoneRecordsEvent() async {
+        let manager = ReviewPromptManager.shared
+        manager.config = ReviewPromptConfig(minDaysBetweenPrompts: 0, minActiveDays: 0, minMilestoneEvents: 5)
+        UserDefaults.standard.set(0, forKey: "GraceApps_Review_MilestoneCount")
+        XCTAssertEqual(manager.milestoneCount, 0)
+
+        // 1. Execute action with milestone: should record milestone (count: 1), but not prompt yet (threshold 5)
+        let exp1 = expectation(description: "UXAction 1 completed")
+        let action = UXAction.ratingPrompt(milestone: "chore_completed")
+        action.execute { outcome in
+            XCTAssertEqual(outcome, .skipped)
+            exp1.fulfill()
+        }
+
+        await fulfillment(of: [exp1], timeout: 2.0)
+        XCTAssertEqual(manager.milestoneCount, 1, "Milestone must be recorded when action executes")
+
+        // 2. Execute second milestone
+        let exp2 = expectation(description: "UXAction 2 completed")
+        let action2 = UXAction.ratingPrompt(milestone: "another_chore")
+        action2.execute { outcome in
+            XCTAssertEqual(outcome, .skipped)
+            exp2.fulfill()
+        }
+
+        await fulfillment(of: [exp2], timeout: 2.0)
+        XCTAssertEqual(manager.milestoneCount, 2, "Second milestone must increment count to 2")
+    }
+
+    @MainActor
+    func testStandardUXPolicyPreconditionForRatingPrompt() {
+        ReviewPromptManager.shared.config = ReviewPromptConfig(minDaysBetweenPrompts: 90)
+        let policy = UXPolicy.standard
+        let precondition = policy.preconditions[.ratingPrompt]
+        XCTAssertNotNil(precondition, "UXPolicy.standard must register precondition for .ratingPrompt")
+
+        // When eligible -> true
+        UserDefaults.standard.removeObject(forKey: lastVersionKey)
+        UserDefaults.standard.removeObject(forKey: "GraceApps_Review_LastPromptDate")
+        XCTAssertTrue(precondition?() ?? false)
+
+        // When 90-day cooldown not elapsed -> false
+        let tenDaysAgo = Calendar.current.date(byAdding: .day, value: -10, to: Date())!
+        UserDefaults.standard.set(tenDaysAgo, forKey: "GraceApps_Review_LastPromptDate")
+        XCTAssertFalse(precondition?() ?? true, "Precondition must fail when cooldown not passed")
     }
 }
 

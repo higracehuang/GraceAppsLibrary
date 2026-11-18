@@ -30,11 +30,18 @@ public struct UXPolicy {
     /// - Showing a review suppresses ads in the same flow.
     /// - Showing a paywall suppresses ads in the same flow.
     /// - 20s cooldown between consecutive ads.
+    /// - Rating prompts gated by `ReviewPromptManager.isEligibleForPrompt()`.
+    @MainActor
     public static var standard: UXPolicy {
         var policy = UXPolicy()
         policy.mutuallyExclude(triggerTag: .review, suppressTag: .ad)
         policy.mutuallyExclude(triggerTag: .paywall, suppressTag: .ad)
         policy.setCooldown(tag: .ad, interval: 20)
+        policy.setPrecondition(actionId: .ratingPrompt) {
+            MainActor.assumeIsolated {
+                ReviewPromptManager.shared.isEligibleForPrompt()
+            }
+        }
         return policy
     }
     

@@ -624,6 +624,7 @@ Device: \(deviceModel) (\(osVersion))
         GraceLogger.success("Marked version '\(self.releaseVersionNumber)' as prompted.", category: .review)
         UserDefaults.standard.set(self.releaseVersionNumber, forKey: SettingKeys.lastVersionPromptedForReviewKey)
         UserDefaults.standard.set(date, forKey: SettingKeys.lastPromptDateKey)
+        UserDefaults.standard.set(0, forKey: SettingKeys.milestoneCountKey)
     }
 
     private func askForReview(retryCount: Int = 0, onPositive: @escaping () -> Void, onNegative: (() -> Void)?) {
