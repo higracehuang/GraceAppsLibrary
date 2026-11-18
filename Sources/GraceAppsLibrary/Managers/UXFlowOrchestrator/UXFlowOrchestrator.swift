@@ -70,6 +70,11 @@ public final class UXFlowOrchestrator: ObservableObject {
         
         self.flowCompletionCallback = onFlowComplete
         GraceLogger.orchestrator("Triggering flow with \(actions.count) candidate actions: \(actions.map { $0.id })", level: .info)
+
+        // If the pipeline is idle, reset flow-scoped executed tags from previous completed flows
+        if !isBusy && actionQueue.isEmpty {
+            executedTagsThisFlow.removeAll()
+        }
         
         let eligible = actions
             .filter { evaluateEligibility(for: $0) }
@@ -111,6 +116,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     /// Use this when the user chooses an action that terminates the sequence (e.g. "Practice Again" or "Review Mistakes").
     public func cancelFlowAndDismiss() {
         actionQueue.removeAll()
+        executedTagsThisFlow.removeAll()
         flowCompletionCallback = nil
         dismissCurrentAction()
     }
@@ -118,6 +124,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     /// Cancels any remaining queued actions in this flow without dismissing the currently active modal.
     public func cancelRemainingActions() {
         actionQueue.removeAll()
+        executedTagsThisFlow.removeAll()
         flowCompletionCallback = nil
     }
     
@@ -131,6 +138,7 @@ public final class UXFlowOrchestrator: ObservableObject {
         guard !actionQueue.isEmpty else {
             isBusy = false
             currentActionId = nil
+            executedTagsThisFlow.removeAll()
             GraceLogger.orchestrator("Presentation queue completed. Pipeline idle.", level: .info)
             let callback = flowCompletionCallback
             flowCompletionCallback = nil

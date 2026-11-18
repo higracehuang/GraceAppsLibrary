@@ -106,6 +106,37 @@ final class UXFlowOrchestratorTests: XCTestCase {
         }
         wait(for: [exp], timeout: 1.0)
     }
+
+    func testMutualExclusionDoesNotLeakAcrossDifferentFlows() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.policy.mutuallyExclude(triggerTag: "review", suppressTag: "ad")
+
+        var reviewPresented = false
+        var adPresentedInSecondFlow = false
+
+        let reviewAction = UXAction(id: "review", priority: .review, kind: .customAsync, tags: ["review"]) { completion in
+            reviewPresented = true
+            completion(.completed)
+        }
+
+        // Flow 1: review executes
+        orchestrator.triggerFlow(actions: [reviewAction])
+        XCTAssertTrue(reviewPresented)
+
+        // Wait for Flow 1 settling, then trigger Flow 2: ad must execute
+        let exp = expectation(description: "Flow 1 settles and Flow 2 triggers")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            let adAction = UXAction(id: "ad", priority: .ad, kind: .customAsync, tags: ["ad"]) { completion in
+                adPresentedInSecondFlow = true
+                completion(.completed)
+            }
+
+            orchestrator.triggerFlow(actions: [adAction])
+            XCTAssertTrue(adPresentedInSecondFlow, "Ad in a subsequent flow must NOT be suppressed by completed previous flow.")
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+    }
     
     func testPreconditionEvaluation() {
         let orchestrator = UXFlowOrchestrator.shared
