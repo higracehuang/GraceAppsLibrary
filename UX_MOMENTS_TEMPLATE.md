@@ -69,11 +69,11 @@ Managed by `UniversalAdCoordinator.shared` and gated by `AdPacingEngine.shared`.
 
 ## 5. Flow Orchestration Matrix
 
-| Screen / Event | Trigger Key | Celebration / Modal | Paywall Sheet | Rating Prompt | Interstitial Ad |
-|---|---|---|---|---|---|
-| **Activity Completed** | `activity_completed` | Completion Summary | — | Direct StoreKit (if milestone eligible; suppresses ad) | Interstitial Ad (if not Pro & no review/paywall shown) |
-| **Settings Upgrade Card** | `settings_upgrade` | — | `PaywallView` (immediate on demand) | — | — |
-| **Pro User Active** | `all_events` | As usual | Suppressed (Cards show "Pro Active") | Normal StoreKit rules | Strictly 100% Suppressed |
+| Screen / Event | Trigger Key | Celebration / Modal | Paywall Sheet | Rating Prompt | Interstitial Ad | Automated Test Verification |
+|---|---|---|---|---|---|---|
+| **Activity Completed** | `activity_completed` | Completion Summary | — | Direct StoreKit (if milestone eligible; suppresses ad) | Interstitial Ad (if not Pro & no review/paywall shown) | `testMatrixRow1_ActivityCompleted_AdPresentation` |
+| **Settings Upgrade Card** | `settings_upgrade` | — | `PaywallView` (immediate on demand) | — | — | `testMatrixRow2_DirectIntentPaywall_FromSettings` |
+| **Pro User Active** | `all_events` | As usual | Suppressed (Cards show "Pro Active") | Normal StoreKit rules | Strictly 100% Suppressed | `testMatrixRow3_ProUserTotalSuppression_AcrossApp` |
 
 ---
 

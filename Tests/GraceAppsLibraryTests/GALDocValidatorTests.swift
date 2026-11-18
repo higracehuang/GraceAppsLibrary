@@ -116,4 +116,83 @@ final class GALDocValidatorTests: XCTestCase {
         let found = GALDocValidator.locateUXMoments(in: tempDirectory)
         XCTAssertEqual(found?.standardizedFileURL, subDoc.standardizedFileURL)
     }
+
+    func testValidateUITestCoverage_Success() throws {
+        let testDoc = tempDirectory.appendingPathComponent("UX_MOMENTS.md")
+        let docContent = """
+        # Test App
+        ## 5. Flow Orchestration Matrix
+        | Action | Verification |
+        |---|---|
+        | Fast Ended | `testMatrixRow1_DirectIntentPaywall` |
+        | Fast Ad | `testMatrixRow3_FastCompleted_MockAd` |
+        """
+        try docContent.write(to: testDoc, atomically: true, encoding: .utf8)
+
+        let uiTestFile = tempDirectory.appendingPathComponent("UXMomentsUITests.swift")
+        let testFileContent = """
+        import XCTest
+        final class UXMomentsUITests: XCTestCase {
+            func testMatrixRow1_DirectIntentPaywall() throws {}
+            func testMatrixRow3_FastCompleted_MockAd() throws {}
+        }
+        """
+        try testFileContent.write(to: uiTestFile, atomically: true, encoding: .utf8)
+
+        let isValid = try GALDocValidator.validateUITestCoverage(docURL: testDoc, uiTestFileURL: uiTestFile)
+        XCTAssertTrue(isValid)
+    }
+
+    func testValidateUITestCoverage_MissingTestCase_Throws() throws {
+        let testDoc = tempDirectory.appendingPathComponent("UX_MOMENTS.md")
+        let docContent = """
+        # Test App
+        | Action | Verification |
+        |---|---|
+        | Fast Ended | `testMatrixRow1_DirectIntentPaywall` |
+        | Fast Ad | `testMatrixRow3_FastCompleted_MockAd` |
+        """
+        try docContent.write(to: testDoc, atomically: true, encoding: .utf8)
+
+        let uiTestFile = tempDirectory.appendingPathComponent("UXMomentsUITests.swift")
+        let incompleteContent = """
+        import XCTest
+        final class UXMomentsUITests: XCTestCase {
+            func testMatrixRow1_DirectIntentPaywall() throws {}
+        }
+        """
+        try incompleteContent.write(to: uiTestFile, atomically: true, encoding: .utf8)
+
+        XCTAssertThrowsError(
+            try GALDocValidator.validateUITestCoverage(docURL: testDoc, uiTestFileURL: uiTestFile)
+        ) { error in
+            guard case GALDocValidationError.missingUITestCase(let method, _) = error else {
+                XCTFail("Expected missingUITestCase, got \(error)")
+                return
+            }
+            XCTAssertEqual(method, "testMatrixRow3_FastCompleted_MockAd")
+        }
+    }
+
+    func testValidateUITestCoverage_MissingFile_Throws() {
+        let missingFile = tempDirectory.appendingPathComponent("NonExistentUITests.swift")
+        XCTAssertThrowsError(
+            try GALDocValidator.validateUITestCoverage(uiTestFileURL: missingFile)
+        ) { error in
+            guard case GALDocValidationError.missingUITestFile = error else {
+                XCTFail("Expected missingUITestFile, got \(error)")
+                return
+            }
+        }
+    }
+
+    func testLocateUXMomentsUITests_FindsFile() throws {
+        let subDir = tempDirectory.appendingPathComponent("AppUITests")
+        try FileManager.default.createDirectory(at: subDir, withIntermediateDirectories: true)
+        let uiTestFile = subDir.appendingPathComponent("UXMomentsUITests.swift")
+        try "// tests".write(to: uiTestFile, atomically: true, encoding: .utf8)
+
+        let found = GALDocValidator.locateUXMomentsUITests(in: tempDirectory)
+        XCTAssertEqual(found?.standardizedFileURL, uiTestFile.standardizedFileURL)
+    }
 }

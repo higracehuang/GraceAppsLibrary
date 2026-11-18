@@ -14,6 +14,8 @@ public enum GALDocValidationError: LocalizedError, Equatable {
     case missingSection(name: String)
     case missingAdTrigger(trigger: String)
     case missingPaywallTrigger(trigger: String)
+    case missingUITestFile(path: String)
+    case missingUITestCase(method: String, file: String)
 
     public var errorDescription: String? {
         switch self {
@@ -27,6 +29,10 @@ public enum GALDocValidationError: LocalizedError, Equatable {
             return "Ad trigger '\(trigger)' is defined in code but missing from the UX_MOMENTS.md catalog/matrix."
         case .missingPaywallTrigger(let trigger):
             return "Paywall trigger '\(trigger)' is defined in code but missing from the UX_MOMENTS.md catalog/matrix."
+        case .missingUITestFile(let path):
+            return "UX Moments UI test file not found at: \(path). Every app must include a UXMomentsUITests.swift test suite."
+        case .missingUITestCase(let method, let file):
+            return "UI test case '\(method)' documented in UX_MOMENTS.md is missing from \(file)."
         }
     }
 }
@@ -55,18 +61,98 @@ public enum GALDocValidator {
         return candidates.first(where: { FileManager.default.fileExists(atPath: $0.path) })
     }
 
-    /// Validates the existence and contents of a UX_MOMENTS markdown document against declared triggers.
+    /// Searches for `UXMomentsUITests.swift` starting from a given directory URL.
+    public static func locateUXMomentsUITests(in directory: URL) -> URL? {
+        let fileManager = FileManager.default
+        let direct = directory.appendingPathComponent("UXMomentsUITests.swift")
+        if fileManager.fileExists(atPath: direct.path) { return direct }
+
+        if let enumerator = fileManager.enumerator(at: directory, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles, .skipsPackageDescendants]) {
+            for case let fileURL as URL in enumerator {
+                if fileURL.lastPathComponent == "UXMomentsUITests.swift" {
+                    return fileURL
+                }
+            }
+        }
+        return nil
+    }
+
+    /// Extracts automated UI test method names referenced in the markdown documentation.
+    /// Matches identifiers starting with `testMatrixRow` or `test` enclosed in backticks or standard code style.
+    public static func extractTestCases(from documentContent: String) -> [String] {
+        let pattern = #"`(test[A-Za-z0-9_]+)`"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return [] }
+        let range = NSRange(location: 0, length: documentContent.utf16.count)
+        let matches = regex.matches(in: documentContent, options: [], range: range)
+        var cases: [String] = []
+        for match in matches {
+            if let swiftRange = Range(match.range(at: 1), in: documentContent) {
+                let name = String(documentContent[swiftRange])
+                if !cases.contains(name) {
+                    cases.append(name)
+                }
+            }
+        }
+        return cases
+    }
+
+    /// Validates that an app's UI test suite implements the UX moments tests defined in `UX_MOMENTS.md`.
+    ///
+    /// - Parameters:
+    ///   - docURL: Optional URL to `UX_MOMENTS.md` to extract documented test names from.
+    ///   - uiTestFileURL: URL to the app's `UXMomentsUITests.swift` source file.
+    ///   - requiredTestCases: Explicit test method names required to be implemented.
+    /// - Throws: `GALDocValidationError` if the test file is missing or any required test method is not implemented.
+    /// - Returns: `true` if all validations pass.
+    @discardableResult
+    public static func validateUITestCoverage(
+        docURL: URL? = nil,
+        uiTestFileURL: URL,
+        requiredTestCases: [String] = []
+    ) throws -> Bool {
+        guard FileManager.default.fileExists(atPath: uiTestFileURL.path) else {
+            throw GALDocValidationError.missingUITestFile(path: uiTestFileURL.path)
+        }
+
+        guard let testContent = try? String(contentsOf: uiTestFileURL, encoding: .utf8) else {
+            throw GALDocValidationError.missingUITestFile(path: uiTestFileURL.path)
+        }
+
+        var expectedTests = requiredTestCases
+
+        if let docURL = docURL, FileManager.default.fileExists(atPath: docURL.path),
+           let docContent = try? String(contentsOf: docURL, encoding: .utf8) {
+            let extracted = extractTestCases(from: docContent)
+            for test in extracted where !expectedTests.contains(test) {
+                expectedTests.append(test)
+            }
+        }
+
+        for method in expectedTests {
+            let functionPattern = "func \(method)"
+            if !testContent.contains(functionPattern) {
+                throw GALDocValidationError.missingUITestCase(method: method, file: uiTestFileURL.lastPathComponent)
+            }
+        }
+
+        return true
+    }
+
+    /// Validates the existence and contents of a UX_MOMENTS markdown document against declared triggers
+    /// and optionally verifies automated UI test coverage.
     ///
     /// - Parameters:
     ///   - docURL: URL to the `UX_MOMENTS.md` file.
-    ///   - adTriggers: List of string trigger raw values declared in code (e.g. `FastingAdTrigger.allCases.map(\.rawValue)`).
+    ///   - uiTestFileURL: Optional URL to the app's `UXMomentsUITests.swift` source file.
+    ///   - adTriggers: List of string trigger raw values declared in code.
     ///   - paywallTriggers: List of string paywall trigger raw values declared in code.
     ///   - requiredSections: Required section names that must appear as markdown headers.
-    /// - Throws: `GALDocValidationError` if missing file, empty contents, missing sections, or undocumented triggers.
+    /// - Throws: `GALDocValidationError` if missing file, empty contents, missing sections, undocumented triggers, or missing UI tests.
     /// - Returns: `true` if all validations pass.
     @discardableResult
     public static func validate(
         docURL: URL,
+        uiTestFileURL: URL? = nil,
         adTriggers: [String] = [],
         paywallTriggers: [String] = [],
         requiredSections: [String] = defaultRequiredSections
@@ -108,6 +194,11 @@ public enum GALDocValidator {
             }
         }
 
+        // Optionally validate UI test coverage
+        if let uiTestFileURL = uiTestFileURL {
+            try validateUITestCoverage(docURL: docURL, uiTestFileURL: uiTestFileURL)
+        }
+
         return true
     }
 
@@ -115,12 +206,14 @@ public enum GALDocValidator {
     @discardableResult
     public static func validate<A: RawRepresentable, P: RawRepresentable>(
         docURL: URL,
+        uiTestFileURL: URL? = nil,
         adTriggers: [A] = [],
         paywallTriggers: [P] = [],
         requiredSections: [String] = defaultRequiredSections
     ) throws -> Bool where A.RawValue == String, P.RawValue == String {
         try validate(
             docURL: docURL,
+            uiTestFileURL: uiTestFileURL,
             adTriggers: adTriggers.map(\.rawValue),
             paywallTriggers: paywallTriggers.map(\.rawValue),
             requiredSections: requiredSections
