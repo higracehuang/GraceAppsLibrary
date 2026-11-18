@@ -134,6 +134,16 @@ public final class ReviewPromptManager {
         UserDefaults.standard.integer(forKey: SettingKeys.milestoneCountKey)
     }
 
+    /// The date when the user was last prompted for review, if any.
+    public var lastPromptDate: Date? {
+        UserDefaults.standard.object(forKey: SettingKeys.lastPromptDateKey) as? Date
+    }
+
+    /// The app release version string that was last prompted for review, if any.
+    public var lastVersionPrompted: String? {
+        UserDefaults.standard.string(forKey: SettingKeys.lastVersionPromptedForReviewKey)
+    }
+
     /// Records an active calendar day session for value gating.
     public func recordDailySession(now: Date = Date()) {
         let calendar = Calendar.current

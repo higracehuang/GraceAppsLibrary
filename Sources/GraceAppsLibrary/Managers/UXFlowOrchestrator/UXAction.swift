@@ -182,7 +182,7 @@ extension UXAction {
     /// - Parameters:
     ///   - id: Action identifier (default: `.ratingPrompt`).
     ///   - tags: Action tags (default: `[.review]`).
-    ///   - onPrompt: Optional closure invoked to execute review prompt evaluation. If nil, invokes `ReviewPromptManager.shared.requestDirectNativeReview()`.
+    ///   - onPrompt: Optional closure invoked to execute review prompt evaluation. If nil, invokes `ReviewPromptManager.shared.requestReviewIfEligible()`.
     @MainActor
     public static func ratingPrompt(
         id: UXActionID = .ratingPrompt,
@@ -199,8 +199,8 @@ extension UXAction {
                 let approved = onPrompt()
                 completion(approved ? .completed : .skipped)
             } else {
-                ReviewPromptManager.shared.requestDirectNativeReview()
-                completion(.completed)
+                let prompted = ReviewPromptManager.shared.requestReviewIfEligible()
+                completion(prompted ? .completed : .skipped)
             }
         }
     }

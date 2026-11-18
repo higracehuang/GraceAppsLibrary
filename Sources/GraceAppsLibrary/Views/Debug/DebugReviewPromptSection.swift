@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A reusable debug section for testing and resetting ReviewPromptManager states.
+/// A reusable debug section for testing, diagnosing, and resetting ReviewPromptManager states.
 public struct DebugReviewPromptSection: View {
     @State private var alertMessage: String?
     @State private var showingAlert = false
@@ -8,25 +8,68 @@ public struct DebugReviewPromptSection: View {
     public init() {}
     
     public var body: some View {
-        Section(header: Text("App Reviews & Prompts")) {
+        Section(
+            header: Text("App Reviews & Prompts"),
+            footer: Text("Direct StoreKit is recommended for production. Quota protection requires 90 days between prompts.")
+        ) {
+            // MARK: - Diagnostics
+            HStack {
+                Text("Configured Style")
+                Spacer()
+                Text(ReviewPromptManager.shared.config.style == .directNative ? "Direct Native" : "Intermediate Alert")
+                    .foregroundColor(.secondary)
+            }
+
+            HStack {
+                Text("Prompted This Version")
+                Spacer()
+                Text(ReviewPromptManager.shared.hasPromptedForCurrentVersion ? "Yes" : "No")
+                    .foregroundColor(ReviewPromptManager.shared.hasPromptedForCurrentVersion ? .orange : .green)
+            }
+
+            HStack {
+                Text("Cooldown Passed (90d)")
+                Spacer()
+                Text(ReviewPromptManager.shared.hasPassedCooldown() ? "Yes" : "No")
+                    .foregroundColor(ReviewPromptManager.shared.hasPassedCooldown() ? .green : .orange)
+            }
+
+            HStack {
+                Text("Active Days / Milestones")
+                Spacer()
+                Text("\(ReviewPromptManager.shared.activeDaysCount)d / \(ReviewPromptManager.shared.milestoneCount)m")
+                    .foregroundColor(.secondary)
+            }
+
+            // MARK: - Actions
             Button {
-                ReviewPromptManager.shared.debugPresentReviewPrompt()
+                let shown = ReviewPromptManager.shared.requestReviewIfEligible()
+                alertMessage = shown
+                    ? "Review prompt was eligible and triggered!"
+                    : "Review prompt suppressed: conditions not met (check cooldown or version status)."
+                showingAlert = true
             } label: {
-                Label("Trigger GAL 2-Step Review Prompt", systemImage: "heart.text.square")
+                Label("Evaluate & Trigger If Eligible", systemImage: "sparkles")
             }
 
             Button {
                 ReviewPromptManager.shared.requestDirectNativeReview()
             } label: {
-                Label("Trigger Native Review Prompt", systemImage: "star.bubble")
+                Label("Force Native StoreKit Prompt", systemImage: "star.bubble")
+            }
+
+            Button {
+                ReviewPromptManager.shared.debugPresentReviewPrompt()
+            } label: {
+                Label("Force GAL 2-Step Alert Prompt", systemImage: "heart.text.square")
             }
 
             Button {
                 ReviewPromptManager.debugResetReviewState()
-                alertMessage = "Review prompt counter and version history have been reset."
+                alertMessage = "Review prompt counter, active days, and version history have been reset."
                 showingAlert = true
             } label: {
-                Label("Reset Review State", systemImage: "star.slash")
+                Label("Reset Review State & Cooldown", systemImage: "star.slash")
             }
         }
         .alert(isPresented: $showingAlert) {
