@@ -24,15 +24,53 @@ public struct PositiveValueMoment: RawRepresentable, Equatable, Hashable, Expres
     public static let milestoneReached = PositiveValueMoment(rawValue: "milestone_reached")
 }
 
+/// Presentation style for the rating prompt.
+public enum ReviewPromptStyle: Sendable {
+    /// Frictionless 1-step direct native StoreKit prompt (maximizes rating volume).
+    case directNative
+    /// 2-step alert asking "Are you enjoying [App]?" before triggering StoreKit or feedback.
+    case intermediateAlert
+}
+
+/// Turnkey configuration for review prompt scheduling, cooldown, and quota protection.
+public struct ReviewPromptConfig: Sendable {
+    public var style: ReviewPromptStyle
+    public var minDaysBetweenPrompts: Int
+    public var minActiveDays: Int
+    public var minMilestoneEvents: Int
+    public var ignorePatchVersions: Bool
+
+    public init(
+        style: ReviewPromptStyle = .directNative,
+        minDaysBetweenPrompts: Int = 90,
+        minActiveDays: Int = 3,
+        minMilestoneEvents: Int = 5,
+        ignorePatchVersions: Bool = true
+    ) {
+        self.style = style
+        self.minDaysBetweenPrompts = minDaysBetweenPrompts
+        self.minActiveDays = minActiveDays
+        self.minMilestoneEvents = minMilestoneEvents
+        self.ignorePatchVersions = ignorePatchVersions
+    }
+}
+
 @MainActor
 public final class ReviewPromptManager {
 
     public static let shared = ReviewPromptManager()
 
+    public var config: ReviewPromptConfig = ReviewPromptConfig()
+
     private var checkpointCount: Int
 
-    public init(checkpointCount: Int = 5) {
+    public init(checkpointCount: Int = 5, config: ReviewPromptConfig = ReviewPromptConfig()) {
         self.checkpointCount = checkpointCount
+        self.config = config
+    }
+
+    public func configure(_ config: ReviewPromptConfig) {
+        self.config = config
     }
 
     /// Retained overlay window used to present the review pre-filter alert independently of any
@@ -44,6 +82,10 @@ public final class ReviewPromptManager {
         static let lastVersionPromptedForReviewKey = "GraceApps_Review_LastVersionPromptedForReview"
         static let appVersionForStorageKey = "GraceApps_Review_AppVersionForStorage"
         static let lastEngagementDateKey = "GraceApps_Review_LastEngagementDate"
+        static let lastPromptDateKey = "GraceApps_Review_LastPromptDate"
+        static let activeDaysCountKey = "GraceApps_Review_ActiveDaysCount"
+        static let lastActiveDateKey = "GraceApps_Review_LastActiveDate"
+        static let milestoneCountKey = "GraceApps_Review_MilestoneCount"
     }
 
     private var appName: String {
@@ -62,26 +104,101 @@ public final class ReviewPromptManager {
         return count
     }
 
-    private func shouldPrompt() -> Bool {
+    /// Returns the major.minor segment of a version string (e.g. "2.1.0" -> "2.1").
+    public static func majorMinorVersion(from version: String) -> String {
+        let parts = version.split(separator: ".")
+        if parts.count >= 2 {
+            return "\(parts[0]).\(parts[1])"
+        }
+        return version
+    }
+
+    /// Whether the minimum cooldown period between review prompts has passed.
+    public func hasPassedCooldown(now: Date = Date()) -> Bool {
+        guard config.minDaysBetweenPrompts > 0 else { return true }
+        guard let lastDate = UserDefaults.standard.object(forKey: SettingKeys.lastPromptDateKey) as? Date else {
+            return true
+        }
+        let elapsedSeconds = now.timeIntervalSince(lastDate)
+        let minSeconds = Double(config.minDaysBetweenPrompts) * 86400.0
+        return elapsedSeconds >= minSeconds
+    }
+
+    /// The number of distinct active days recorded.
+    public var activeDaysCount: Int {
+        UserDefaults.standard.integer(forKey: SettingKeys.activeDaysCountKey)
+    }
+
+    /// The number of milestone events recorded.
+    public var milestoneCount: Int {
+        UserDefaults.standard.integer(forKey: SettingKeys.milestoneCountKey)
+    }
+
+    /// Records an active calendar day session for value gating.
+    public func recordDailySession(now: Date = Date()) {
+        let calendar = Calendar.current
+        let lastActiveDate = UserDefaults.standard.object(forKey: SettingKeys.lastActiveDateKey) as? Date
+        if lastActiveDate == nil || !calendar.isDate(now, inSameDayAs: lastActiveDate!) {
+            let days = UserDefaults.standard.integer(forKey: SettingKeys.activeDaysCountKey) + 1
+            UserDefaults.standard.set(days, forKey: SettingKeys.activeDaysCountKey)
+            UserDefaults.standard.set(now, forKey: SettingKeys.lastActiveDateKey)
+            GraceLogger.info("Recorded active day: \(days)", category: .review)
+        }
+    }
+
+    /// Records a milestone action event.
+    public func recordMilestoneEvent(_ name: String = "milestone") {
+        let count = UserDefaults.standard.integer(forKey: SettingKeys.milestoneCountKey) + 1
+        UserDefaults.standard.set(count, forKey: SettingKeys.milestoneCountKey)
+        GraceLogger.info("Recorded milestone event '\(name)' (total: \(count))", category: .review)
+    }
+
+    /// Whether the user has demonstrated sufficient depth/value before prompting.
+    public func hasMetValueThreshold() -> Bool {
+        let activeDays = activeDaysCount
+        let milestones = milestoneCount
+        let engagements = UserDefaults.standard.integer(forKey: SettingKeys.engagementCounterKey)
+
+        return activeDays >= config.minActiveDays ||
+               milestones >= config.minMilestoneEvents ||
+               engagements >= checkpointCount
+    }
+
+    /// Comprehensive check evaluating all eligibility gates (release notes, cooldown, version).
+    public func isEligibleForPrompt(now: Date = Date()) -> Bool {
         guard !ReleaseNotesManager.hasShownReleaseNotesThisSession else {
-            GraceLogger.info("Release notes were already shown in this session. Suppressing review prompt.", category: .review)
+            GraceLogger.info("Review prompt suppressed: release notes already shown this session.", category: .review)
             return false
         }
+        guard hasPassedCooldown(now: now) else {
+            GraceLogger.info("Review prompt suppressed: cooldown of \(config.minDaysBetweenPrompts) days not elapsed.", category: .review)
+            return false
+        }
+        guard !hasPromptedForCurrentVersion else {
+            GraceLogger.info("Review prompt suppressed: current version already prompted.", category: .review)
+            return false
+        }
+        return true
+    }
+
+    private func shouldPrompt(now: Date = Date()) -> Bool {
+        guard isEligibleForPrompt(now: now) else { return false }
         let count = recordEngagement()
-        let alreadyPrompted = hasPromptYet()
-        let result = count >= checkpointCount && !alreadyPrompted
-        GraceLogger.info("Evaluate shouldPrompt: count=\(count), checkpoint=\(checkpointCount), hasPromptedYet=\(alreadyPrompted) -> \(result ? "SHOULD PROMPT" : "SKIP")", category: .review)
+        let result = count >= checkpointCount
+        GraceLogger.info("Evaluate shouldPrompt: count=\(count), checkpoint=\(checkpointCount) -> \(result ? "SHOULD PROMPT" : "SKIP")", category: .review)
         return result
     }
 
-    /// Requests a review if conditions are met (or forced), presenting pre-filter prompt.
-    /// If user taps "Love it!", StoreKit prompt is shown.
-    /// If user taps "Not really", `onNegativeFeedback` closure is executed if provided,
-    /// or defaults to launching the support feedback email composer.
+    /// Requests review if conditions are met, presenting via the configured style (`.directNative` or `.intermediateAlert`).
     public func requestReview(onNegativeFeedback: (() -> Void)? = nil) {
         GraceLogger.info("requestReview() invoked", category: .review)
         if shouldPrompt() {
-            askForReview(onPositive: showNativeReviewPrompt, onNegative: onNegativeFeedback)
+            switch config.style {
+            case .directNative:
+                showNativeReviewPrompt()
+            case .intermediateAlert:
+                askForReview(onPositive: showNativeReviewPrompt, onNegative: onNegativeFeedback)
+            }
         }
     }
 
@@ -90,10 +207,71 @@ public final class ReviewPromptManager {
     public func requestReviewIfNecessary(onNegativeFeedback: (() -> Void)? = nil) -> Bool {
         GraceLogger.info("requestReviewIfNecessary() invoked", category: .review)
         if shouldPrompt() {
-            askForReview(onPositive: showNativeReviewPrompt, onNegative: onNegativeFeedback)
+            switch config.style {
+            case .directNative:
+                showNativeReviewPrompt()
+            case .intermediateAlert:
+                askForReview(onPositive: showNativeReviewPrompt, onNegative: onNegativeFeedback)
+            }
             return true
         }
         return false
+    }
+
+    /// Evaluates eligibility and presents the review prompt with the requested style.
+    @discardableResult
+    public func requestReviewIfEligible(
+        style: ReviewPromptStyle? = nil,
+        now: Date = Date(),
+        onNegativeFeedback: (() -> Void)? = nil
+    ) -> Bool {
+        guard isEligibleForPrompt(now: now) else { return false }
+        guard hasMetValueThreshold() else {
+            GraceLogger.info("Review prompt suppressed: value threshold not met.", category: .review)
+            return false
+        }
+
+        let effectiveStyle = style ?? config.style
+        switch effectiveStyle {
+        case .directNative:
+            showNativeReviewPrompt()
+        case .intermediateAlert:
+            askForReview(onPositive: showNativeReviewPrompt, onNegative: onNegativeFeedback)
+        }
+        return true
+    }
+
+    /// Convenience to evaluate eligibility and trigger 1-step direct native StoreKit prompt.
+    @discardableResult
+    public func requestDirectReviewIfEligible(now: Date = Date()) -> Bool {
+        requestReviewIfEligible(style: .directNative, now: now)
+    }
+
+    /// Convenience to evaluate eligibility and trigger 2-step intermediate alert prompt.
+    @discardableResult
+    public func requestAlertReviewIfEligible(
+        now: Date = Date(),
+        onNegativeFeedback: (() -> Void)? = nil
+    ) -> Bool {
+        requestReviewIfEligible(style: .intermediateAlert, now: now, onNegativeFeedback: onNegativeFeedback)
+    }
+
+    @discardableResult
+    public static func requestReviewIfEligible(
+        style: ReviewPromptStyle? = nil,
+        onNegativeFeedback: (() -> Void)? = nil
+    ) -> Bool {
+        shared.requestReviewIfEligible(style: style, onNegativeFeedback: onNegativeFeedback)
+    }
+
+    @discardableResult
+    public static func requestDirectReviewIfEligible() -> Bool {
+        shared.requestDirectReviewIfEligible()
+    }
+
+    @discardableResult
+    public static func requestAlertReviewIfEligible(onNegativeFeedback: (() -> Void)? = nil) -> Bool {
+        shared.requestAlertReviewIfEligible(onNegativeFeedback: onNegativeFeedback)
     }
 
     /// Triggers review request daily throttled.
@@ -198,9 +376,15 @@ public final class ReviewPromptManager {
         let key = "GraceApps_Review_EventCount_\(eventName)"
         let newCount = UserDefaults.standard.integer(forKey: key) + 1
         UserDefaults.standard.set(newCount, forKey: key)
+        recordMilestoneEvent(eventName)
 
         guard !ReleaseNotesManager.hasShownReleaseNotesThisSession else {
             GraceLogger.info("Positive value moment '\(eventName)' recorded, but release notes were already shown in this session. Suppressing review prompt.", category: .review)
+            return false
+        }
+
+        guard hasPassedCooldown() else {
+            GraceLogger.info("Positive value moment '\(eventName)' recorded, but cooldown has not elapsed.", category: .review)
             return false
         }
 
@@ -210,7 +394,12 @@ public final class ReviewPromptManager {
         }
 
         GraceLogger.success("Positive value moment achieved ('\(eventName)'). Presenting review prompt...", category: .review)
-        askForReview(onPositive: showNativeReviewPrompt, onNegative: onNegativeFeedback)
+        switch config.style {
+        case .directNative:
+            showNativeReviewPrompt()
+        case .intermediateAlert:
+            askForReview(onPositive: showNativeReviewPrompt, onNegative: onNegativeFeedback)
+        }
         return true
     }
 
@@ -255,6 +444,10 @@ public final class ReviewPromptManager {
         UserDefaults.standard.set(0, forKey: SettingKeys.engagementCounterKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastVersionPromptedForReviewKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastEngagementDateKey)
+        UserDefaults.standard.removeObject(forKey: SettingKeys.lastPromptDateKey)
+        UserDefaults.standard.removeObject(forKey: SettingKeys.activeDaysCountKey)
+        UserDefaults.standard.removeObject(forKey: SettingKeys.lastActiveDateKey)
+        UserDefaults.standard.removeObject(forKey: SettingKeys.milestoneCountKey)
         for key in UserDefaults.standard.dictionaryRepresentation().keys {
             if key.hasPrefix("GraceApps_Review_EventCount_") || key.hasPrefix("GraceApps_Review_MomentCount_") {
                 UserDefaults.standard.removeObject(forKey: key)
@@ -264,16 +457,31 @@ public final class ReviewPromptManager {
     }
 
     public static func appInit() {
+        shared.recordDailySession()
         let storedVersion = UserDefaults.standard.string(forKey: SettingKeys.appVersionForStorageKey) ?? ""
         let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
 
         if storedVersion != currentVersion {
-            GraceLogger.info("App version changed ('\(storedVersion)' -> '\(currentVersion)'). Resetting engagement counter.", category: .app)
-            UserDefaults.standard.set(0, forKey: SettingKeys.engagementCounterKey)
+            let isPatch = shared.config.ignorePatchVersions &&
+                !storedVersion.isEmpty &&
+                !currentVersion.isEmpty &&
+                majorMinorVersion(from: storedVersion) == majorMinorVersion(from: currentVersion)
+
+            if isPatch {
+                GraceLogger.info("App patch version updated ('\(storedVersion)' -> '\(currentVersion)'). Retaining engagement state.", category: .app)
+            } else {
+                GraceLogger.info("App version changed ('\(storedVersion)' -> '\(currentVersion)'). Resetting engagement counter.", category: .app)
+                UserDefaults.standard.set(0, forKey: SettingKeys.engagementCounterKey)
+            }
             UserDefaults.standard.set(currentVersion, forKey: SettingKeys.appVersionForStorageKey)
         } else {
             GraceLogger.info("App initialized for version '\(currentVersion)'.", category: .app)
         }
+    }
+
+    /// Whether the current release version (or major.minor if ignorePatchVersions is true) has already been prompted for review.
+    public var hasPromptedForCurrentVersion: Bool {
+        hasPromptYet()
     }
 
     public func hasPromptYet() -> Bool {
@@ -281,12 +489,11 @@ public final class ReviewPromptManager {
               !lastVersionPrompted.isEmpty else {
             return false
         }
-        return lastVersionPrompted == releaseVersionNumber
-    }
-
-    /// Whether the current release version of the app has already been prompted for review.
-    public var hasPromptedForCurrentVersion: Bool {
-        hasPromptYet()
+        if config.ignorePatchVersions {
+            return Self.majorMinorVersion(from: lastVersionPrompted) == Self.majorMinorVersion(from: releaseVersionNumber)
+        } else {
+            return lastVersionPrompted == releaseVersionNumber
+        }
     }
 
     nonisolated public static func getReviewURL(appStoreId: String) -> URL? {
@@ -410,9 +617,10 @@ Device: \(deviceModel) (\(osVersion))
         return false
     }
 
-    private func markPromptedForCurrentVersion() {
+    private func markPromptedForCurrentVersion(date: Date = Date()) {
         GraceLogger.success("Marked version '\(self.releaseVersionNumber)' as prompted.", category: .review)
         UserDefaults.standard.set(self.releaseVersionNumber, forKey: SettingKeys.lastVersionPromptedForReviewKey)
+        UserDefaults.standard.set(date, forKey: SettingKeys.lastPromptDateKey)
     }
 
     private func askForReview(retryCount: Int = 0, onPositive: @escaping () -> Void, onNegative: (() -> Void)?) {

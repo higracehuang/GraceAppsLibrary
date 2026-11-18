@@ -225,5 +225,105 @@ final class ReviewPromptManagerTests: XCTestCase {
         let opened = ReviewPromptManager.openAppStoreReviewPage(appStoreId: "")
         XCTAssertFalse(opened)
     }
+
+    func testMajorMinorVersionParser() {
+        XCTAssertEqual(ReviewPromptManager.majorMinorVersion(from: "2.1.0"), "2.1")
+        XCTAssertEqual(ReviewPromptManager.majorMinorVersion(from: "2.1.3"), "2.1")
+        XCTAssertEqual(ReviewPromptManager.majorMinorVersion(from: "2.0"), "2.0")
+        XCTAssertEqual(ReviewPromptManager.majorMinorVersion(from: "3"), "3")
+        XCTAssertEqual(ReviewPromptManager.majorMinorVersion(from: ""), "")
+    }
+
+    func testPatchVersionIgnoredForPromptEligibility() {
+        let manager = ReviewPromptManager.shared
+        manager.config = ReviewPromptConfig(ignorePatchVersions: true)
+
+        let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+        let parts = currentVersion.split(separator: ".")
+        let patchVersion: String
+        if parts.count >= 2 {
+            patchVersion = "\(parts[0]).\(parts[1]).999"
+        } else {
+            patchVersion = "\(currentVersion).999"
+        }
+
+        UserDefaults.standard.set(patchVersion, forKey: lastVersionKey)
+        XCTAssertTrue(manager.hasPromptedForCurrentVersion, "When ignorePatchVersions=true, a patch difference should still count as already prompted")
+
+        manager.config.ignorePatchVersions = false
+        XCTAssertFalse(manager.hasPromptedForCurrentVersion, "When ignorePatchVersions=false, exact version string must match")
+    }
+
+    func testCooldownSuppressionAndElapsed() {
+        let manager = ReviewPromptManager.shared
+        manager.config = ReviewPromptConfig(minDaysBetweenPrompts: 90)
+
+        // 1. No prompt recorded yet -> cooldown passed
+        UserDefaults.standard.removeObject(forKey: "GraceApps_Review_LastPromptDate")
+        XCTAssertTrue(manager.hasPassedCooldown())
+
+        // 2. Prompt recorded 10 days ago -> cooldown NOT passed
+        let tenDaysAgo = Calendar.current.date(byAdding: .day, value: -10, to: Date())!
+        UserDefaults.standard.set(tenDaysAgo, forKey: "GraceApps_Review_LastPromptDate")
+        XCTAssertFalse(manager.hasPassedCooldown())
+
+        // 3. Prompt recorded 91 days ago -> cooldown passed
+        let ninetyOneDaysAgo = Calendar.current.date(byAdding: .day, value: -91, to: Date())!
+        UserDefaults.standard.set(ninetyOneDaysAgo, forKey: "GraceApps_Review_LastPromptDate")
+        XCTAssertTrue(manager.hasPassedCooldown())
+    }
+
+    func testActiveDaysAndMilestonesGating() {
+        let manager = ReviewPromptManager.shared
+        manager.config = ReviewPromptConfig(minDaysBetweenPrompts: 0, minActiveDays: 3, minMilestoneEvents: 5)
+
+        // 1. Initial state -> not met
+        XCTAssertFalse(manager.hasMetValueThreshold())
+
+        // 2. Record 2 days -> not yet met
+        UserDefaults.standard.set(2, forKey: "GraceApps_Review_ActiveDaysCount")
+        XCTAssertFalse(manager.hasMetValueThreshold())
+
+        // 3. Record 3rd day -> met
+        UserDefaults.standard.set(3, forKey: "GraceApps_Review_ActiveDaysCount")
+        XCTAssertTrue(manager.hasMetValueThreshold())
+
+        // 4. Reset active days and test milestones
+        UserDefaults.standard.set(0, forKey: "GraceApps_Review_ActiveDaysCount")
+        XCTAssertFalse(manager.hasMetValueThreshold())
+
+        UserDefaults.standard.set(5, forKey: "GraceApps_Review_MilestoneCount")
+        XCTAssertTrue(manager.hasMetValueThreshold())
+    }
+
+    func testReviewPromptStyleDirectVsIntermediateAlert() {
+        let manager = ReviewPromptManager.shared
+        manager.config = ReviewPromptConfig(
+            style: .directNative,
+            minDaysBetweenPrompts: 0,
+            minActiveDays: 1,
+            minMilestoneEvents: 1,
+            ignorePatchVersions: true
+        )
+        UserDefaults.standard.set(1, forKey: "GraceApps_Review_ActiveDaysCount")
+
+        // 1. Direct native style
+        var negativeFeedbackInvoked = false
+        let shownDirect = manager.requestReviewIfEligible(style: .directNative) {
+            negativeFeedbackInvoked = true
+        }
+        XCTAssertTrue(shownDirect)
+        XCTAssertFalse(negativeFeedbackInvoked)
+
+        // Reset prompted state for next test
+        UserDefaults.standard.removeObject(forKey: lastVersionKey)
+        UserDefaults.standard.removeObject(forKey: "GraceApps_Review_LastPromptDate")
+
+        // 2. Intermediate alert style
+        let shownAlert = manager.requestReviewIfEligible(style: .intermediateAlert) {
+            negativeFeedbackInvoked = true
+        }
+        XCTAssertTrue(shownAlert)
+    }
 }
 
