@@ -80,3 +80,13 @@
 "Leave a Rating" = "前往評分";
 
 "onboarding.skip" = "暫時略過";
+
+/* Subscription */
+"subscription.section_title" = "訂閱";
+"subscription.manage" = "管理訂閱";
+"subscription.active" = "有效";
+"subscription.upgrade_to %@" = "升級至 %@";
+"subscription.unlocked_all" = "已解鎖全部功能並去除廣告";
+"subscription.thank_you" = "感謝你對本應用的支持 💛";
+"subscription.pro_badge" = "PRO";
+

@@ -80,3 +80,13 @@
 "Leave a Rating" = "Dejar una valoración";
 
 "onboarding.skip" = "Omitir por ahora";
+
+/* Subscription */
+"subscription.section_title" = "Suscripción";
+"subscription.manage" = "Gestionar suscripción";
+"subscription.active" = "Activo";
+"subscription.upgrade_to %@" = "Actualizar a %@";
+"subscription.unlocked_all" = "Todas las funciones desbloqueadas y sin anuncios";
+"subscription.thank_you" = "Gracias por apoyar la app 💛";
+"subscription.pro_badge" = "PRO";
+

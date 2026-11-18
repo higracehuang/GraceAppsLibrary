@@ -80,3 +80,13 @@
 "Leave a Rating" = "評価を残す";
 
 "onboarding.skip" = "今はスキップ";
+
+/* Subscription */
+"subscription.section_title" = "サブスクリプション";
+"subscription.manage" = "サブスクリプションを管理";
+"subscription.active" = "有効";
+"subscription.upgrade_to %@" = "%@ にアップグレード";
+"subscription.unlocked_all" = "全機能の解放＆広告なし";
+"subscription.thank_you" = "アプリを応援していただきありがとうございます 💛";
+"subscription.pro_badge" = "PRO";
+

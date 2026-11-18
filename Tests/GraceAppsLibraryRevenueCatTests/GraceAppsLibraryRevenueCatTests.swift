@@ -90,4 +90,36 @@ final class GraceAppsLibraryRevenueCatTests: XCTestCase {
         }
         XCTAssertEqual(sectionWithCustom.title, "Custom Developer")
     }
+
+    func testUniversalSubscriptionSectionInitialization() {
+        let heroSection = UniversalSubscriptionSection(
+            style: .hero,
+            tierName: "TallyCoin Pro",
+            features: [
+                UniversalSubscriptionFeature(icon: "person.2.fill", title: "Unlimited Helpers"),
+                UniversalSubscriptionFeature(icon: "repeat", title: "Automated Schedules")
+            ]
+        )
+        XCTAssertEqual(heroSection.style, .hero)
+        XCTAssertFalse(heroSection.showHeader)
+        XCTAssertEqual(heroSection.features.count, 2)
+
+        let compactSection = UniversalSubscriptionSection(
+            style: .compact,
+            tierName: "DialIn Pro"
+        )
+        XCTAssertEqual(compactSection.style, .compact)
+        XCTAssertTrue(compactSection.showHeader)
+
+        // Verify localization bundle and keys exist
+        let bundle = Bundle.graceAppsLibrary
+        let titleEn = bundle.localizedString(forKey: "subscription.section_title", value: nil, table: nil)
+        XCTAssertEqual(titleEn, "Subscription")
+
+        let manageEn = bundle.localizedString(forKey: "subscription.manage", value: nil, table: nil)
+        XCTAssertEqual(manageEn, "Manage Subscription")
+
+        let activeEn = bundle.localizedString(forKey: "subscription.active", value: nil, table: nil)
+        XCTAssertEqual(activeEn, "Active")
+    }
 }

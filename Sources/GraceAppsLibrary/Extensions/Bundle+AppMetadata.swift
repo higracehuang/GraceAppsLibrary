@@ -1,6 +1,11 @@
 import Foundation
 
 extension Bundle {
+    /// The bundle containing GraceAppsLibrary resources.
+    public static var graceAppsLibrary: Bundle {
+        Bundle.module
+    }
+
     /// Returns the app's display name, falling back to bundle name or "App".
     public var appName: String {
         object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
