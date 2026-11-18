@@ -156,7 +156,11 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
 
     /// Sets the store purchase status directly (useful for testing or fallback).
     public func setStoreStatus(_ purchased: Bool) {
+        let wasNotPro = !self.storeIsPro
         self.storeIsPro = purchased
+        if purchased && wasNotPro {
+            PaywallPacingEngine.shared.recordTriggerPurchased("active_paywall")
+        }
         syncEffective()
     }
 
