@@ -1,0 +1,296 @@
+# GraceAppsLibrary Centralized Fastfile
+# Shared lanes across all Grace apps (iOS & macOS)
+
+def app_fastlane_folder
+  FastlaneCore::FastlaneFolder.path || Dir.pwd
+end
+
+def app_project_folder
+  File.expand_path("..", app_fastlane_folder)
+end
+
+def fetch_asc_api_key
+  key_id = ENV["ASC_KEY_ID"]
+  issuer_id = ENV["ASC_ISSUER_ID"]
+  key_content = ENV["ASC_PRIVATE_KEY"]
+
+  if key_id.to_s.empty? || issuer_id.to_s.empty? || key_content.to_s.empty?
+    UI.user_error!("Missing required environment variables: ASC_KEY_ID, ASC_ISSUER_ID, ASC_PRIVATE_KEY")
+  end
+
+  app_store_connect_api_key(
+    key_id: key_id,
+    issuer_id: issuer_id,
+    key_content: key_content,
+    is_key_content_base64: false,
+    in_house: false
+  )
+end
+
+def upload_marketing_impl(options)
+  api_key = fetch_asc_api_key
+
+  deliver_opts = {
+    api_key: api_key,
+    force: true, # Skip HTML preview prompt in CI
+    skip_binary_upload: true,
+    overwrite_screenshots: true,
+    run_precheck_before_submit: false
+  }
+
+  deliver_opts[:platform] = options[:platform] if options[:platform]
+  deliver_opts[:skip_screenshots] = true if options[:skip_screenshots]
+  deliver_opts[:skip_metadata] = true if options[:skip_metadata]
+
+  # Check for app preview videos
+  previews_dir = File.join(app_fastlane_folder, "app-previews")
+  should_skip_previews = (options[:skip_previews].to_s == "true") || (options[:skip_screenshots].to_s == "true")
+  if should_skip_previews
+    UI.message("Skipping App Preview video uploads (skip_previews: true)")
+    deliver_opts[:app_previews_path] = nil
+    deliver_opts[:overwrite_preview_videos] = false
+  elsif Dir.exist?(previews_dir)
+    UI.message("Syncing App Preview videos from #{previews_dir}")
+    deliver_opts[:app_previews_path] = previews_dir
+    deliver_opts[:overwrite_preview_videos] = true
+  end
+
+  # Auto-detect target version from .xcodeproj if not explicitly passed
+  target_version = options[:version].to_s.strip
+  if target_version.empty?
+    pbxproj_path = Dir.glob(File.join(app_project_folder, "*.xcodeproj", "project.pbxproj")).first
+    if pbxproj_path && File.exist?(pbxproj_path)
+      versions = File.read(pbxproj_path).scan(/MARKETING_VERSION\s*=\s*([0-9a-zA-Z.-]+);/).flatten
+      detected = versions.reject { |v| v == "1.0" }.first || versions.first
+      target_version = detected.to_s.strip
+    end
+  end
+
+  unless target_version.empty?
+    UI.message("Targeting App Store version: #{target_version}")
+    deliver_opts[:app_version] = target_version
+  end
+
+  deliver(deliver_opts)
+end
+
+def update_iap_names_impl(options)
+  api_key = fetch_asc_api_key
+  token = Spaceship::ConnectAPI::Token.create(**api_key)
+  Spaceship::ConnectAPI.token = token
+  client = Spaceship::ConnectAPI.client.tunes_request_client
+
+  app_id = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+  app_resp = client.get("v1/apps", { "filter[bundleId]" => app_id })
+  app_data = (app_resp.body["data"] || []).first
+  UI.user_error!("App #{app_id} not found in App Store Connect") unless app_data
+  app_internal_id = app_data["id"]
+
+  iaps_dir = File.join(app_fastlane_folder, "iaps")
+
+  # Determine which product IDs to process
+  target_ids = if options[:product_ids]
+                 options[:product_ids].split(",").map(&:strip)
+               elsif Dir.exist?(iaps_dir)
+                 Dir.glob(File.join(iaps_dir, "*.json")).map { |f| File.basename(f, ".json") }
+               else
+                 []
+               end
+
+  if target_ids.empty?
+    UI.important("No product IDs specified and no config files found in #{iaps_dir}")
+    return
+  end
+
+  # Fetch standard IAPs (V2 endpoint, fallback to V1 if needed)
+  standard_iaps = []
+  begin
+    iaps_resp = client.get("v1/apps/#{app_internal_id}/inAppPurchasesV2", { "limit" => 200 })
+    standard_iaps += (iaps_resp.body["data"] || [])
+  rescue => e
+    UI.message("inAppPurchasesV2 fetch error: #{e.message}")
+  end
+
+  if standard_iaps.empty?
+    begin
+      iaps_v1_resp = client.get("v1/apps/#{app_internal_id}/inAppPurchases", { "limit" => 200 })
+      standard_iaps += (iaps_v1_resp.body["data"] || [])
+    rescue => e
+      UI.message("inAppPurchases V1 fetch error: #{e.message}")
+    end
+  end
+
+  # Fetch Auto-Renewable Subscriptions
+  all_subs = []
+  begin
+    groups_resp = client.get("v1/apps/#{app_internal_id}/subscriptionGroups", { "limit" => 200 })
+    (groups_resp.body["data"] || []).each do |group|
+      subs_resp = client.get("v1/subscriptionGroups/#{group['id']}/subscriptions", { "limit" => 200 }) rescue nil
+      all_subs += (subs_resp&.body&.[]("data") || [])
+    end
+  rescue => e
+    UI.message("Subscription groups fetch error: #{e.message}")
+  end
+
+  all_found_ids = (standard_iaps + all_subs).map { |i| i.dig("attributes", "productId") }.compact
+  UI.message("Found in App Store Connect: #{all_found_ids.inspect}")
+
+  target_ids.each do |product_id|
+    config_path = File.join(iaps_dir, "#{product_id}.json")
+    unless File.exist?(config_path)
+      UI.error("Configuration file not found for #{product_id} at #{config_path}")
+      next
+    end
+
+    config = JSON.parse(File.read(config_path))
+    target_item = standard_iaps.find { |i| i.dig("attributes", "productId") == product_id }
+    is_subscription = false
+
+    unless target_item
+      target_item = all_subs.find { |s| s.dig("attributes", "productId") == product_id }
+      is_subscription = true if target_item
+    end
+
+    unless target_item
+      UI.user_error!("Product ID '#{product_id}' not found in App Store Connect. Available IDs: #{all_found_ids.inspect}")
+      next
+    end
+
+    item_id = target_item["id"]
+    current_ref_name = target_item.dig("attributes", "name")
+
+    UI.message("------------------------------------------------------------")
+    UI.message("Processing #{is_subscription ? 'Subscription' : 'IAP'}: #{product_id} (ID: #{item_id})")
+
+    # 1. Update internal reference name if changed
+    if config["reference_name"] && current_ref_name != config["reference_name"]
+      UI.message("Updating reference name to: '#{config['reference_name']}'")
+      begin
+        if is_subscription
+          client.patch("v1/subscriptions/#{item_id}", {
+            data: { type: "subscriptions", id: item_id, attributes: { name: config["reference_name"] } }
+          })
+        else
+          client.patch("v2/inAppPurchases/#{item_id}", {
+            data: { type: "inAppPurchases", id: item_id, attributes: { name: config["reference_name"] } }
+          })
+        end
+        UI.success("  Reference name updated")
+      rescue => e
+        error_detail = e.respond_to?(:response) && e.response ? (e.response[:body] || e.response.body) : e.message
+        UI.error("Failed to update reference name: #{error_detail}")
+      end
+    end
+
+    # 2. Fetch existing localizations
+    locs_resp = if is_subscription
+                  client.get("v1/subscriptions/#{item_id}/subscriptionLocalizations") rescue nil
+                else
+                  (client.get("v2/inAppPurchases/#{item_id}/inAppPurchaseLocalizations") rescue nil) ||
+                  (client.get("v1/inAppPurchasesV2/#{item_id}/inAppPurchaseLocalizations") rescue nil) ||
+                  (client.get("v1/inAppPurchases/#{item_id}/inAppPurchaseLocalizations") rescue nil)
+                end
+    existing_locs = locs_resp&.body&.[]("data") || []
+
+    # 3. Update or create localizations
+    (config["localizations"] || {}).each do |locale, loc_data|
+      desired_name = loc_data["name"]
+      desired_desc = loc_data["description"]
+      existing = existing_locs.find { |l| l["attributes"]["locale"] == locale }
+
+      begin
+        if existing
+          loc_id = existing["id"]
+          curr_name = existing["attributes"]["name"]
+          curr_desc = existing["attributes"]["description"]
+
+          if curr_name != desired_name || curr_desc != desired_desc
+            UI.message("Updating [#{locale}] name to '#{desired_name}'...")
+            if is_subscription
+              client.patch("v1/subscriptionLocalizations/#{loc_id}", {
+                data: {
+                  type: "subscriptionLocalizations",
+                  id: loc_id,
+                  attributes: { name: desired_name, description: desired_desc }
+                }
+              })
+            else
+              client.patch("v1/inAppPurchaseLocalizations/#{loc_id}", {
+                data: {
+                  type: "inAppPurchaseLocalizations",
+                  id: loc_id,
+                  attributes: { name: desired_name, description: desired_desc }
+                }
+              })
+            end
+            UI.success("  [#{locale}] updated successfully")
+          else
+            UI.message("  [#{locale}] is already up to date")
+          end
+        else
+          UI.message("Creating [#{locale}] localization...")
+          if is_subscription
+            client.post("v1/subscriptionLocalizations", {
+              data: {
+                type: "subscriptionLocalizations",
+                attributes: { locale: locale, name: desired_name, description: desired_desc },
+                relationships: {
+                  subscription: { data: { type: "subscriptions", id: item_id } }
+                }
+              }
+            })
+          else
+            client.post("v1/inAppPurchaseLocalizations", {
+              data: {
+                type: "inAppPurchaseLocalizations",
+                attributes: { locale: locale, name: desired_name, description: desired_desc },
+                relationships: {
+                  inAppPurchaseV2: { data: { type: "inAppPurchases", id: item_id } }
+                }
+              }
+            })
+          end
+          UI.success("  [#{locale}] created successfully")
+        end
+      rescue => e
+        error_detail = e.respond_to?(:response) && e.response ? (e.response[:body] || e.response.body) : e.message
+        UI.error("Failed to process localization [#{locale}]: #{error_detail}")
+      end
+    end
+  end
+
+  UI.success("\nAll IAP and subscription names processed successfully!")
+end
+
+# Root-level lanes (accessible regardless of default platform)
+desc "Sync localized screenshots and metadata to App Store Connect"
+lane :upload_marketing do |options|
+  upload_marketing_impl(options)
+end
+
+desc "Update In-App Purchase and Subscription names from fastlane/iaps/*.json"
+lane :update_iap_names do |options|
+  update_iap_names_impl(options)
+end
+
+# iOS platform lanes
+platform :ios do
+  desc "Sync localized screenshots and metadata to App Store Connect (iOS)"
+  lane :upload_marketing do |options|
+    upload_marketing_impl(options)
+  end
+
+  desc "Update In-App Purchase and Subscription names (iOS)"
+  lane :update_iap_names do |options|
+    update_iap_names_impl(options)
+  end
+end
+
+# macOS platform lanes
+platform :mac do
+  desc "Upload localized metadata and screenshots to App Store Connect (macOS)"
+  lane :upload_marketing do |options|
+    options[:platform] ||= "osx"
+    upload_marketing_impl(options)
+  end
+end
