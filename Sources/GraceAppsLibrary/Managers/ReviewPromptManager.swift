@@ -201,20 +201,13 @@ public final class ReviewPromptManager {
 
     /// Requests review if conditions are met, presenting via the configured style (`.directNative` or `.intermediateAlert`).
     public func requestReview(onNegativeFeedback: (() -> Void)? = nil) {
-        GraceLogger.info("requestReview() invoked", category: .review)
-        if shouldPrompt() {
-            switch config.style {
-            case .directNative:
-                showNativeReviewPrompt()
-            case .intermediateAlert:
-                askForReview(onPositive: showNativeReviewPrompt, onNegative: onNegativeFeedback)
-            }
-        }
+        requestReviewIfEligible(onNegativeFeedback: onNegativeFeedback)
     }
 
     /// Requests review if conditions are met, returning whether prompt was shown.
+    /// Internal only: external callers should use `requestReviewIfEligible()`.
     @discardableResult
-    public func requestReviewIfNecessary(onNegativeFeedback: (() -> Void)? = nil) -> Bool {
+    internal func requestReviewIfNecessary(onNegativeFeedback: (() -> Void)? = nil) -> Bool {
         GraceLogger.info("requestReviewIfNecessary() invoked", category: .review)
         if shouldPrompt() {
             switch config.style {
