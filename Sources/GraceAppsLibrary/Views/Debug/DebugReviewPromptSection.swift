@@ -41,6 +41,23 @@ public struct DebugReviewPromptSection: View {
                     .foregroundColor(.secondary)
             }
 
+            HStack {
+                Text("Last Milestone")
+                Spacer()
+                if let name = ReviewPromptManager.shared.lastMilestoneName {
+                    if let date = ReviewPromptManager.shared.lastMilestoneDate {
+                        Text("\(name) (\(date.formatted(date: .omitted, time: .shortened)))")
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text(name)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    Text("None")
+                        .foregroundColor(.secondary)
+                }
+            }
+
             // MARK: - Actions
             Button {
                 let shown = ReviewPromptManager.shared.requestReviewIfEligible()

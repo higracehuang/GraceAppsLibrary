@@ -82,11 +82,13 @@ public final class ReviewPromptManager {
     private struct SettingKeys {
         static let lastVersionPromptedForReviewKey = "GraceApps_Review_LastVersionPromptedForReview"
         static let appVersionForStorageKey = "GraceApps_Review_AppVersionForStorage"
-        static let lastEngagementDateKey = "GraceApps_Review_LastEngagementDate"
+        static let lastDailyCheckDateKey = "GraceApps_Review_LastDailyCheckDate"
         static let lastPromptDateKey = "GraceApps_Review_LastPromptDate"
         static let activeDaysCountKey = "GraceApps_Review_ActiveDaysCount"
         static let lastActiveDateKey = "GraceApps_Review_LastActiveDate"
         static let milestoneCountKey = "GraceApps_Review_MilestoneCount"
+        static let lastMilestoneNameKey = "GraceApps_Review_LastMilestoneName"
+        static let lastMilestoneDateKey = "GraceApps_Review_LastMilestoneDate"
     }
 
     private var appName: String {
@@ -137,6 +139,16 @@ public final class ReviewPromptManager {
         UserDefaults.standard.string(forKey: SettingKeys.lastVersionPromptedForReviewKey)
     }
 
+    /// The name of the most recently recorded milestone event, if any.
+    public var lastMilestoneName: String? {
+        UserDefaults.standard.string(forKey: SettingKeys.lastMilestoneNameKey)
+    }
+
+    /// The date when the most recent milestone event was recorded, if any.
+    public var lastMilestoneDate: Date? {
+        UserDefaults.standard.object(forKey: SettingKeys.lastMilestoneDateKey) as? Date
+    }
+
     /// Records an active calendar day session for value gating.
     /// Internal only: invoked automatically via `ReviewPromptManager.appInit()`.
     internal func recordDailySession(now: Date = Date()) {
@@ -154,6 +166,8 @@ public final class ReviewPromptManager {
     public func recordMilestoneEvent(_ name: String = "milestone") {
         let count = UserDefaults.standard.integer(forKey: SettingKeys.milestoneCountKey) + 1
         UserDefaults.standard.set(count, forKey: SettingKeys.milestoneCountKey)
+        UserDefaults.standard.set(name, forKey: SettingKeys.lastMilestoneNameKey)
+        UserDefaults.standard.set(Date(), forKey: SettingKeys.lastMilestoneDateKey)
         GraceLogger.info("Recorded milestone event '\(name)' (total: \(count))", category: .review)
     }
 
@@ -270,10 +284,10 @@ public final class ReviewPromptManager {
 
     /// Triggers review request daily throttled.
     public func requestReviewDaily(onNegativeFeedback: (() -> Void)? = nil) {
-        let lastDate = UserDefaults.standard.object(forKey: SettingKeys.lastEngagementDateKey) as? Date
+        let lastDate = UserDefaults.standard.object(forKey: SettingKeys.lastDailyCheckDateKey) as? Date
         if lastDate == nil || !Calendar.current.isDateInToday(lastDate!) {
             GraceLogger.info("Daily review check passed. Requesting review...", category: .review)
-            UserDefaults.standard.set(Date(), forKey: SettingKeys.lastEngagementDateKey)
+            UserDefaults.standard.set(Date(), forKey: SettingKeys.lastDailyCheckDateKey)
             self.requestReview(onNegativeFeedback: onNegativeFeedback)
         } else {
             GraceLogger.info("Daily review check throttled (already checked today).", category: .review)
@@ -432,21 +446,49 @@ public final class ReviewPromptManager {
         return recordPositiveValueMoment(name, onNegativeFeedback: onNegativeFeedback)
     }
 
-    public static func debugResetReviewState() {
-        shared.dismissAlertWindow()
+    /// Resets all review prompt state, cooldowns, active days, and milestones.
+    /// Dedicated for unit and UI testing environments.
+    public func resetForTesting() {
+        dismissAlertWindow()
         ReleaseNotesManager.hasShownReleaseNotesThisSession = false
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastVersionPromptedForReviewKey)
-        UserDefaults.standard.removeObject(forKey: SettingKeys.lastEngagementDateKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastPromptDateKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.activeDaysCountKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.lastActiveDateKey)
         UserDefaults.standard.removeObject(forKey: SettingKeys.milestoneCountKey)
+        UserDefaults.standard.removeObject(forKey: SettingKeys.lastMilestoneNameKey)
+        UserDefaults.standard.removeObject(forKey: SettingKeys.lastMilestoneDateKey)
+        UserDefaults.standard.removeObject(forKey: SettingKeys.lastDailyCheckDateKey)
+        UserDefaults.standard.removeObject(forKey: "GraceApps_Review_LastEngagementDate")
         for key in UserDefaults.standard.dictionaryRepresentation().keys {
             if key.hasPrefix("GraceApps_Review_EventCount_") || key.hasPrefix("GraceApps_Review_MomentCount_") {
                 UserDefaults.standard.removeObject(forKey: key)
             }
         }
-        GraceLogger.info("Reset active days, milestones, and cleared prompted version status.", category: .debug)
+        GraceLogger.info("Reset review prompt state for testing.", category: .debug)
+    }
+
+    /// Suppresses review prompts by marking the specified or current release version as already prompted.
+    /// Dedicated for UI tests or test harnesses that need to prevent prompts from interrupting automation.
+    public func suppressForTesting(version: String? = nil) {
+        let targetVersion = version ?? releaseVersionNumber
+        UserDefaults.standard.set(targetVersion, forKey: SettingKeys.lastVersionPromptedForReviewKey)
+        GraceLogger.info("Suppressed review prompt for testing (version: '\(targetVersion)').", category: .debug)
+    }
+
+    /// Static convenience to reset all review prompt state for testing.
+    public static func resetForTesting() {
+        shared.resetForTesting()
+    }
+
+    /// Static convenience to suppress review prompts for testing.
+    public static func suppressForTesting(version: String? = nil) {
+        shared.suppressForTesting(version: version)
+    }
+
+    /// Backward-compatible alias for `resetForTesting()`.
+    public static func debugResetReviewState() {
+        shared.resetForTesting()
     }
 
     public static func appInit() {

@@ -6,15 +6,15 @@ final class ReviewPromptManagerTests: XCTestCase {
     
     private let lastVersionKey = "GraceApps_Review_LastVersionPromptedForReview"
     private let appVersionKey = "GraceApps_Review_AppVersionForStorage"
-    private let lastDateKey = "GraceApps_Review_LastEngagementDate"
+    private let lastDailyCheckKey = "GraceApps_Review_LastDailyCheckDate"
     
     override func setUp() {
         super.setUp()
-        ReviewPromptManager.debugResetReviewState()
+        ReviewPromptManager.resetForTesting()
         ReviewPromptManager.shared.config = ReviewPromptConfig()
         UserDefaults.standard.removeObject(forKey: lastVersionKey)
         UserDefaults.standard.removeObject(forKey: appVersionKey)
-        UserDefaults.standard.removeObject(forKey: lastDateKey)
+        UserDefaults.standard.removeObject(forKey: lastDailyCheckKey)
         UserDefaults.standard.removeObject(forKey: "GraceApps_Review_LastPromptDate")
         UserDefaults.standard.removeObject(forKey: "GraceApps_Review_MilestoneCount")
         UserDefaults.standard.removeObject(forKey: "GraceApps_Review_ActiveDaysCount")
@@ -22,11 +22,11 @@ final class ReviewPromptManagerTests: XCTestCase {
     }
     
     override func tearDown() {
-        ReviewPromptManager.debugResetReviewState()
+        ReviewPromptManager.resetForTesting()
         ReviewPromptManager.shared.config = ReviewPromptConfig()
         UserDefaults.standard.removeObject(forKey: lastVersionKey)
         UserDefaults.standard.removeObject(forKey: appVersionKey)
-        UserDefaults.standard.removeObject(forKey: lastDateKey)
+        UserDefaults.standard.removeObject(forKey: lastDailyCheckKey)
         UserDefaults.standard.removeObject(forKey: "GraceApps_Review_LastPromptDate")
         UserDefaults.standard.removeObject(forKey: "GraceApps_Review_MilestoneCount")
         UserDefaults.standard.removeObject(forKey: "GraceApps_Review_ActiveDaysCount")
@@ -117,12 +117,12 @@ final class ReviewPromptManagerTests: XCTestCase {
         
         // Yesterday date -> triggers prompt
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
-        UserDefaults.standard.set(yesterday, forKey: lastDateKey)
+        UserDefaults.standard.set(yesterday, forKey: lastDailyCheckKey)
         
         XCTAssertTrue(manager.requestReviewIfEligible())
         manager.requestReviewDaily()
         
-        let lastDate = UserDefaults.standard.object(forKey: lastDateKey) as? Date
+        let lastDate = UserDefaults.standard.object(forKey: lastDailyCheckKey) as? Date
         XCTAssertNotNil(lastDate)
         XCTAssertTrue(Calendar.current.isDateInToday(lastDate!))
     }
@@ -407,6 +407,51 @@ final class ReviewPromptManagerTests: XCTestCase {
         let tenDaysAgo = Calendar.current.date(byAdding: .day, value: -10, to: Date())!
         UserDefaults.standard.set(tenDaysAgo, forKey: "GraceApps_Review_LastPromptDate")
         XCTAssertFalse(precondition?() ?? true, "Precondition must fail when cooldown not passed")
+    }
+
+    @MainActor
+    func testMilestoneTelemetryTracking() {
+        let manager = ReviewPromptManager.shared
+        XCTAssertNil(manager.lastMilestoneName)
+        XCTAssertNil(manager.lastMilestoneDate)
+
+        manager.recordMilestoneEvent("coins_awarded")
+        XCTAssertEqual(manager.lastMilestoneName, "coins_awarded")
+        XCTAssertNotNil(manager.lastMilestoneDate)
+        XCTAssertTrue(Calendar.current.isDateInToday(manager.lastMilestoneDate!))
+        XCTAssertEqual(manager.milestoneCount, 1)
+
+        manager.recordMilestoneEvent("reward_redeemed")
+        XCTAssertEqual(manager.lastMilestoneName, "reward_redeemed")
+        XCTAssertEqual(manager.milestoneCount, 2)
+    }
+
+    @MainActor
+    func testResetForTesting() {
+        let manager = ReviewPromptManager.shared
+        manager.recordMilestoneEvent("test_milestone")
+        UserDefaults.standard.set("1.0.0", forKey: lastVersionKey)
+        UserDefaults.standard.set(Date(), forKey: "GraceApps_Review_LastPromptDate")
+
+        ReviewPromptManager.resetForTesting()
+
+        XCTAssertEqual(manager.milestoneCount, 0)
+        XCTAssertNil(manager.lastMilestoneName)
+        XCTAssertNil(manager.lastMilestoneDate)
+        XCTAssertNil(manager.lastPromptDate)
+        XCTAssertNil(manager.lastVersionPrompted)
+    }
+
+    @MainActor
+    func testSuppressForTesting() {
+        let manager = ReviewPromptManager.shared
+        XCTAssertFalse(manager.hasPromptedForCurrentVersion)
+
+        ReviewPromptManager.suppressForTesting()
+        XCTAssertTrue(manager.hasPromptedForCurrentVersion)
+
+        ReviewPromptManager.suppressForTesting(version: "9.9.9")
+        XCTAssertEqual(manager.lastVersionPrompted, "9.9.9")
     }
 }
 
