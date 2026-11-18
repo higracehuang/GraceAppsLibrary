@@ -69,7 +69,7 @@ public struct DebugReviewPromptSection: View {
             Button {
                 ReviewPromptManager.shared.debugPresentReviewPrompt()
             } label: {
-                Label("Force GAL 2-Step Alert Prompt", systemImage: "heart.text.square")
+                Label("Trigger GAL 2-Step Review Prompt", systemImage: "heart.text.square")
             }
 
             Button {
