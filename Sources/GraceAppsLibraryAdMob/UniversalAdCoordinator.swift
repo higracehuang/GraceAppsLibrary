@@ -228,13 +228,9 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
     // MARK: - Presentation
 
     /// Presents a cached interstitial ad for the specified trigger if approved by `AdPacingEngine`.
-    /// - Parameters:
-    ///   - trigger: Trigger identifier (e.g. "fast_completed").
-    ///   - viewController: Optional presenting UIViewController. If nil, automatically resolves the top-most visible controller.
-    ///   - completion: Callback invoked with `true` when the ad finishes presentation, or `false` if suppressed/failed.
-    /// - Returns: `true` if presentation was initiated; `false` if suppressed or not ready.
+    /// - Note: Internal to GraceAppsLibraryAdMob. Client views should invoke ads via `UXFlowOrchestrator.shared.requestActions([UXAction.universalAd(trigger:)])`.
     @discardableResult
-    public func present(
+    internal func present(
         for trigger: String = "default",
         from viewController: UIViewController? = nil,
         completion: ((Bool) -> Void)? = nil
@@ -329,8 +325,8 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
         return true
     }
 
-    /// Convenience presentation method with optional completion handler.
-    public func showAd(
+    /// Convenience presentation method with optional completion handler. Internal to GAL.
+    internal func showAd(
         for trigger: String = "default",
         from viewController: UIViewController? = nil,
         completion: ((Bool) -> Void)? = nil
@@ -338,8 +334,8 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
         present(for: trigger, from: viewController, completion: completion)
     }
 
-    /// Convenience overload supporting `showAd(trigger:)` parameter label.
-    public func showAd(
+    /// Convenience overload supporting `showAd(trigger:)` parameter label. Internal to GAL.
+    internal func showAd(
         trigger: String,
         from viewController: UIViewController? = nil,
         completion: ((Bool) -> Void)? = nil
@@ -347,9 +343,9 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
         present(for: trigger, from: viewController, completion: completion)
     }
 
-    /// Convenience overload supporting `present(trigger:)` parameter label.
+    /// Convenience overload supporting `present(trigger:)` parameter label. Internal to GAL.
     @discardableResult
-    public func present(
+    internal func present(
         trigger: String,
         from viewController: UIViewController? = nil,
         completion: ((Bool) -> Void)? = nil
@@ -357,8 +353,8 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
         present(for: trigger, from: viewController, completion: completion)
     }
 
-    /// Legacy present with automatic preload on non-presentation.
-    public func presentAdAndLoadNextAd(shouldPresent: Bool) {
+    /// Legacy present with automatic preload on non-presentation. Internal to GAL.
+    internal func presentAdAndLoadNextAd(shouldPresent: Bool) {
         guard shouldPresent else { return }
         present(for: "default") { [weak self] presented in
             if !presented {
@@ -446,9 +442,9 @@ extension UniversalAdCoordinator {
         }
     }
 
-    /// Evaluates policy and presents an interstitial ad using any String-backed enum trigger.
+    /// Evaluates policy and presents an interstitial ad using any String-backed enum trigger. Internal to GAL.
     @discardableResult
-    public func present<T: RawRepresentable>(
+    internal func present<T: RawRepresentable>(
         for trigger: T,
         from viewController: UIViewController? = nil,
         completion: ((Bool) -> Void)? = nil
@@ -456,9 +452,9 @@ extension UniversalAdCoordinator {
         present(for: trigger.rawValue, from: viewController, completion: completion)
     }
 
-    /// Evaluates policy and presents an interstitial ad using any String-backed enum trigger.
+    /// Evaluates policy and presents an interstitial ad using any String-backed enum trigger. Internal to GAL.
     @discardableResult
-    public func present<T: RawRepresentable>(
+    internal func present<T: RawRepresentable>(
         trigger: T,
         from viewController: UIViewController? = nil,
         completion: ((Bool) -> Void)? = nil
@@ -466,8 +462,8 @@ extension UniversalAdCoordinator {
         present(for: trigger.rawValue, from: viewController, completion: completion)
     }
 
-    /// Convenience presentation method using any String-backed enum trigger.
-    public func showAd<T: RawRepresentable>(
+    /// Convenience presentation method using any String-backed enum trigger. Internal to GAL.
+    internal func showAd<T: RawRepresentable>(
         for trigger: T,
         from viewController: UIViewController? = nil,
         completion: ((Bool) -> Void)? = nil
@@ -475,8 +471,8 @@ extension UniversalAdCoordinator {
         showAd(for: trigger.rawValue, from: viewController, completion: completion)
     }
 
-    /// Convenience presentation method using any String-backed enum trigger with `trigger:` label.
-    public func showAd<T: RawRepresentable>(
+    /// Convenience presentation method using any String-backed enum trigger with `trigger:` label. Internal to GAL.
+    internal func showAd<T: RawRepresentable>(
         trigger: T,
         from viewController: UIViewController? = nil,
         completion: ((Bool) -> Void)? = nil
