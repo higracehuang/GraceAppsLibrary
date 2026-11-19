@@ -114,35 +114,15 @@ public struct DebugRevenueCatSection: View {
 /// Helper host presenting RevenueCatUI's PaywallView with pacing registration on appear & dismiss.
 public struct RevenueCatPaywallHostView: View {
     public let offeringIdentifier: String?
-    @Environment(\.dismiss) private var dismiss
-    @State private var offering: Offering? = nil
 
     public init(offeringIdentifier: String? = nil) {
         self.offeringIdentifier = offeringIdentifier
     }
 
     public var body: some View {
-        Group {
-            if let offering = offering {
-                PaywallView(offering: offering, displayCloseButton: true)
-            } else {
-                PaywallView(displayCloseButton: true)
-            }
-        }
-        .onAppear {
-            PaywallPacingEngine.shared.recordTriggerShown("debug_paywall_sheet")
-        }
-        .onDisappear {
-            PaywallPacingEngine.shared.recordTriggerDismissed("debug_paywall_sheet")
-            if UniversalPurchaseCoordinator.shared.isPro {
-                PaywallPacingEngine.shared.recordTriggerPurchased("debug_paywall_sheet")
-            }
-        }
-        .task {
-            if let identifier = offeringIdentifier {
-                let offerings = await UniversalPurchaseCoordinator.shared.loadOfferings()
-                self.offering = offerings.first { $0.identifier == identifier }
-            }
-        }
+        UniversalPaywallView(
+            trigger: "debug_paywall_sheet",
+            offeringIdentifier: offeringIdentifier
+        )
     }
 }

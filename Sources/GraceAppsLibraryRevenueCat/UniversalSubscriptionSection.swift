@@ -46,7 +46,6 @@ public struct UniversalSubscriptionSection: View {
     public let paywallAction: (() -> Void)?
     public let manageAction: (() -> Void)?
 
-    @State private var showPaywallSheet: Bool = false
     @State private var showCustomerCenterSheet: Bool = false
 
     public init(
@@ -115,9 +114,6 @@ public struct UniversalSubscriptionSection: View {
                     sectionContent
                 }
             }
-        }
-        .sheet(isPresented: $showPaywallSheet) {
-            RevenueCatPaywallHostView()
         }
         .sheet(isPresented: $showCustomerCenterSheet) {
             CustomerCenterView()
@@ -320,7 +316,7 @@ public struct UniversalSubscriptionSection: View {
         if let paywallAction = paywallAction {
             paywallAction()
         } else {
-            showPaywallSheet = true
+            UniversalPaywallPresenter.present(trigger: "settings_upgrade")
         }
     }
 

@@ -140,4 +140,21 @@ final class GraceAppsLibraryRevenueCatTests: XCTestCase {
         let viewWithEnum = EmptyView().universalPaywall(isPresented: binding, trigger: TestPaywallTrigger.settingsUpgrade)
         XCTAssertNotNil(viewWithEnum)
     }
+
+    func testUXActionPaywallFactoryAndPresenter() {
+        let action = UXAction.paywall(trigger: "test_trigger")
+        XCTAssertEqual(action.id, .paywall)
+        XCTAssertEqual(action.priority, .critical)
+        XCTAssertEqual(action.kind, .sheet)
+        XCTAssertTrue(action.tags.contains(.paywall))
+
+        let enumAction = UXAction.paywall(trigger: TestPaywallTrigger.settingsUpgrade)
+        XCTAssertEqual(enumAction.id, .paywall)
+        XCTAssertEqual(enumAction.priority, .critical)
+        XCTAssertTrue(enumAction.tags.contains(.paywall))
+
+        // Ensure PaywallPresenter typealias points to UniversalPaywallPresenter
+        let isSameType = (PaywallPresenter.self == UniversalPaywallPresenter.self)
+        XCTAssertTrue(isSameType)
+    }
 }
