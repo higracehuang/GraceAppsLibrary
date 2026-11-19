@@ -133,12 +133,13 @@ public final class UXFlowOrchestrator: ObservableObject {
     }
     
     /// Atomically cancels all pending actions in the current flow and dismisses the currently active modal.
-    /// Use this when the user chooses an action that terminates the sequence (e.g. "Practice Again" or "Review Mistakes").
-    public func cancelFlowAndDismiss() {
+    /// Use this when the user chooses an action that terminates the sequence (e.g. "Practice Again", "Review Mistakes", or "Upgrade").
+    /// - Parameter onSettled: Optional callback invoked once the active modal's dismissal settling window completes.
+    public func cancelFlowAndDismiss(onSettled: (() -> Void)? = nil) {
         actionQueue.removeAll()
         executedTagsThisFlow.removeAll()
         flowCompletionCallback = nil
-        dismissCurrentAction()
+        dismissCurrentAction(onSettled: onSettled)
     }
     
     /// Cancels any remaining queued actions in this flow without dismissing the currently active modal.
@@ -311,7 +312,12 @@ public final class UXFlowOrchestrator: ObservableObject {
         }
     }
     
-    // MARK: - Testing Helpers
+    // MARK: - Testing & Debug Helpers
+    
+    /// Resets the session execution counter for a specific action ID (used when resetting state from debug tools).
+    public func resetSessionCount(for actionId: UXActionID) {
+        sessionActionCounts.removeValue(forKey: actionId)
+    }
     
     public func resetForTesting() {
         settlingWorkItem?.cancel()

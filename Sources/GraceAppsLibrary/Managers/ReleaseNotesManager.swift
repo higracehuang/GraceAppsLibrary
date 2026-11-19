@@ -102,6 +102,7 @@ public final class ReleaseNotesManager {
         GraceLogger.info("Resetting release notes state.", category: .debug)
         Self.hasShownReleaseNotesThisSession = false
         hasEvaluatedLaunchReleaseNotes = false
+        UXFlowOrchestrator.shared.resetSessionCount(for: .releaseNotes)
         userDefaults.removeObject(forKey: lastViewedVersionKey)
     }
 

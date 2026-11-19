@@ -524,4 +524,35 @@ final class UXFlowOrchestratorTests: XCTestCase {
         }
         wait(for: [exp1], timeout: 1.0)
     }
+
+    func testCancelFlowAndDismissWithOnSettledDropsQueuedActionsAndFiresSettledCallback() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.resetForTesting()
+        orchestrator.interPresentationDelay = 0.02
+
+        let releaseNotesSheet = UXAction(id: .releaseNotes, priority: .releaseNotes, kind: .sheet) {
+            Text("Release Notes")
+        }
+        let queuedCycleSyncSheet = UXAction(id: "cycle_sync_preview", priority: UXActionPriority(rawValue: 550), kind: .sheet) {
+            Text("Cycle Sync")
+        }
+
+        orchestrator.requestActions([releaseNotesSheet, queuedCycleSyncSheet])
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, .releaseNotes)
+
+        var paywallUpgradeTriggered = false
+        let exp = expectation(description: "Wait for settled upgrade callback")
+        orchestrator.cancelFlowAndDismiss {
+            paywallUpgradeTriggered = true
+            exp.fulfill()
+        }
+
+        XCTAssertNil(orchestrator.activeSheetItem)
+        XCTAssertFalse(paywallUpgradeTriggered)
+
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertTrue(paywallUpgradeTriggered)
+        XCTAssertNil(orchestrator.activeSheetItem, "Queued cycle_sync_preview must be cancelled so paywall opens without competition")
+        XCTAssertFalse(orchestrator.isBusy)
+    }
 }

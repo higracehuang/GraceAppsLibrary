@@ -608,8 +608,46 @@ final class ReleaseNotesTests: XCTestCase {
         orchestrator.requestAction(action)
         XCTAssertNil(orchestrator.activeSheetItem, "hasEvaluatedLaunchReleaseNotes must short-circuit subsequent tab-switch evaluations")
 
-        // 3. Calling resetReleaseNotesState() resets hasEvaluatedLaunchReleaseNotes to false
+        // 3. Calling resetReleaseNotesState() resets hasEvaluatedLaunchReleaseNotes to false and clears session cap
         manager.resetReleaseNotesState()
         XCTAssertFalse(manager.hasEvaluatedLaunchReleaseNotes)
+    }
+
+    @MainActor
+    func testResetReleaseNotesState_ClearsSessionCapSoReleaseNotesCanPresentAgain() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.resetForTesting()
+        orchestrator.policy = UXPolicy.standard
+        orchestrator.interPresentationDelay = 0.01
+
+        let notes = [
+            ReleaseNote(version: "2.0.0", notes: ["Update 2"])
+        ]
+
+        manager.seedLastViewedVersionForTesting("1.0.0")
+        let action = UXAction.releaseNotes(
+            releaseNotes: notes,
+            currentVersion: "2.0.0",
+            manager: manager
+        )
+
+        // 1st presentation reaches sessionCap (1/1)
+        orchestrator.requestAction(action)
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, .releaseNotes)
+        orchestrator.dismissCurrentAction()
+
+        let exp = expectation(description: "Settling window")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) {
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+
+        // Debug menu reset must clear sessionCap for .releaseNotes so re-testing in the same session works
+        manager.resetReleaseNotesState()
+        manager.seedLastViewedVersionForTesting("1.0.0")
+
+        orchestrator.requestAction(action)
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, .releaseNotes, "Resetting release notes state must also reset orchestrator session count for .releaseNotes")
+        orchestrator.dismissCurrentAction()
     }
 }
