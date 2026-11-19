@@ -555,4 +555,50 @@ final class UXFlowOrchestratorTests: XCTestCase {
         XCTAssertNil(orchestrator.activeSheetItem, "Queued cycle_sync_preview must be cancelled so paywall opens without competition")
         XCTAssertFalse(orchestrator.isBusy)
     }
+
+    func testActionIDDeduplicationInQueueAndWhileActive() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.resetForTesting()
+        orchestrator.interPresentationDelay = 0.01
+
+        let releaseNotesSheet = UXAction(id: .releaseNotes, priority: .releaseNotes, kind: .sheet) {
+            Text("Release Notes")
+        }
+        let autoCycleSync = UXAction(id: "cycle_sync_preview", priority: UXActionPriority(rawValue: 550), kind: .sheet) {
+            Text("Auto Sync")
+        }
+        let manualCycleSync = UXAction(id: "cycle_sync_preview", priority: .critical, kind: .sheet) {
+            Text("Manual Sync")
+        }
+
+        // 1. Present Release Notes (600) and queue Auto Cycle Sync (550)
+        orchestrator.requestActions([releaseNotesSheet, autoCycleSync])
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, .releaseNotes)
+
+        // 2. Requesting releaseNotesSheet again while it is active on screen must be rejected
+        orchestrator.requestAction(releaseNotesSheet)
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, .releaseNotes)
+
+        // 3. Requesting manualCycleSync (1000) with same ID "cycle_sync_preview" while queued must replace the existing queued entry rather than stacking two copies
+        orchestrator.requestAction(manualCycleSync)
+
+        // 4. Dismiss Release Notes -> Cycle Sync presents once with updated priority (1000), then queue is empty
+        orchestrator.dismissCurrentAction()
+        let exp1 = expectation(description: "Wait for deduplicated cycle_sync_preview")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+            XCTAssertEqual(orchestrator.activeSheetItem?.id, "cycle_sync_preview")
+            XCTAssertEqual(orchestrator.activeSheetItem?.action.priority, .critical)
+            orchestrator.dismissCurrentAction()
+            exp1.fulfill()
+        }
+        wait(for: [exp1], timeout: 1.0)
+
+        let exp2 = expectation(description: "Verify no duplicate cycle_sync_preview presents")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+            XCTAssertNil(orchestrator.activeSheetItem, "Deduplicated queue must not present a second copy of cycle_sync_preview")
+            XCTAssertFalse(orchestrator.isBusy)
+            exp2.fulfill()
+        }
+        wait(for: [exp2], timeout: 1.0)
+    }
 }

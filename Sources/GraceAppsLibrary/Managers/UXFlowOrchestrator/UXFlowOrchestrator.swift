@@ -76,9 +76,11 @@ public final class UXFlowOrchestrator: ObservableObject {
             executedTagsThisFlow.removeAll()
         }
         
+        var seenIDs = Set<UXActionID>()
         let eligible = actions
             .filter { evaluateEligibility(for: $0) }
             .sorted(by: { $0.priority > $1.priority })
+            .filter { seenIDs.insert($0.id).inserted }
         
         guard !eligible.isEmpty else {
             GraceLogger.orchestrator("No candidate actions passed policy eligibility check.", level: .info)
@@ -105,6 +107,8 @@ public final class UXFlowOrchestrator: ObservableObject {
         }
         
         GraceLogger.orchestrator("Enqueued \(eligible.count) approved actions in priority order: \(eligible.map { "\($0.id)(\($0.priority.rawValue))" })", level: .success)
+        let incomingIDs = Set(eligible.map { $0.id })
+        actionQueue.removeAll(where: { incomingIDs.contains($0.id) })
         actionQueue.append(contentsOf: eligible)
         actionQueue.sort(by: { $0.priority > $1.priority })
         processNextInQueue()
@@ -258,6 +262,12 @@ public final class UXFlowOrchestrator: ObservableObject {
     // MARK: - Policy Filtering
     
     private func evaluateEligibility(for action: UXAction) -> Bool {
+        // 0. Active duplicate check
+        if currentActionId == action.id {
+            GraceLogger.orchestrator("Action '\(action.id)' rejected: Already active on screen.", level: .info)
+            return false
+        }
+
         // 1. App-level precondition
         if let precondition = policy.preconditions[action.id], !precondition() {
             GraceLogger.orchestrator("Action '\(action.id)' rejected: Precondition returned false.", level: .info)

@@ -49,10 +49,13 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
 
     internal var adLoadDates: [String: Date] = [:]
     internal var activeLoadingTriggers: Set<String> = []
+    internal var registeredTriggers: Set<String> = []
+    internal var isSDKInitialized: Bool = false
     internal var activeDismissalCallback: (@MainActor (Bool) -> Void)?
     internal var activePresentingTrigger: String?
     internal var adLoader: ((String) async throws -> UniversalPresentableAd)?
     internal var topViewControllerResolver: (() -> UIViewController?)?
+    private var foregroundObserver: NSObjectProtocol?
 
     public let pacing = AdPacingEngine.shared
 
@@ -64,6 +67,21 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
 
     public override init() {
         super.init()
+        foregroundObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                await self?.refreshAllRegisteredTriggers()
+            }
+        }
+    }
+
+    deinit {
+        if let observer = foregroundObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     // MARK: - Configuration & Setup
@@ -79,6 +97,9 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
         isPro: (() -> Bool)? = nil
     ) {
         self.adUnitMap = adUnits
+        for trigger in adUnits.keys where !trigger.isEmpty {
+            self.registeredTriggers.insert(trigger)
+        }
         if let defaultUnitID = defaultUnitID {
             self.adUnitMap["default"] = defaultUnitID
         }
@@ -88,17 +109,25 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
         GraceLogger.ads("Configured UniversalAdCoordinator with \(adUnits.count) ad units.", level: .info)
     }
 
-    /// Initializes Google Mobile Ads SDK asynchronously and updates pacing.
+    /// Initializes Google Mobile Ads SDK asynchronously and refreshes any registered triggers once ready.
     public func initialize(completion: ((InitializationStatus) -> Void)? = nil) {
-        MobileAds.shared.start { status in
+        MobileAds.shared.start { [weak self] status in
             GraceLogger.ads("Google Mobile Ads initialized successfully.", level: .info)
             completion?(status)
+            Task { @MainActor in
+                guard let self = self else { return }
+                self.isSDKInitialized = true
+                await self.refreshAllRegisteredTriggers()
+            }
         }
     }
 
     /// Registers an AdMob ad unit ID for a specific trigger.
     public func register(adUnitID: String, for trigger: String) {
         adUnitMap[trigger] = adUnitID
+        if !trigger.isEmpty {
+            registeredTriggers.insert(trigger)
+        }
     }
 
     /// Registers the default AdMob ad unit ID used when a trigger has no explicit mapping.
@@ -169,6 +198,9 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
 
     /// Evaluates `AdPacingEngine` gatekeepers and preloads an ad JIT only if eligible.
     public func preloadJIT(for trigger: String = "default") async {
+        if !trigger.isEmpty {
+            registeredTriggers.insert(trigger)
+        }
         cleanExpiredAds()
 
         let fresh = isAdReady(for: trigger)
@@ -212,9 +244,30 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
     /// Preloads all declared triggers of an enum conforming to `CaseIterable & RawRepresentable`.
     public func preloadAll<T: CaseIterable & RawRepresentable>(triggers: T.Type) where T.RawValue == String {
         for trigger in triggers.allCases {
+            if !trigger.rawValue.isEmpty {
+                registeredTriggers.insert(trigger.rawValue)
+            }
             Task {
                 await preloadJIT(for: trigger.rawValue)
             }
+        }
+    }
+
+    /// Evicts any expired ads (older than 50-minute TTL) and preloads all registered triggers that are missing or expired.
+    /// Automatically invoked after SDK initialization and whenever the app becomes active in the foreground.
+    public func refreshAllRegisteredTriggers() async {
+        cleanExpiredAds()
+        let triggersToRefresh: Set<String>
+        if !registeredTriggers.isEmpty {
+            triggersToRefresh = registeredTriggers
+        } else if adUnitMap["default"] != nil {
+            triggersToRefresh = ["default"]
+        } else {
+            return
+        }
+
+        for trigger in triggersToRefresh {
+            await preloadJIT(for: trigger)
         }
     }
 
@@ -235,6 +288,9 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
         from viewController: UIViewController? = nil,
         completion: ((Bool) -> Void)? = nil
     ) -> Bool {
+        if !trigger.isEmpty {
+            registeredTriggers.insert(trigger)
+        }
         cleanExpiredAds()
 
         #if DEBUG
@@ -280,13 +336,21 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
             return false
         }
 
-        let ad = cachedAds.removeValue(forKey: trigger) ?? cachedAds.removeValue(forKey: "default")
-        adLoadDates.removeValue(forKey: trigger)
-        adLoadDates.removeValue(forKey: "default")
+        let ad: UniversalPresentableAd?
+        if let triggerAd = cachedAds.removeValue(forKey: trigger) {
+            ad = triggerAd
+            adLoadDates.removeValue(forKey: trigger)
+        } else {
+            ad = cachedAds.removeValue(forKey: "default")
+            adLoadDates.removeValue(forKey: "default")
+        }
 
         guard let ad = ad else {
-            GraceLogger.ads("Presentation skipped for '\(trigger)': Ad was not ready in cache.", level: .warning)
+            GraceLogger.ads("Presentation skipped for '\(trigger)': Ad was not ready in cache. Triggering background replenishment...", level: .warning)
             completion?(false)
+            Task { @MainActor [weak self] in
+                await self?.preloadJIT(for: trigger)
+            }
             return false
         }
 

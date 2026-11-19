@@ -50,6 +50,7 @@ final class UniversalAdCoordinatorTests: XCTestCase {
         AdPacingEngine.shared.resetForTesting()
         AdPacingEngine.shared.config.isFirstRunExempt = false
         UniversalAdCoordinator.shared.clearAllAds()
+        UniversalAdCoordinator.shared.registeredTriggers.removeAll()
         UniversalAdCoordinator.shared.adLoader = nil
         UniversalAdCoordinator.shared.topViewControllerResolver = nil
         #if DEBUG
@@ -59,6 +60,7 @@ final class UniversalAdCoordinatorTests: XCTestCase {
     
     override func tearDown() async throws {
         UniversalAdCoordinator.shared.clearAllAds()
+        UniversalAdCoordinator.shared.registeredTriggers.removeAll()
         UniversalAdCoordinator.shared.adLoader = nil
         UniversalAdCoordinator.shared.topViewControllerResolver = nil
         #if DEBUG
@@ -585,5 +587,83 @@ final class UniversalAdCoordinatorTests: XCTestCase {
     func testTypealiasAdCoordinator() {
         let coordinator: AdCoordinator = UniversalAdCoordinator.shared
         XCTAssertTrue(coordinator === UniversalAdCoordinator.shared)
+    }
+
+    func testPresentationCacheMissTriggersBackgroundReplenishment() async {
+        let coordinator = UniversalAdCoordinator.shared
+        coordinator.pacing.isProUser = { false }
+        coordinator.registerDefault(adUnitID: "ca-app-pub-test-replenish")
+        let mockAd = MockUniversalPresentableAd()
+        let loadExp = expectation(description: "Background replenishment load triggered")
+        coordinator.adLoader = { unitID in
+            XCTAssertEqual(unitID, "ca-app-pub-test-replenish")
+            loadExp.fulfill()
+            return mockAd
+        }
+
+        let initiated = coordinator.present(for: "fast_completed") { _ in }
+        XCTAssertFalse(initiated)
+
+        await fulfillment(of: [loadExp], timeout: 2.0)
+        await Task.yield()
+        XCTAssertTrue(coordinator.isAdReady(for: "fast_completed"))
+    }
+
+    func testRefreshAllRegisteredTriggersAfterTTLExpiration() async {
+        let coordinator = UniversalAdCoordinator.shared
+        coordinator.pacing.isProUser = { false }
+        coordinator.registerDefault(adUnitID: "ca-app-pub-test-refresh")
+        coordinator.preloadAll(triggers: TestTrigger.self)
+
+        // Simulate expired cache for both triggers
+        let expiredDate = Date().addingTimeInterval(-(coordinator.pacing.config.cacheTTL + 60))
+        for trigger in TestTrigger.allCases {
+            coordinator.cachedAds[trigger.rawValue] = MockUniversalPresentableAd()
+            coordinator.adLoadDates[trigger.rawValue] = expiredDate
+        }
+
+        var loadedCount = 0
+        coordinator.adLoader = { _ in
+            loadedCount += 1
+            return MockUniversalPresentableAd()
+        }
+
+        await coordinator.refreshAllRegisteredTriggers()
+        XCTAssertEqual(loadedCount, TestTrigger.allCases.count)
+        for trigger in TestTrigger.allCases {
+            XCTAssertTrue(coordinator.isAdReady(for: trigger))
+        }
+    }
+
+    func testRefreshAllRegisteredTriggersFallbackToDefaultAndEmpty() async {
+        let coordinator = UniversalAdCoordinator.shared
+        coordinator.pacing.isProUser = { false }
+        coordinator.adUnitMap.removeAll()
+        coordinator.registeredTriggers.removeAll()
+
+        // No triggers and no default ad unit -> no-op
+        await coordinator.refreshAllRegisteredTriggers()
+        XCTAssertTrue(coordinator.cachedAds.isEmpty)
+
+        // Default ad unit configured with no specific registeredTriggers -> refreshes "default"
+        coordinator.registerDefault(adUnitID: "ca-app-pub-default-only")
+        coordinator.adLoader = { _ in MockUniversalPresentableAd() }
+        await coordinator.refreshAllRegisteredTriggers()
+        XCTAssertTrue(coordinator.isAdReady(for: "default"))
+    }
+
+    func testForegroundNotificationRefreshesExpiredAds() async {
+        let coordinator = UniversalAdCoordinator.shared
+        coordinator.pacing.isProUser = { false }
+        coordinator.register(adUnitID: "ca-app-pub-fg", for: "fast_completed")
+
+        let exp = expectation(description: "Foreground notification triggers preload")
+        coordinator.adLoader = { _ in
+            exp.fulfill()
+            return MockUniversalPresentableAd()
+        }
+
+        NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+        await fulfillment(of: [exp], timeout: 2.0)
     }
 }
