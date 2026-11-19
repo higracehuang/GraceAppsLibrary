@@ -67,6 +67,10 @@ public enum GraceLogger {
         log(message, level: .warning, category: category)
     }
 
+    public static func error(_ message: String, category: Category = .app) {
+        log(message, level: .error, category: category)
+    }
+
     // MARK: - Category Express Methods
 
     public static func review(_ message: String, level: Level = .info) {
