@@ -10,6 +10,7 @@ each change listed with the feature name first.
 - Release Notes: Launch checks no longer re-run on tab switches, and the sheet dismisses before the paywall opens.
 - AdMob: Showing ads is internal now, so ads only present through the orchestrator.
 - Logger: New error-level convenience method in GraceLogger.
+- CI / Fastlane: Added reusable `sync-appstore.yml` GitHub Actions workflow for cross-app metadata and screenshot syncing.
 
 ## 1.40.0 — Nov 18, 2026
 

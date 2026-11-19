@@ -1,0 +1,74 @@
+name: Sync App Store Metadata & Screenshots (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'App version to target (leave blank to auto-detect MARKETING_VERSION)'
+        required: false
+        default: ''
+        type: string
+      skip_screenshots:
+        description: 'Skip uploading screenshots'
+        required: false
+        default: false
+        type: boolean
+      skip_metadata:
+        description: 'Skip uploading metadata'
+        required: false
+        default: false
+        type: boolean
+      platform:
+        description: 'Fastlane platform (ios or mac)'
+        required: false
+        default: 'ios'
+        type: string
+    secrets:
+      ASC_KEY_ID:
+        required: true
+      ASC_ISSUER_ID:
+        required: true
+      ASC_PRIVATE_KEY:
+        required: true
+
+jobs:
+  sync-appstore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Ruby & Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Export AppInfo and Screenshots to Fastlane
+        run: |
+          if [ -f "scripts/export_to_fastlane.py" ]; then
+            if [ -n "${{ inputs.version }}" ]; then
+              python3 scripts/export_to_fastlane.py --version "${{ inputs.version }}"
+            else
+              python3 scripts/export_to_fastlane.py
+            fi
+          else
+            echo "No scripts/export_to_fastlane.py found, skipping export step."
+          fi
+
+      - name: Upload Metadata & Screenshots via Fastlane Deliver
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+          FASTLANE_ENABLE_BETA_DELIVER_SYNC_SCREENSHOTS: 'true'
+        run: |
+          bundle exec fastlane ${{ inputs.platform }} upload_marketing \
+            skip_screenshots:${{ inputs.skip_screenshots }} \
+            skip_metadata:${{ inputs.skip_metadata }} \
+            version:"${{ inputs.version }}"
