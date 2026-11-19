@@ -65,7 +65,6 @@ public struct UniversalDebugMenu<CustomContent: View, OnboardingContent: View>: 
                 DebugResetSection(
                     entitlementOverride: $purchaseCoordinator.debugOverride,
                     onReset: {
-                        purchaseCoordinator.debugOverride = .automatic
                         AdPacingEngine.shared.resetSession()
                         sessionAdCount = AdPacingEngine.shared.sessionAdCount
                         onReset?()

@@ -7,6 +7,7 @@ internal struct WhatIsNewView: View {
     let paywallAction: (() -> Void)?
 
     @State private var showingReleaseNotes = false
+    @State private var pendingPaywallAction = false
     
     internal init(releaseNotes: [ReleaseNote], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil) {
         self.releaseNotes = releaseNotes
@@ -21,8 +22,23 @@ internal struct WhatIsNewView: View {
         }) {
             Label(NSLocalizedString(Constants.StringKeys.releaseNotesTitle, bundle: .module, value: "What's New", comment: ""), systemImage: "sparkles")
         }
-        .sheet(isPresented: $showingReleaseNotes) {
-            ReleaseNotesView(releaseNotes: releaseNotes, isPaidUser: isPaidUser, tierName: tierName, paywallAction: paywallAction) {
+        .sheet(isPresented: $showingReleaseNotes, onDismiss: {
+            if pendingPaywallAction {
+                pendingPaywallAction = false
+                paywallAction?()
+            }
+        }) {
+            ReleaseNotesView(
+                releaseNotes: releaseNotes,
+                isPaidUser: isPaidUser,
+                tierName: tierName,
+                paywallAction: paywallAction.map { _ in
+                    {
+                        pendingPaywallAction = true
+                        showingReleaseNotes = false
+                    }
+                }
+            ) {
                 showingReleaseNotes = false
             }
         }

@@ -9,6 +9,7 @@ public struct DebugReleaseNotesSection: View {
 
     @State private var lastViewedVersion: String?
     @State private var showingReleaseNotesSheet = false
+    @State private var pendingPaywallAction = false
     @State private var showingResetAlert = false
 
     public init(
@@ -40,12 +41,22 @@ public struct DebugReleaseNotesSection: View {
                 } label: {
                     Label("Preview Release Notes Sheet", systemImage: "play.circle")
                 }
-                .sheet(isPresented: $showingReleaseNotesSheet) {
+                .sheet(isPresented: $showingReleaseNotesSheet, onDismiss: {
+                    if pendingPaywallAction {
+                        pendingPaywallAction = false
+                        paywallAction?()
+                    }
+                }) {
                     ReleaseNotesView(
                         releaseNotes: notes,
                         isPaidUser: isPaidUser,
                         tierName: tierName,
-                        paywallAction: paywallAction
+                        paywallAction: paywallAction.map { _ in
+                            {
+                                pendingPaywallAction = true
+                                showingReleaseNotesSheet = false
+                            }
+                        }
                     ) {
                         showingReleaseNotesSheet = false
                     }
