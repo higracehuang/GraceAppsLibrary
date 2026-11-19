@@ -51,14 +51,27 @@ jobs:
 
       - name: Export AppInfo and Screenshots to Fastlane
         run: |
+          SCRIPT_PATH=""
           if [ -f "scripts/export_to_fastlane.py" ]; then
+            SCRIPT_PATH="scripts/export_to_fastlane.py"
+          elif [ -f "Scripts/export_to_fastlane.py" ]; then
+            SCRIPT_PATH="Scripts/export_to_fastlane.py"
+          fi
+
+          if [ -n "$SCRIPT_PATH" ]; then
+            ARGS=""
             if [ -n "${{ inputs.version }}" ]; then
-              python3 scripts/export_to_fastlane.py --version "${{ inputs.version }}"
-            else
-              python3 scripts/export_to_fastlane.py
+              ARGS="$ARGS --version ${{ inputs.version }}"
             fi
+            if [ "${{ inputs.skip_screenshots }}" = "true" ]; then
+              ARGS="$ARGS --metadata-only"
+            fi
+            if [ "${{ inputs.skip_metadata }}" = "true" ]; then
+              ARGS="$ARGS --screenshots-only"
+            fi
+            python3 "$SCRIPT_PATH" $ARGS
           else
-            echo "No scripts/export_to_fastlane.py found, skipping export step."
+            echo "No export_to_fastlane.py found, skipping export step."
           fi
 
       - name: Upload Metadata & Screenshots via Fastlane Deliver
@@ -69,6 +82,10 @@ jobs:
           FASTLANE_ENABLE_BETA_DELIVER_SYNC_SCREENSHOTS: 'true'
         run: |
           bundle exec fastlane ${{ inputs.platform }} upload_marketing \
+            skip_screenshots:${{ inputs.skip_screenshots }} \
+            skip_metadata:${{ inputs.skip_metadata }} \
+            version:"${{ inputs.version }}" || \
+          fastlane ${{ inputs.platform }} upload_marketing \
             skip_screenshots:${{ inputs.skip_screenshots }} \
             skip_metadata:${{ inputs.skip_metadata }} \
             version:"${{ inputs.version }}"
