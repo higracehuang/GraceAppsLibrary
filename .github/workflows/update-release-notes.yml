@@ -1,0 +1,90 @@
+name: Update GAL Release Notes Daily
+
+on:
+  schedule:
+    # Runs daily at 05:30 UTC (30 mins before GraceAppReports dispatch)
+    - cron: '30 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out GraceAppsLibrary
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Check if latest tag SHA changed
+        id: check
+        run: |
+          LATEST_TAG=$(git tag --sort=-v:refname | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No tags found."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          LATEST_SHA=$(git rev-list -n 1 "$LATEST_TAG")
+          PREV_TAG=$(git tag --sort=-v:refname | sed -n '2p')
+          RECORDED_SHA=$(grep -oE '<!-- gal-notes-sha: [a-f0-9]+ -->' RELEASE_NOTES.md | tail -n 1 | awk '{print $3}' || true)
+
+          echo "latest_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "latest_sha=$LATEST_SHA" >> "$GITHUB_OUTPUT"
+          echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
+
+          if [ "$LATEST_SHA" = "$RECORDED_SHA" ]; then
+            echo "RELEASE_NOTES.md already up to date for $LATEST_TAG ($LATEST_SHA)."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag $LATEST_TAG ($LATEST_SHA) differs from recorded SHA ($RECORDED_SHA)."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node.js & Claude Code
+        if: steps.check.outputs.changed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Claude Code CLI
+        if: steps.check.outputs.changed == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Update RELEASE_NOTES.md via Claude Code
+        if: steps.check.outputs.changed == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          LATEST_TAG="${{ steps.check.outputs.latest_tag }}"
+          LATEST_SHA="${{ steps.check.outputs.latest_sha }}"
+          PREV_TAG="${{ steps.check.outputs.prev_tag }}"
+          VERSION="${LATEST_TAG#v}"
+          TODAY=$(date -u +"%b %-d, %Y")
+
+          PROMPT="Update RELEASE_NOTES.md for GraceAppsLibrary release ${VERSION} (${TODAY}).
+          Compare commits/diff between '${PREV_TAG}' and '${LATEST_SHA}' using git log and git diff --stat.
+          Follow the exact formatting of RELEASE_NOTES.md (newest first, feature-first bullets).
+          If there are breaking API changes, renamed symbols, or new SPM products required by consumer apps, include a concise '### Migration' subsection under ## ${VERSION} — ${TODAY}.
+          If a '## ${VERSION}' section already exists (because the tag was retagged), update that section in place rather than duplicating it.
+          Finally, ensure the last line of RELEASE_NOTES.md is: <!-- gal-notes-sha: ${LATEST_SHA} -->"
+
+          claude -p "$PROMPT" \
+            --allowedTools "Read,Edit,Bash(git log:*),Bash(git diff:*),Bash(git show:*)" \
+            --max-turns 8
+
+      - name: Commit and push RELEASE_NOTES.md
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add RELEASE_NOTES.md
+          if git diff --staged --quiet; then
+            echo "No changes to RELEASE_NOTES.md."
+          else
+            git commit -m "docs: update RELEASE_NOTES.md for ${{ steps.check.outputs.latest_tag }} [skip ci]"
+            git push origin main
+          fi

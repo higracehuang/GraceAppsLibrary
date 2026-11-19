@@ -1,0 +1,307 @@
+name: Migrate GraceAppsLibrary (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Target GAL tag/version (leave blank to use latest GAL tag)'
+        required: false
+        default: ''
+        type: string
+      target_sha:
+        description: 'Target GAL commit SHA (leave blank to resolve from tag)'
+        required: false
+        default: ''
+        type: string
+      scheme:
+        description: 'Xcode scheme to build (leave blank to auto-detect)'
+        required: false
+        default: ''
+        type: string
+    secrets:
+      ANTHROPIC_API_KEY:
+        required: true
+      ALERT_WEBHOOK_URL:
+        required: false
+
+jobs:
+  migrate-gal:
+    runs-on: macos-15
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    concurrency:
+      group: gal-migrate-${{ github.repository }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out app repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check out GraceAppsLibrary for diff & release notes
+        uses: actions/checkout@v4
+        with:
+          repository: higracehuang/GraceAppsLibrary
+          path: _gal
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Resolve versions, SHAs, and Xcode project
+        id: meta
+        run: |
+          python3 - <<'EOF'
+          import glob, json, os, subprocess
+
+          target_ver = "${{ inputs.version }}".strip().lstrip("v")
+          target_sha = "${{ inputs.target_sha }}".strip()
+
+          if not target_ver:
+              tags = subprocess.check_output(
+                  ["git", "-C", "_gal", "tag", "--sort=-v:refname"], text=True
+              ).splitlines()
+              target_ver = tags[0].lstrip("v") if tags else ""
+
+          if not target_sha and target_ver:
+              for ref in (target_ver, f"v{target_ver}"):
+                  try:
+                      target_sha = subprocess.check_output(
+                          ["git", "-C", "_gal", "rev-list", "-n", "1", ref],
+                          text=True, stderr=subprocess.DEVNULL
+                      ).strip()
+                      if target_sha:
+                          break
+                  except subprocess.CalledProcessError:
+                      pass
+
+          resolved_files = sorted(glob.glob("**/*.xcworkspace/xcshareddata/swiftpm/Package.resolved", recursive=True))
+          if not resolved_files:
+              resolved_files = sorted(glob.glob("**/Package.resolved", recursive=True))
+
+          from_ver, from_sha = "", ""
+          for rf in resolved_files:
+              if rf.startswith("_gal/"):
+                  continue
+              try:
+                  data = json.load(open(rf))
+                  pins = data.get("pins") or data.get("object", {}).get("pins", [])
+                  for pin in pins:
+                      loc = (pin.get("location") or pin.get("repositoryURL") or "").lower()
+                      ident = (pin.get("identity") or pin.get("package") or "").lower()
+                      if "graceappslibrary" in loc and "graceappslibrarymac" not in loc:
+                          st = pin.get("state", {})
+                          from_ver = st.get("version") or ""
+                          from_sha = st.get("revision") or ""
+                          break
+              except Exception:
+                  pass
+              if from_sha:
+                  break
+
+          workspaces = [w for w in glob.glob("*.xcworkspace") if not w.startswith("_gal")]
+          projects = [p for p in glob.glob("*.xcodeproj") if not p.startswith("_gal")]
+
+          container_flag = "-workspace" if workspaces else "-project"
+          container_path = workspaces[0] if workspaces else (projects[0] if projects else "")
+
+          scheme = "${{ inputs.scheme }}".strip()
+          if not scheme and container_path:
+              out = subprocess.check_output(
+                  ["xcodebuild", "-list", "-json", container_flag, container_path], text=True
+              )
+              info = json.loads(out)
+              key = "workspace" if workspaces else "project"
+              schemes = info.get(key, {}).get("schemes", [])
+              repo_name = os.environ.get("GITHUB_REPOSITORY", "").split("/")[-1]
+              scheme = next((s for s in schemes if s.lower() == repo_name.lower()), schemes[0] if schemes else "")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out_f:
+              out_f.write(f"target_version={target_ver}\n")
+              out_f.write(f"target_sha={target_sha}\n")
+              out_f.write(f"from_version={from_ver}\n")
+              out_f.write(f"from_sha={from_sha}\n")
+              out_f.write(f"container_flag={container_flag}\n")
+              out_f.write(f"container_path={container_path}\n")
+              out_f.write(f"scheme={scheme}\n")
+          EOF
+
+      - name: Reset rolling chore/gal-update branch from main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B chore/gal-update
+
+      - name: Bump minimumVersion in project.pbxproj (if version increased)
+        run: |
+          python3 - <<'EOF'
+          import glob, re
+
+          from_ver = "${{ steps.meta.outputs.from_version }}"
+          target_ver = "${{ steps.meta.outputs.target_version }}"
+          if not target_ver or from_ver == target_ver:
+              print(f"Skipping minimumVersion bump (from={from_ver}, target={target_ver})")
+              raise SystemExit(0)
+
+          def semver(v):
+              parts = [int(x) for x in re.findall(r'\d+', v)[:3]]
+              return tuple(parts + [0] * (3 - len(parts)))
+
+          if from_ver and semver(target_ver) <= semver(from_ver):
+              print(f"Target {target_ver} is not greater than {from_ver}; skipping minimumVersion bump.")
+              raise SystemExit(0)
+
+          pattern = re.compile(
+              r'(repositoryURL\s*=\s*"[^"]*GraceAppsLibrary\.git";\s*requirement\s*=\s*\{[^}]*?minimumVersion\s*=\s*)([^;]+)(;)',
+              re.DOTALL
+          )
+          for pbx in glob.glob("*.xcodeproj/project.pbxproj"):
+              content = open(pbx, encoding="utf-8").read()
+              new_content, count = pattern.subn(rf'\g<1>{target_ver}\g<3>', content)
+              if count:
+                  open(pbx, "w", encoding="utf-8").write(new_content)
+                  print(f"Updated minimumVersion to {target_ver} in {pbx}")
+          EOF
+
+      - name: Resolve SwiftPM dependencies (retag-safe)
+        run: |
+          rm -rf /tmp/spm_cache
+          xcodebuild -resolvePackageDependencies \
+            ${{ steps.meta.outputs.container_flag }} "${{ steps.meta.outputs.container_path }}" \
+            -scheme "${{ steps.meta.outputs.scheme }}" \
+            -clonedSourcePackagesDirPath /tmp/spm_cache
+
+      - name: Set up Node.js & Claude Code CLI
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude Code migration
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          FROM_SHA="${{ steps.meta.outputs.from_sha }}"
+          TARGET_SHA="${{ steps.meta.outputs.target_sha }}"
+          TARGET_VER="${{ steps.meta.outputs.target_version }}"
+
+          DIFF_CMD="git -C _gal diff ${FROM_SHA}..${TARGET_SHA} -- Sources Package.swift"
+          if [ -z "$FROM_SHA" ] || [ "$FROM_SHA" = "$TARGET_SHA" ]; then
+            DIFF_CMD="git -C _gal show --stat ${TARGET_SHA}"
+          fi
+
+          PROMPT="You are migrating this iOS app to GraceAppsLibrary v${TARGET_VER} (commit ${TARGET_SHA}).
+          1. Read _gal/RELEASE_NOTES.md for changes and migration instructions up to v${TARGET_VER}.
+          2. Inspect the library diff using: ${DIFF_CMD}
+          3. Update any broken or deprecated call sites, imports, or SPM product links in this app so it compiles cleanly against GraceAppsLibrary v${TARGET_VER}.
+          4. Verify compilation using: xcodebuild build ${{ steps.meta.outputs.container_flag }} \"${{ steps.meta.outputs.container_path }}\" -scheme \"${{ steps.meta.outputs.scheme }}\" -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO -clonedSourcePackagesDirPath /tmp/spm_cache
+          5. Do NOT modify anything inside _gal/."
+
+          claude -p "$PROMPT" \
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(xcodebuild:*),Bash(git -C _gal diff:*),Bash(git -C _gal show:*),Bash(git status)" \
+            --max-turns 15 || true
+
+      - name: Verify Xcode build
+        id: build
+        run: |
+          set -o pipefail
+          if xcodebuild build \
+            ${{ steps.meta.outputs.container_flag }} "${{ steps.meta.outputs.container_path }}" \
+            -scheme "${{ steps.meta.outputs.scheme }}" \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            -clonedSourcePackagesDirPath /tmp/spm_cache 2>&1 | tee /tmp/xcodebuild.log; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+            tail -n 60 /tmp/xcodebuild.log > /tmp/xcodebuild_tail.log
+          fi
+
+      - name: Clean up temporary _gal checkout & commit
+        id: commit
+        run: |
+          rm -rf _gal
+          git add -A
+          if git diff --staged --quiet; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "chore: migrate to GraceAppsLibrary ${{ steps.meta.outputs.target_version }}"
+            git push -f origin chore/gal-update
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or update Draft PR
+        if: steps.commit.outputs.has_changes == 'true'
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TARGET_VER="${{ steps.meta.outputs.target_version }}"
+          TARGET_SHA="${{ steps.meta.outputs.target_sha }}"
+          BUILD_PASSED="${{ steps.build.outputs.passed }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          gh label create "gal-migration-failed" --color "d73a4a" --description "Automated GAL migration failed build" 2>/dev/null || true
+
+          if [ "$BUILD_PASSED" = "true" ]; then
+            STATUS_LINE="✅ \`xcodebuild\` (iOS Simulator) passed."
+            TITLE="chore: migrate to GraceAppsLibrary ${TARGET_VER}"
+            ERR_BLOCK=""
+          else
+            STATUS_LINE="❌ \`xcodebuild\` (iOS Simulator) failed — see [workflow run](${RUN_URL})."
+            TITLE="chore: migrate to GraceAppsLibrary ${TARGET_VER} (build failed)"
+            ERR_BLOCK=$'\n\n<details><summary>Compiler output (last 60 lines)</summary>\n\n```\n'"$(cat /tmp/xcodebuild_tail.log 2>/dev/null || echo 'See workflow logs')"$'\n```\n</details>'
+          fi
+
+          BODY="Automated migration to **GraceAppsLibrary \`v${TARGET_VER}\`** (\`${TARGET_SHA:0:7}\`).
+
+          - **Build:** ${STATUS_LINE}
+          - **Release Notes:** https://github.com/higracehuang/GraceAppsLibrary/blob/main/RELEASE_NOTES.md${ERR_BLOCK}
+
+          <!-- gal-sha: ${TARGET_SHA} -->"
+
+          EXISTING_PR=$(gh pr list --head chore/gal-update --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING_PR" ]; then
+            gh pr edit "$EXISTING_PR" --title "$TITLE" --body "$BODY"
+            if [ "$BUILD_PASSED" = "true" ]; then
+              gh pr edit "$EXISTING_PR" --remove-label "gal-migration-failed" 2>/dev/null || true
+            else
+              gh pr edit "$EXISTING_PR" --add-label "gal-migration-failed"
+            fi
+            PR_URL=$(gh pr view "$EXISTING_PR" --json url --jq '.url')
+          else
+            EXTRA_FLAG=""
+            if [ "$BUILD_PASSED" != "true" ]; then
+              EXTRA_FLAG="--label gal-migration-failed"
+            fi
+            PR_URL=$(gh pr create --draft --head chore/gal-update --base main --title "$TITLE" --body "$BODY" $EXTRA_FLAG)
+          fi
+          echo "url=$PR_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Notify & fail if migration or build failed
+        if: failure() || steps.build.outputs.passed == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          PR_URL="${{ steps.pr.outputs.url }}"
+          TARGET_VER="${{ steps.meta.outputs.target_version }}"
+
+          if [ -z "$PR_URL" ]; then
+            gh label create "gal-migration-failed" --color "d73a4a" --description "Automated GAL migration failed" 2>/dev/null || true
+            gh issue create \
+              --title "GAL v${TARGET_VER} migration failed" \
+              --label "gal-migration-failed" \
+              --body "Automated migration to GraceAppsLibrary \`v${TARGET_VER}\` failed before opening a PR. See [workflow run](${RUN_URL})." || true
+          fi
+
+          if [ -n "$ALERT_WEBHOOK_URL" ]; then
+            MSG="❌ GAL v${TARGET_VER} migration failed in ${GITHUB_REPOSITORY}: ${PR_URL:-$RUN_URL}"
+            curl -fsS -X POST -H "Content-Type: application/json" \
+              -d "{\"content\": \"$MSG\", \"text\": \"$MSG\"}" \
+              "$ALERT_WEBHOOK_URL" || true
+          fi
+          exit 1
