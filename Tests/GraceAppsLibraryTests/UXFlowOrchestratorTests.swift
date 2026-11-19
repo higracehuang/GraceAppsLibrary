@@ -601,4 +601,56 @@ final class UXFlowOrchestratorTests: XCTestCase {
         }
         wait(for: [exp2], timeout: 1.0)
     }
+
+    func testActionPreconditionFiltersIneligibleSheetAndRunsTrailingAd() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.resetForTesting()
+        orchestrator.interPresentationDelay = 0.01
+
+        var shouldShowSheet = false
+        var adPresentedCount = 0
+
+        let makeActions: () -> [UXAction] = {
+            [
+                UXAction(
+                    id: "conditional_prompt",
+                    priority: .critical,
+                    kind: .sheet,
+                    precondition: { shouldShowSheet }
+                ) {
+                    Text("Conditional Prompt")
+                },
+                UXAction.ad { completion in
+                    adPresentedCount += 1
+                    completion(true)
+                }
+            ]
+        }
+
+        // 1. Precondition false -> sheet is skipped, ad presents immediately
+        orchestrator.requestActions(makeActions())
+        XCTAssertNil(orchestrator.activeSheetItem)
+        XCTAssertEqual(adPresentedCount, 1, "Ad must execute immediately when conditional sheet precondition is false")
+
+        let settleExp = expectation(description: "Wait for pipeline idle")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+            XCTAssertFalse(orchestrator.isBusy)
+            settleExp.fulfill()
+        }
+        wait(for: [settleExp], timeout: 1.0)
+
+        // 2. Precondition true -> sheet presents first, ad executes only after dismissal
+        shouldShowSheet = true
+        orchestrator.requestActions(makeActions())
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, "conditional_prompt")
+        XCTAssertEqual(adPresentedCount, 1, "Ad must wait while conditional sheet is active")
+
+        orchestrator.dismissCurrentAction()
+        let adExp = expectation(description: "Wait for trailing ad after sheet dismissal")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+            XCTAssertEqual(adPresentedCount, 2, "Trailing ad must execute after conditional sheet dismisses")
+            adExp.fulfill()
+        }
+        wait(for: [adExp], timeout: 1.0)
+    }
 }

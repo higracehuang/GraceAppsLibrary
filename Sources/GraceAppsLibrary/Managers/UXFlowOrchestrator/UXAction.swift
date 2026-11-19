@@ -72,12 +72,14 @@ public struct UXAction: Identifiable {
         priority: UXActionPriority = .milestone,
         kind: UXPresentationKind = .sheet,
         tags: Set<UXTag> = [],
+        precondition: (() -> Bool)? = nil,
         @ViewBuilder content: @escaping () -> some View
     ) {
         self.id = id
         self.priority = priority
         self.kind = kind
         self.tags = tags
+        self.precondition = precondition
         self.viewBuilder = { AnyView(content()) }
         self.executionBlock = nil
     }
@@ -88,9 +90,10 @@ public struct UXAction: Identifiable {
         priority: UXActionPriority = .milestone,
         kind: UXPresentationKind = .sheet,
         tags: Set<UXTag> = [],
+        precondition: (() -> Bool)? = nil,
         @ViewBuilder content: @escaping () -> some View
     ) {
-        self.init(id: UXActionID(id), priority: priority, kind: kind, tags: tags, content: content)
+        self.init(id: UXActionID(id), priority: priority, kind: kind, tags: tags, precondition: precondition, content: content)
     }
 
     /// Backward-compatible initializer for visual SwiftUI views with Set<String> tags
@@ -99,12 +102,14 @@ public struct UXAction: Identifiable {
         priority: UXActionPriority = .milestone,
         kind: UXPresentationKind = .sheet,
         tags: Set<String>,
+        precondition: (() -> Bool)? = nil,
         @ViewBuilder content: @escaping () -> some View
     ) {
         self.id = UXActionID(id)
         self.priority = priority
         self.kind = kind
         self.tags = Set(tags.map { UXTag($0) })
+        self.precondition = precondition
         self.viewBuilder = { AnyView(content()) }
         self.executionBlock = nil
     }
