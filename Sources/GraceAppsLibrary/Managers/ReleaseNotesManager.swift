@@ -9,6 +9,10 @@ public final class ReleaseNotesManager {
     /// Tracks if release notes were presented during the current active app session.
     @MainActor public static var hasShownReleaseNotesThisSession: Bool = false
     
+    /// Tracks whether launch release notes eligibility has already been evaluated in the current session,
+    /// preventing redundant re-evaluations on tab switches or view re-appearances.
+    public internal(set) var hasEvaluatedLaunchReleaseNotes: Bool = false
+    
     public init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
     }
@@ -97,11 +101,13 @@ public final class ReleaseNotesManager {
     public func resetReleaseNotesState() {
         GraceLogger.info("Resetting release notes state.", category: .debug)
         Self.hasShownReleaseNotesThisSession = false
+        hasEvaluatedLaunchReleaseNotes = false
         userDefaults.removeObject(forKey: lastViewedVersionKey)
     }
 
     /// Seeds a simulated previously viewed version in UserDefaults for testing upgrade flows.
     public func seedLastViewedVersionForTesting(_ version: String?) {
+        hasEvaluatedLaunchReleaseNotes = false
         if let version = version {
             userDefaults.set(version, forKey: lastViewedVersionKey)
         } else {

@@ -580,4 +580,36 @@ final class ReleaseNotesTests: XCTestCase {
         orchestrator.requestAction(action2)
         XCTAssertNil(orchestrator.activeSheetItem, "Session cap of 1 must prevent a second release notes sheet in the same session")
     }
+
+    @MainActor
+    func testHasEvaluatedLaunchReleaseNotes_ShortCircuitsTabSwitchReevaluationsAndResetsOnDebugReset() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.resetForTesting()
+        orchestrator.policy = UXPolicy() // No sessionCap so we test hasEvaluatedLaunchReleaseNotes directly
+
+        let notes = [
+            ReleaseNote(version: "2.0.0", notes: ["Update 2"])
+        ]
+
+        XCTAssertFalse(manager.hasEvaluatedLaunchReleaseNotes)
+
+        // 1. First evaluation on fresh install sets hasEvaluatedLaunchReleaseNotes = true
+        let action = UXAction.releaseNotes(
+            releaseNotes: notes,
+            currentVersion: "2.0.0",
+            manager: manager
+        )
+        orchestrator.requestAction(action)
+        XCTAssertTrue(manager.hasEvaluatedLaunchReleaseNotes, "First evaluation must set hasEvaluatedLaunchReleaseNotes to true")
+        XCTAssertNil(orchestrator.activeSheetItem)
+
+        // 2. Even if UserDefaults is mutated without resetting manager state, tab-switch re-appear is short-circuited
+        userDefaults.set("1.0.0", forKey: "GraceAppsLibrary_LastViewedReleaseNotesVersion")
+        orchestrator.requestAction(action)
+        XCTAssertNil(orchestrator.activeSheetItem, "hasEvaluatedLaunchReleaseNotes must short-circuit subsequent tab-switch evaluations")
+
+        // 3. Calling resetReleaseNotesState() resets hasEvaluatedLaunchReleaseNotes to false
+        manager.resetReleaseNotesState()
+        XCTAssertFalse(manager.hasEvaluatedLaunchReleaseNotes)
+    }
 }

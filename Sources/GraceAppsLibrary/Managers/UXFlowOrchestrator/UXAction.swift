@@ -243,6 +243,10 @@ extension UXAction {
             )
         }
         action.precondition = {
+            guard !manager.hasEvaluatedLaunchReleaseNotes else {
+                return false
+            }
+            manager.hasEvaluatedLaunchReleaseNotes = true
             let targetVersion = currentVersion ?? manager.currentVersion
             return manager.shouldShowReleaseNotes(
                 currentVersion: targetVersion,
