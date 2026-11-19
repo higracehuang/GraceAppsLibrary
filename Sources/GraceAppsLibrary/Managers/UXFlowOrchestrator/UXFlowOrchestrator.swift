@@ -52,6 +52,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     private var lastPresentedTimes: [UXTag: Date] = [:]
     private var executedTagsThisFlow: Set<UXTag> = []
     private var flowCompletionCallback: (() -> Void)?
+    private var settlingWorkItem: DispatchWorkItem?
     
     internal init() {}
     
@@ -68,7 +69,6 @@ public final class UXFlowOrchestrator: ObservableObject {
         }
         #endif
         
-        self.flowCompletionCallback = onFlowComplete
         GraceLogger.orchestrator("Triggering flow with \(actions.count) candidate actions: \(actions.map { $0.id })", level: .info)
 
         // If the pipeline is idle, reset flow-scoped executed tags from previous completed flows
@@ -82,14 +82,31 @@ public final class UXFlowOrchestrator: ObservableObject {
         
         guard !eligible.isEmpty else {
             GraceLogger.orchestrator("No candidate actions passed policy eligibility check.", level: .info)
-            let callback = flowCompletionCallback
-            self.flowCompletionCallback = nil
-            callback?()
+            if !isBusy && actionQueue.isEmpty {
+                let callback = flowCompletionCallback
+                self.flowCompletionCallback = nil
+                callback?()
+                onFlowComplete?()
+            } else {
+                onFlowComplete?()
+            }
             return
+        }
+
+        if let onFlowComplete = onFlowComplete {
+            if let existingCallback = self.flowCompletionCallback {
+                self.flowCompletionCallback = {
+                    existingCallback()
+                    onFlowComplete()
+                }
+            } else {
+                self.flowCompletionCallback = onFlowComplete
+            }
         }
         
         GraceLogger.orchestrator("Enqueued \(eligible.count) approved actions in priority order: \(eligible.map { "\($0.id)(\($0.priority.rawValue))" })", level: .success)
         actionQueue.append(contentsOf: eligible)
+        actionQueue.sort(by: { $0.priority > $1.priority })
         processNextInQueue()
     }
     
@@ -104,11 +121,14 @@ public final class UXFlowOrchestrator: ObservableObject {
     }
     
     /// Programmatically dismisses the active visual modal (sheet or cover) and transitions to the next queued action.
-    public func dismissCurrentAction() {
+    /// - Parameter onSettled: Optional callback invoked once the modal's dismissal settling window completes.
+    public func dismissCurrentAction(onSettled: (() -> Void)? = nil) {
         if let sheet = activeSheetItem {
-            onModalDismissed(actionId: sheet.id)
+            onModalDismissed(actionId: sheet.id, onSettled: onSettled)
         } else if let cover = activeCoverItem {
-            onModalDismissed(actionId: cover.id)
+            onModalDismissed(actionId: cover.id, onSettled: onSettled)
+        } else {
+            onSettled?()
         }
     }
     
@@ -186,9 +206,10 @@ public final class UXFlowOrchestrator: ObservableObject {
     
     /// Handles dismissal of visual sheets and full-screen covers.
     /// Intercepted by `UXFlowViewModifier` to guarantee clean transitions.
-    internal func onModalDismissed(actionId: UXActionID) {
+    internal func onModalDismissed(actionId: UXActionID, onSettled: (() -> Void)? = nil) {
         guard let current = (activeSheetItem?.action ?? activeCoverItem?.action), current.id == actionId else {
             GraceLogger.orchestrator("Received onModalDismissed for '\(actionId)' but active item was different.", level: .warning)
+            onSettled?()
             return
         }
         
@@ -196,7 +217,7 @@ public final class UXFlowOrchestrator: ObservableObject {
         activeCoverItem = nil
         current.onDismiss?()
         GraceLogger.orchestrator("Visual modal '\(actionId)' dismissed. Entering \(interPresentationDelay)s settling window...", level: .info)
-        completeAction(current, outcome: .completed)
+        completeAction(current, outcome: .completed, onSettled: onSettled)
     }
 
     /// Backward-compatible overload for string action IDs.
@@ -204,15 +225,20 @@ public final class UXFlowOrchestrator: ObservableObject {
         onModalDismissed(actionId: UXActionID(actionId))
     }
     
-    private func completeAction(_ action: UXAction, outcome: UXActionOutcome = .completed) {
+    private func completeAction(_ action: UXAction, outcome: UXActionOutcome = .completed, onSettled: (() -> Void)? = nil) {
+        settlingWorkItem?.cancel()
         // Enforce settling window so the UIKit transition completes cleanly before next modal mounts
         let delay = (outcome == .skipped) ? 0.0 : interPresentationDelay
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+        let workItem = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
+            self.settlingWorkItem = nil
             self.isBusy = false
             self.currentActionId = nil
+            onSettled?()
             self.processNextInQueue()
         }
+        settlingWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
     }
     
     /// Resets tags executed in the current flow. Call when starting a new activity or screen.
@@ -288,6 +314,8 @@ public final class UXFlowOrchestrator: ObservableObject {
     // MARK: - Testing Helpers
     
     public func resetForTesting() {
+        settlingWorkItem?.cancel()
+        settlingWorkItem = nil
         activeSheetItem = nil
         activeCoverItem = nil
         isBusy = false

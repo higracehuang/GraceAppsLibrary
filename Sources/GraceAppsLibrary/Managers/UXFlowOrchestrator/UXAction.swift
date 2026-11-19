@@ -234,8 +234,7 @@ extension UXAction {
                 tierName: tierName,
                 paywallAction: paywallAction.map { upgradeAction in
                     {
-                        UXFlowOrchestrator.shared.dismissCurrentAction()
-                        upgradeAction()
+                        UXFlowOrchestrator.shared.dismissCurrentAction(onSettled: upgradeAction)
                     }
                 },
                 onDismiss: {

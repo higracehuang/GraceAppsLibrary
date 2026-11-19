@@ -462,4 +462,66 @@ final class UXFlowOrchestratorTests: XCTestCase {
         }
         XCTAssertEqual(adAction.id, .interstitialAd)
     }
+
+    func testDismissCurrentActionWithOnSettledCallback() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.resetForTesting()
+        orchestrator.interPresentationDelay = 0.02
+
+        let sheetAction = UXAction(id: .releaseNotes, priority: .releaseNotes, kind: .sheet) {
+            Text("Release Notes")
+        }
+        orchestrator.requestAction(sheetAction)
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, .releaseNotes)
+        XCTAssertTrue(orchestrator.isBusy)
+
+        var settledFired = false
+        var wasBusyWhenSettled = true
+        let exp = expectation(description: "Wait for onSettled callback")
+
+        orchestrator.dismissCurrentAction {
+            settledFired = true
+            wasBusyWhenSettled = orchestrator.isBusy
+            exp.fulfill()
+        }
+
+        // Immediately after dismissCurrentAction, activeSheetItem is nil, but onSettled has not fired yet
+        XCTAssertNil(orchestrator.activeSheetItem)
+        XCTAssertFalse(settledFired)
+
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertTrue(settledFired)
+        XCTAssertFalse(wasBusyWhenSettled, "onSettled must execute after settling window when orchestrator is no longer busy")
+    }
+
+    func testAsyncEnqueuedActionResortsQueueByPriorityWhileBusy() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.resetForTesting()
+        orchestrator.interPresentationDelay = 0.01
+
+        let firstSheet = UXAction(id: .releaseNotes, priority: .releaseNotes, kind: .sheet) {
+            Text("First")
+        }
+        let lowPrioritySheet = UXAction(id: "low_priority", priority: .ad, kind: .sheet) {
+            Text("Low")
+        }
+        let midPrioritySheet = UXAction(id: "mid_priority", priority: UXActionPriority(rawValue: 550), kind: .sheet) {
+            Text("Mid")
+        }
+
+        // Start flow with 600 and 100 -> 600 presents, 100 is in queue
+        orchestrator.requestActions([firstSheet, lowPrioritySheet])
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, .releaseNotes)
+
+        // While 600 is active, 550 arrives asynchronously -> must sort ahead of 100 in the queue
+        orchestrator.requestAction(midPrioritySheet)
+
+        orchestrator.dismissCurrentAction()
+        let exp1 = expectation(description: "Wait for mid_priority")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) {
+            XCTAssertEqual(orchestrator.activeSheetItem?.id, "mid_priority", "Mid-priority (550) must present before low-priority (100)")
+            exp1.fulfill()
+        }
+        wait(for: [exp1], timeout: 1.0)
+    }
 }
