@@ -437,4 +437,147 @@ final class ReleaseNotesTests: XCTestCase {
         hostingControllerWithNotes.view.layoutIfNeeded()
         XCTAssertNotNil(hostingControllerWithNotes.rootView)
     }
+
+    // MARK: - UXFlowOrchestrator Release Notes Action Tests
+
+    @MainActor
+    func testOrchestratedReleaseNotes_SuppressedOnFreshInstall() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.resetForTesting()
+        orchestrator.policy = UXPolicy.standard
+        ReleaseNotesManager.hasShownReleaseNotesThisSession = false
+
+        let notes = [
+            ReleaseNote(version: "1.0.0", notes: ["Initial release"]),
+            ReleaseNote(version: "2.0.0", notes: ["Major update"])
+        ]
+
+        // Fresh install: lastViewedVersion is nil
+        XCTAssertTrue(manager.isFirstInstall)
+        XCTAssertNil(manager.lastViewedVersion)
+
+        var flowCompleted = false
+        let action = UXAction.releaseNotes(
+            releaseNotes: notes,
+            currentVersion: "2.0.0",
+            manager: manager
+        )
+        orchestrator.requestAction(action) {
+            flowCompleted = true
+        }
+
+        // Must be rejected on fresh install, recording 2.0.0 as baseline
+        XCTAssertNil(orchestrator.activeSheetItem)
+        XCTAssertFalse(orchestrator.isBusy)
+        XCTAssertTrue(flowCompleted)
+        XCTAssertFalse(ReleaseNotesManager.hasShownReleaseNotesThisSession)
+        XCTAssertEqual(manager.lastViewedVersion, "2.0.0")
+    }
+
+    @MainActor
+    func testOrchestratedReleaseNotes_PresentedOnUpgradeAndMarksViewedOnDismiss() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.resetForTesting()
+        orchestrator.policy = UXPolicy.standard
+        orchestrator.interPresentationDelay = 0.01
+        ReleaseNotesManager.hasShownReleaseNotesThisSession = false
+
+        let notes = [
+            ReleaseNote(version: "2.0.0", notes: ["Major update"]),
+            ReleaseNote(version: "1.0.0", notes: ["Initial release"])
+        ]
+
+        // Simulate existing user who previously viewed 1.0.0
+        manager.seedLastViewedVersionForTesting("1.0.0")
+        XCTAssertEqual(manager.lastViewedVersion, "1.0.0")
+
+        var dismissCallbackFired = false
+        var adExecuted = false
+        var reviewExecuted = false
+
+        let releaseNotesAction = UXAction.releaseNotes(
+            releaseNotes: notes,
+            isPaidUser: false,
+            tierName: "Unlimited",
+            currentVersion: "2.0.0",
+            manager: manager,
+            onDismiss: {
+                dismissCallbackFired = true
+            }
+        )
+        let reviewAction = UXAction.ratingPrompt {
+            reviewExecuted = true
+            return true
+        }
+        let adAction = UXAction.ad { completion in
+            adExecuted = true
+            completion(true)
+        }
+
+        // Trigger all three together: Release notes (600) must present and suppress review (250) & ad (100)
+        orchestrator.requestActions([adAction, reviewAction, releaseNotesAction])
+
+        XCTAssertNotNil(orchestrator.activeSheetItem)
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, .releaseNotes)
+        XCTAssertEqual(orchestrator.currentActionId, .releaseNotes)
+        XCTAssertTrue(ReleaseNotesManager.hasShownReleaseNotesThisSession)
+        XCTAssertNotNil(orchestrator.activeSheetItem?.action.viewBuilder?())
+
+        // Dismiss the release notes sheet
+        orchestrator.dismissCurrentAction()
+        XCTAssertNil(orchestrator.activeSheetItem)
+        XCTAssertTrue(dismissCallbackFired)
+        XCTAssertEqual(manager.lastViewedVersion, "2.0.0", "Dismissing release notes must record current version as viewed")
+
+        let exp = expectation(description: "Wait for flow settling window")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            XCTAssertFalse(orchestrator.isBusy)
+            XCTAssertFalse(reviewExecuted, "Review prompt must be suppressed by release notes mutual exclusion")
+            XCTAssertFalse(adExecuted, "Ad must be suppressed by release notes mutual exclusion")
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+
+        // Subsequent request in the same version/session must be rejected
+        orchestrator.requestAction(releaseNotesAction)
+        XCTAssertNil(orchestrator.activeSheetItem)
+    }
+
+    @MainActor
+    func testOrchestratedReleaseNotes_SessionCapPreventsDuplicatePresentation() {
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.resetForTesting()
+        orchestrator.policy = UXPolicy.standard
+        orchestrator.interPresentationDelay = 0.01
+
+        let notes = [
+            ReleaseNote(version: "2.0.0", notes: ["Update 2"]),
+            ReleaseNote(version: "3.0.0", notes: ["Update 3"])
+        ]
+
+        manager.seedLastViewedVersionForTesting("1.0.0")
+        let action1 = UXAction.releaseNotes(
+            releaseNotes: notes,
+            currentVersion: "2.0.0",
+            manager: manager
+        )
+        orchestrator.requestAction(action1)
+        XCTAssertEqual(orchestrator.activeSheetItem?.id, .releaseNotes)
+        orchestrator.dismissCurrentAction()
+
+        let exp = expectation(description: "Settling window")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+
+        // Even if version is changed again in the same session, sessionCap (1) blocks a second presentation
+        let action2 = UXAction.releaseNotes(
+            releaseNotes: notes,
+            currentVersion: "3.0.0",
+            manager: manager
+        )
+        orchestrator.requestAction(action2)
+        XCTAssertNil(orchestrator.activeSheetItem, "Session cap of 1 must prevent a second release notes sheet in the same session")
+    }
 }

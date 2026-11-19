@@ -366,6 +366,9 @@ final class UXFlowOrchestratorTests: XCTestCase {
         let policy = UXPolicy.standard
         XCTAssertTrue(policy.mutualExclusions[.review]?.contains(.ad) == true)
         XCTAssertTrue(policy.mutualExclusions[.paywall]?.contains(.ad) == true)
+        XCTAssertTrue(policy.mutualExclusions[.releaseNotes]?.contains(.ad) == true)
+        XCTAssertTrue(policy.mutualExclusions[.releaseNotes]?.contains(.review) == true)
+        XCTAssertEqual(policy.sessionCaps[.releaseNotes], 1)
         XCTAssertEqual(policy.tagCooldowns[.ad], 20)
     }
 
@@ -435,7 +438,14 @@ final class UXFlowOrchestratorTests: XCTestCase {
         XCTAssertEqual(UXActionID.ratingPrompt.rawValue, "rating_prompt")
         XCTAssertEqual(UXActionID.milestoneSheet.rawValue, "milestone_sheet")
         XCTAssertEqual(UXActionID.paywall.rawValue, "paywall")
+        XCTAssertEqual(UXActionID.releaseNotes.rawValue, "release_notes")
         XCTAssertEqual(UXActionID.celebration.rawValue, "milestone_sheet")
+        XCTAssertEqual(UXTag.releaseNotes.rawValue, "release_notes")
+        XCTAssertEqual(UXActionPriority.releaseNotes.rawValue, 600)
+        XCTAssertTrue(UXActionPriority.milestone > UXActionPriority.releaseNotes)
+        XCTAssertTrue(UXActionPriority.releaseNotes > UXActionPriority.paywall)
+        XCTAssertTrue(UXActionPriority.paywall > UXActionPriority.review)
+        XCTAssertTrue(UXActionPriority.review > UXActionPriority.ad)
 
         var policy = UXPolicy()
         policy.setSessionCap(actionId: .interstitialAd, maxCount: 2)

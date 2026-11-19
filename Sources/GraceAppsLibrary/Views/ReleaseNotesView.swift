@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct ReleaseNotesView: View {
+internal struct ReleaseNotesView: View {
     let releaseNotes: [ReleaseNote]
     let isPaidUser: Bool
     let tierName: LocalizedStringKey
@@ -8,7 +8,7 @@ public struct ReleaseNotesView: View {
     let onDismiss: () -> Void
 
     
-    public init(releaseNotes: [ReleaseNote], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil, onDismiss: @escaping () -> Void) {
+    internal init(releaseNotes: [ReleaseNote], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil, onDismiss: @escaping () -> Void) {
         self.releaseNotes = Array(releaseNotes.prefix(5))
         self.isPaidUser = isPaidUser
         self.tierName = tierName
@@ -16,7 +16,7 @@ public struct ReleaseNotesView: View {
         self.onDismiss = onDismiss
     }
     
-    public var body: some View {
+    internal var body: some View {
         let firstPaidNoteId = releaseNotes.first(where: { $0.hasPaidFeature && !$0.hasCustomCTA })?.id
         
         NavigationView {

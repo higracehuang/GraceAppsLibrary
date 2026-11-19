@@ -28,15 +28,17 @@ public struct UXActionPriority: Comparable, Sendable, Hashable {
     }
     
     /// User explicitly requested an action (e.g. tapped "Go Pro" or "Settings Upgrade")
-    public static let critical  = UXActionPriority(rawValue: 1000)
+    public static let critical     = UXActionPriority(rawValue: 1000)
     /// Peak milestone / celebration / completion results sheet
-    public static let milestone = UXActionPriority(rawValue: 750)
+    public static let milestone    = UXActionPriority(rawValue: 750)
+    /// App update release notes / "What's New" sheet
+    public static let releaseNotes = UXActionPriority(rawValue: 600)
     /// Commercial conversion / upsell paywall
-    public static let paywall   = UXActionPriority(rawValue: 500)
+    public static let paywall      = UXActionPriority(rawValue: 500)
     /// StoreKit App Store rating / review prompt
-    public static let review    = UXActionPriority(rawValue: 250)
+    public static let review       = UXActionPriority(rawValue: 250)
     /// Monetization interstitial ad
-    public static let ad        = UXActionPriority(rawValue: 100)
+    public static let ad           = UXActionPriority(rawValue: 100)
 
     public static func < (lhs: UXActionPriority, rhs: UXActionPriority) -> Bool {
         lhs.rawValue < rhs.rawValue
@@ -60,6 +62,9 @@ public struct UXAction: Identifiable {
     
     let viewBuilder: (() -> AnyView)?
     let executionBlock: (@MainActor (_ completion: @escaping (UXActionOutcome) -> Void) -> Void)?
+    internal var precondition: (() -> Bool)? = nil
+    internal var onPresent: (@MainActor () -> Void)? = nil
+    internal var onDismiss: (@MainActor () -> Void)? = nil
     
     /// Initializer for visual SwiftUI views (.sheet / .fullScreenCover)
     public init(
@@ -185,6 +190,76 @@ extension UXAction {
             tags: tags,
             content: content
         )
+    }
+
+    /// Creates a standard version release notes ("What's New") sheet action with priority `.releaseNotes` (600).
+    ///
+    /// Automatically evaluates eligibility via `ReleaseNotesManager` (suppressing on fresh install by default),
+    /// marks `ReleaseNotesManager.hasShownReleaseNotesThisSession = true` upon presentation,
+    /// and records the version as viewed upon dismissal.
+    ///
+    /// - Parameters:
+    ///   - id: Action identifier (default: `.releaseNotes`).
+    ///   - releaseNotes: The list of available release notes.
+    ///   - isPaidUser: Whether the user is on a paid tier.
+    ///   - tierName: The display name of the premium tier (default: `"Premium"`).
+    ///   - suppressOnFirstInstall: Whether to suppress release notes on fresh installs (default: `true`).
+    ///   - currentVersion: Optional explicit app version override (defaults to `manager.currentVersion`).
+    ///   - manager: The `ReleaseNotesManager` instance (default: `.shared`).
+    ///   - tags: Action tags (default: `[.releaseNotes]`).
+    ///   - paywallAction: Optional closure invoked when the user taps the paywall upgrade CTA inside release notes.
+    ///   - onDismiss: Optional closure invoked after the release notes sheet is dismissed.
+    @MainActor
+    public static func releaseNotes(
+        id: UXActionID = .releaseNotes,
+        releaseNotes: [ReleaseNote],
+        isPaidUser: Bool = false,
+        tierName: LocalizedStringKey = "Premium",
+        suppressOnFirstInstall: Bool = true,
+        currentVersion: String? = nil,
+        manager: ReleaseNotesManager = .shared,
+        tags: Set<UXTag> = [.releaseNotes],
+        paywallAction: (() -> Void)? = nil,
+        onDismiss: (() -> Void)? = nil
+    ) -> UXAction {
+        var action = UXAction(
+            id: id,
+            priority: .releaseNotes,
+            kind: .sheet,
+            tags: tags
+        ) {
+            ReleaseNotesView(
+                releaseNotes: releaseNotes,
+                isPaidUser: isPaidUser,
+                tierName: tierName,
+                paywallAction: paywallAction.map { upgradeAction in
+                    {
+                        UXFlowOrchestrator.shared.dismissCurrentAction()
+                        upgradeAction()
+                    }
+                },
+                onDismiss: {
+                    UXFlowOrchestrator.shared.dismissCurrentAction()
+                }
+            )
+        }
+        action.precondition = {
+            let targetVersion = currentVersion ?? manager.currentVersion
+            return manager.shouldShowReleaseNotes(
+                currentVersion: targetVersion,
+                releaseNotes: releaseNotes,
+                suppressOnFirstInstall: suppressOnFirstInstall
+            )
+        }
+        action.onPresent = {
+            ReleaseNotesManager.hasShownReleaseNotesThisSession = true
+        }
+        action.onDismiss = {
+            let targetVersion = currentVersion ?? manager.currentVersion
+            manager.markAsViewed(version: targetVersion)
+            onDismiss?()
+        }
+        return action
     }
 
     /// Creates a standard StoreKit native review prompt action with priority `.review` (250).

@@ -29,6 +29,8 @@ public struct UXPolicy {
     /// Standard production policy:
     /// - Showing a review suppresses ads in the same flow.
     /// - Showing a paywall suppresses ads in the same flow.
+    /// - Showing release notes suppresses ads and review prompts in the same flow.
+    /// - Release notes capped at 1 presentation per session.
     /// - 20s cooldown between consecutive ads.
     /// - Rating prompts gated by `ReviewPromptManager.isEligibleForPrompt()`.
     @MainActor
@@ -36,7 +38,10 @@ public struct UXPolicy {
         var policy = UXPolicy()
         policy.mutuallyExclude(triggerTag: .review, suppressTag: .ad)
         policy.mutuallyExclude(triggerTag: .paywall, suppressTag: .ad)
+        policy.mutuallyExclude(triggerTag: .releaseNotes, suppressTag: .ad)
+        policy.mutuallyExclude(triggerTag: .releaseNotes, suppressTag: .review)
         policy.setCooldown(tag: .ad, interval: 20)
+        policy.setSessionCap(actionId: .releaseNotes, maxCount: 1)
         policy.setPrecondition(actionId: .ratingPrompt) {
             MainActor.assumeIsolated {
                 ReviewPromptManager.shared.isEligibleForPrompt()

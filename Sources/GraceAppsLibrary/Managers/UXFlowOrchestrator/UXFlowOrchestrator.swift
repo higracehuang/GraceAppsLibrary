@@ -161,11 +161,13 @@ public final class UXFlowOrchestrator: ObservableObject {
         switch nextAction.kind {
         case .sheet:
             recordActionExecution(nextAction)
+            nextAction.onPresent?()
             GraceLogger.orchestrator("Presenting '\(nextAction.id)' (kind: \(nextAction.kind), priority: \(nextAction.priority.rawValue))...", level: .success)
             activeSheetItem = UXActionItem(action: nextAction)
             
         case .fullScreenCover:
             recordActionExecution(nextAction)
+            nextAction.onPresent?()
             GraceLogger.orchestrator("Presenting '\(nextAction.id)' (kind: \(nextAction.kind), priority: \(nextAction.priority.rawValue))...", level: .success)
             activeCoverItem = UXActionItem(action: nextAction)
             
@@ -192,6 +194,7 @@ public final class UXFlowOrchestrator: ObservableObject {
         
         activeSheetItem = nil
         activeCoverItem = nil
+        current.onDismiss?()
         GraceLogger.orchestrator("Visual modal '\(actionId)' dismissed. Entering \(interPresentationDelay)s settling window...", level: .info)
         completeAction(current, outcome: .completed)
     }
@@ -253,6 +256,12 @@ public final class UXFlowOrchestrator: ObservableObject {
                     return false
                 }
             }
+        }
+        
+        // 4. Intrinsic action precondition (e.g., ReleaseNotesManager eligibility)
+        if let actionPrecondition = action.precondition, !actionPrecondition() {
+            GraceLogger.orchestrator("Action '\(action.id)' rejected: Intrinsic precondition returned false.", level: .info)
+            return false
         }
         
         return true

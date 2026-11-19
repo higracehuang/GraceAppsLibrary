@@ -43,6 +43,9 @@ public struct UXActionID: RawRepresentable, Hashable, Sendable, ExpressibleByStr
     /// Commercial paywall presentation action.
     public static let paywall: UXActionID        = "paywall"
 
+    /// Version release notes ("What's New") sheet presentation action.
+    public static let releaseNotes: UXActionID   = "release_notes"
+
     /// Celebration presentation action (alias of milestoneSheet).
     public static let celebration: UXActionID    = "milestone_sheet"
 }

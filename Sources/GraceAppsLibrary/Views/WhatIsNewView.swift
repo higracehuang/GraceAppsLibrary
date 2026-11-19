@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct WhatIsNewView: View {
+internal struct WhatIsNewView: View {
     let releaseNotes: [ReleaseNote]
     let isPaidUser: Bool
     let tierName: LocalizedStringKey
@@ -8,14 +8,14 @@ public struct WhatIsNewView: View {
 
     @State private var showingReleaseNotes = false
     
-    public init(releaseNotes: [ReleaseNote], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil) {
+    internal init(releaseNotes: [ReleaseNote], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil) {
         self.releaseNotes = releaseNotes
         self.isPaidUser = isPaidUser
         self.tierName = tierName
         self.paywallAction = paywallAction
     }
     
-    public var body: some View {
+    internal var body: some View {
         Button(action: {
             showingReleaseNotes = true
         }) {

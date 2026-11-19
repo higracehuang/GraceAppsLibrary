@@ -28,12 +28,9 @@ public final class ReleaseNotesManager {
         lastViewedVersion == nil
     }
     
-    /// Checks if the release notes should be shown for the current app version
-    /// - Parameters:
-    ///   - releaseNotes: The list of available release notes
-    ///   - suppressOnFirstInstall: If true (default), suppresses release notes for new user fresh installs
-    /// - Returns: True if the current version's release notes should be shown (e.g. on app upgrade)
-    public func shouldShow(releaseNotes: [ReleaseNote], suppressOnFirstInstall: Bool = true) -> Bool {
+    /// Checks if the release notes should be shown for the current app version.
+    /// - Note: Internal to GraceAppsLibrary. Client views should use `UXFlowOrchestrator.shared.requestActions([UXAction.releaseNotes(...)])`.
+    internal func shouldShow(releaseNotes: [ReleaseNote], suppressOnFirstInstall: Bool = true) -> Bool {
         shouldShowReleaseNotes(
             currentVersion: currentVersion,
             releaseNotes: releaseNotes,
@@ -41,18 +38,14 @@ public final class ReleaseNotesManager {
         )
     }
     
-    /// Marks the current app version as viewed
-    public func markCurrentVersionAsViewed() {
+    /// Marks the current app version as viewed. Internal to GAL.
+    internal func markCurrentVersionAsViewed() {
         markAsViewed(version: currentVersion)
     }
     
-    /// Checks if the release notes should be shown for the current version
-    /// - Parameters:
-    ///   - currentVersion: The current version of the app (e.g., from Bundle)
-    ///   - releaseNotes: The list of available release notes
-    ///   - suppressOnFirstInstall: If true (default), suppresses release notes on fresh installations
-    /// - Returns: True if the current version's release notes haven't been seen yet and it's an upgrade from a previous version
-    public func shouldShowReleaseNotes(
+    /// Checks if the release notes should be shown for the current version.
+    /// - Note: Internal to GraceAppsLibrary.
+    internal func shouldShowReleaseNotes(
         currentVersion: String,
         releaseNotes: [ReleaseNote],
         suppressOnFirstInstall: Bool = true
@@ -93,9 +86,8 @@ public final class ReleaseNotesManager {
         return isUpgrade
     }
     
-    /// Marks the current version as viewed
-    /// - Parameter version: The version to mark as viewed
-    public func markAsViewed(version: String) {
+    /// Marks the specified version as viewed. Internal to GAL.
+    internal func markAsViewed(version: String) {
         GraceLogger.info("Marking version \(version) as viewed")
         userDefaults.set(version, forKey: lastViewedVersionKey)
     }
@@ -106,6 +98,15 @@ public final class ReleaseNotesManager {
         GraceLogger.info("Resetting release notes state.", category: .debug)
         Self.hasShownReleaseNotesThisSession = false
         userDefaults.removeObject(forKey: lastViewedVersionKey)
+    }
+
+    /// Seeds a simulated previously viewed version in UserDefaults for testing upgrade flows.
+    public func seedLastViewedVersionForTesting(_ version: String?) {
+        if let version = version {
+            userDefaults.set(version, forKey: lastViewedVersionKey)
+        } else {
+            userDefaults.removeObject(forKey: lastViewedVersionKey)
+        }
     }
     
 }

@@ -26,10 +26,13 @@ public struct UXTag: Hashable, Sendable, ExpressibleByStringLiteral, CustomStrin
     // MARK: - Standard Tags
     
     /// Milestone or achievement celebration results modal.
-    public static let celebration: UXTag = "celebration"
+    public static let celebration: UXTag  = "celebration"
+    
+    /// Version release notes ("What's New") modal presentation.
+    public static let releaseNotes: UXTag = "release_notes"
     
     /// Commercial conversion, subscription, or paywall modal.
-    public static let paywall: UXTag     = "paywall"
+    public static let paywall: UXTag      = "paywall"
     
     /// App Store rating and review request prompt.
     public static let review: UXTag      = "review"

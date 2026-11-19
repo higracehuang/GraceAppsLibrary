@@ -1,14 +1,8 @@
 import SwiftUI
 
-public extension View {
-    /// Automatically shows release notes if they haven't been viewed for the current version
-    /// - Parameters:
-    ///   - releaseNotes: The list of available release notes
-    ///   - isPaidUser: Whether the user is on a paid tier
-    ///   - tierName: The name of the premium tier (default "Premium")
-    ///   - suppressOnFirstInstall: Whether to suppress release notes on fresh installs (default true)
-    ///   - paywallAction: Custom closure when tapping paywall upgrade CTAs
-    /// - Returns: A view that shows release notes in a sheet if needed
+internal extension View {
+    /// Automatically shows release notes if they haven't been viewed for the current version.
+    /// - Note: Internal to GraceAppsLibrary. Client views should present release notes via `UXFlowOrchestrator.shared.requestActions([UXAction.releaseNotes(...)])`.
     func graceReleaseNotes(
         releaseNotes: [ReleaseNote],
         isPaidUser: Bool = false,
@@ -24,7 +18,9 @@ public extension View {
             paywallAction: paywallAction
         ))
     }
-    
+}
+
+public extension View {
     @ViewBuilder
     func compatBadge(_ text: String) -> some View {
         if #available(iOS 15.0, *) {
