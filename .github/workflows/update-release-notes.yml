@@ -70,11 +70,33 @@ jobs:
           Follow the exact formatting of RELEASE_NOTES.md (newest first, feature-first bullets).
           If there are breaking API changes, renamed symbols, or new SPM products required by consumer apps, include a concise '### Migration' subsection under ## ${VERSION} — ${TODAY}.
           If a '## ${VERSION}' section already exists (because the tag was retagged), update that section in place rather than duplicating it.
+          Keep only the 10 most recent release sections (remove any older '## ' sections beyond the 10th).
           Finally, ensure the last line of RELEASE_NOTES.md is: <!-- gal-notes-sha: ${LATEST_SHA} -->"
 
           claude -p "$PROMPT" \
             --allowedTools "Read,Edit,Bash(git log:*),Bash(git diff:*),Bash(git show:*)" \
             --max-turns 8
+
+      - name: Enforce max 10 releases in RELEASE_NOTES.md
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          python3 - <<'EOF'
+          import re
+
+          latest_sha = "${{ steps.check.outputs.latest_sha }}"
+          path = "RELEASE_NOTES.md"
+          text = open(path, encoding="utf-8").read()
+          text = re.sub(r'\n*<!--\s*gal-notes-sha:\s*[a-f0-9]+\s*-->\s*', '\n', text).rstrip()
+
+          parts = re.split(r'(?=^## )', text, flags=re.MULTILINE)
+          header = parts[0].rstrip() if parts and not parts[0].startswith("## ") else ""
+          sections = [p.rstrip() for p in parts if p.startswith("## ")]
+
+          kept = sections[:10]
+          new_text = (header + "\n\n" if header else "") + "\n\n".join(kept) + f"\n\n<!-- gal-notes-sha: {latest_sha} -->\n"
+          open(path, "w", encoding="utf-8").write(new_text)
+          print(f"RELEASE_NOTES.md trimmed to {len(kept)} release(s).")
+          EOF
 
       - name: Commit and push RELEASE_NOTES.md
         if: steps.check.outputs.changed == 'true'
