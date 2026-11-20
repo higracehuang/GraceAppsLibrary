@@ -251,7 +251,7 @@ public final class ReviewPromptManager {
 
     /// Convenience to evaluate eligibility and trigger 1-step direct native StoreKit prompt.
     @discardableResult
-    public func requestDirectReviewIfEligible(now: Date = Date()) -> Bool {
+    internal func requestDirectReviewIfEligible(now: Date = Date()) -> Bool {
         requestReviewIfEligible(style: .directNative, now: now)
     }
 
@@ -273,7 +273,7 @@ public final class ReviewPromptManager {
     }
 
     @discardableResult
-    public static func requestDirectReviewIfEligible() -> Bool {
+    internal static func requestDirectReviewIfEligible() -> Bool {
         shared.requestDirectReviewIfEligible()
     }
 
@@ -308,7 +308,7 @@ public final class ReviewPromptManager {
     ///   - isModalPresented: Optional flag to suppress prompting if a modal (e.g. paywall) is currently visible.
     ///   - delay: Seconds to delay before presenting StoreKit prompt to allow transitions to settle (default is 0.6s).
     @discardableResult
-    public func requestDirectReviewIfEligible(
+    internal func requestDirectReviewIfEligible(
         currentCount: Int,
         threshold: Int = 2,
         isModalPresented: Bool = false,
@@ -346,7 +346,7 @@ public final class ReviewPromptManager {
 
     /// Static helper to evaluate eligibility and present direct native StoreKit review prompt.
     @discardableResult
-    public static func requestDirectReviewIfEligible(
+    internal static func requestDirectReviewIfEligible(
         currentCount: Int,
         threshold: Int = 2,
         isModalPresented: Bool = false,
