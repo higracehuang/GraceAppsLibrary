@@ -75,7 +75,7 @@ jobs:
 
           claude -p "$PROMPT" \
             --allowedTools "Read,Edit,Bash(git log:*),Bash(git diff:*),Bash(git show:*)" \
-            --max-turns 8
+            --max-turns 20
 
       - name: Enforce max 10 releases in RELEASE_NOTES.md
         if: steps.check.outputs.changed == 'true'
