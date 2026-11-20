@@ -73,7 +73,7 @@ jobs:
           - Feature is the component or area name (for example Paywall, AdMob, RevenueCat, Review Prompt, UX Flow, Screenshots, Onboarding, Logger, Docs, Fastlane). Map commit scopes to these names (admob = AdMob, revenuecat = RevenueCat, review = Review Prompt, orchestrator and UXFlow = UX Flow); title-case any other scope.
           - Description is one short sentence in plain, simple words, no big words, ending with a period.
           - Group related commits into a single bullet. Skip pure refactors, tests, and chores unless they change behavior an app developer using the library would notice.
-          If there are breaking API changes, renamed symbols, or new SPM products required by consumer apps, include a concise '### Migration' subsection under ## ${VERSION} — ${TODAY}.
+          If there are breaking API changes, renamed symbols, or new SPM products required by consumer apps, include a concise '### Migration' subsection under ## ${VERSION} — ${TODAY}. Write the subsection from any 'Migration:' notes in the commit messages between '${PREV_TAG}' and '${LATEST_SHA}' when they exist, keeping the author's own steps and wording. Only when no such note exists, work the steps out from the diff.
           If a '## ${VERSION}' section already exists (because the tag was retagged), update that section in place rather than duplicating it.
           Keep only the 10 most recent release sections (remove any older '## ' sections beyond the 10th).
           Finally, ensure the last line of RELEASE_NOTES.md is: <!-- gal-notes-sha: ${LATEST_SHA} -->"
