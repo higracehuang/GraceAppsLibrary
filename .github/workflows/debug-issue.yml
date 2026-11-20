@@ -144,7 +144,7 @@ jobs:
               --title "Fix for issue #${{ inputs.issue_number }}" \
               --body "$(cat /tmp/debug-report.md)
 
-          Refs #${{ inputs.issue_number }}")
+          Closes #${{ inputs.issue_number }}")
           fi
           echo "created=true" >> "$GITHUB_OUTPUT"
           echo "url=$PR_URL" >> "$GITHUB_OUTPUT"
