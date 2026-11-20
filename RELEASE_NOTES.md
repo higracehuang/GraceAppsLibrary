@@ -64,3 +64,5 @@ each change listed with the feature name first.
 
 - Screenshots: New hero slide type for the renderer, with 3D flashcard styling and an iPad layout with fanned cards and a bento grid.
 - Docs: Fastlane playbook with directory standards, metadata specs, and CI/CD automation.
+
+<!-- gal-notes-sha: 1247eff8b24b9ad1179b9983a2ab2b3329e16977 -->
