@@ -3,6 +3,17 @@
 Release notes for GraceAppsLibrary, newest first. One section per release,
 each change listed with the feature name first.
 
+## 1.41.0 — Nov 20, 2026
+
+- iCloud: New CloudKitSyncManager, plus ready-made iCloud sync views (CloudKitSyncSectionView and iCloudSyncView).
+- Review Prompt: requestDirectReviewIfEligible is internal now, so rating prompts run through the UX Flow orchestrator.
+- Fastlane: The App Store Connect private key is detected automatically, as base64 or raw PEM.
+- Workflows: New reusable workflow that migrates apps to a new GAL version, and a debug workflow that fixes a labeled issue and opens a PR for review.
+
+### Migration
+
+Marked all 4 requestDirectReviewIfEligible overloads internal in ReviewPromptManager.swift, matching requestReviewIfNecessary, showAd, and graceReleaseNotes so client apps go through UXFlowOrchestrator + UXAction.ratingPrompt.
+
 ## 1.40.1 — Nov 19, 2026
 
 - UX Flow: Release notes now run through the orchestrator, with a settled callback, priority queue re-sorting, and duplicate actions removed by ID.
@@ -60,9 +71,4 @@ each change listed with the feature name first.
 - Screenshots: New panoramic App Store row view with scale controls, plus layout fixes so slides no longer clip or overflow.
 - Onboarding: Step transitions animate by default, and swiping between steps can be turned off.
 
-## 1.34.0 — Oct 28, 2026
-
-- Screenshots: New hero slide type for the renderer, with 3D flashcard styling and an iPad layout with fanned cards and a bento grid.
-- Docs: Fastlane playbook with directory standards, metadata specs, and CI/CD automation.
-
-<!-- gal-notes-sha: 1247eff8b24b9ad1179b9983a2ab2b3329e16977 -->
+<!-- gal-notes-sha: 36ec449bc60e2510b6a0958afafa73baafccfb38 -->
