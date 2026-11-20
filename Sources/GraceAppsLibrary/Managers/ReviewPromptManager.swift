@@ -210,7 +210,7 @@ public final class ReviewPromptManager {
     }
 
     /// Requests review if conditions are met, returning whether prompt was shown.
-    /// Internal only: external callers should use `requestReviewIfEligible()`.
+    /// Internal only: external callers should use `UXAction.ratingPrompt` via `UXFlowOrchestrator`.
     @discardableResult
     internal func requestReviewIfNecessary(onNegativeFeedback: (() -> Void)? = nil) -> Bool {
         GraceLogger.info("requestReviewIfNecessary() invoked", category: .review)
@@ -227,8 +227,9 @@ public final class ReviewPromptManager {
     }
 
     /// Evaluates eligibility and presents the review prompt with the requested style.
+    /// Internal only: external callers should use `UXAction.ratingPrompt` via `UXFlowOrchestrator`.
     @discardableResult
-    public func requestReviewIfEligible(
+    internal func requestReviewIfEligible(
         style: ReviewPromptStyle? = nil,
         now: Date = Date(),
         onNegativeFeedback: (() -> Void)? = nil
@@ -265,7 +266,7 @@ public final class ReviewPromptManager {
     }
 
     @discardableResult
-    public static func requestReviewIfEligible(
+    internal static func requestReviewIfEligible(
         style: ReviewPromptStyle? = nil,
         onNegativeFeedback: (() -> Void)? = nil
     ) -> Bool {
