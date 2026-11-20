@@ -280,6 +280,18 @@ jobs:
           fi
           echo "url=$PR_URL" >> "$GITHUB_OUTPUT"
 
+      - name: Auto-merge when the build passed
+        if: steps.commit.outputs.has_changes == 'true' && steps.build.outputs.passed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(gh pr list --head chore/gal-update --state open --json number --jq '.[0].number // empty')
+          if [ -n "$PR_NUMBER" ]; then
+            if [ "$(gh pr view "$PR_NUMBER" --json isDraft --jq '.isDraft')" = "true" ]; then
+              gh pr ready "$PR_NUMBER"
+            fi
+            gh pr merge "$PR_NUMBER" --merge
+          fi
       - name: Notify & fail if migration or build failed
         if: failure() || steps.build.outputs.passed == 'false'
         env:
