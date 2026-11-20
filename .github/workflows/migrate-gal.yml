@@ -196,6 +196,7 @@ jobs:
           1. Read _gal/RELEASE_NOTES.md for changes and migration instructions up to v${TARGET_VER}.
           2. Inspect the library diff using: ${DIFF_CMD}
           3. Update any broken or deprecated call sites, imports, or SPM product links in this app so it compiles cleanly against GraceAppsLibrary v${TARGET_VER}.
+          Scope: adapt only the functionality this app already has to the GAL changes. Do not add new features or capabilities to the app, even when the new GAL version offers them. Example: if GAL adds an iCloud feature, do not wire it into this app unless the app already uses that feature.
           4. Verify compilation using: xcodebuild build ${{ steps.meta.outputs.container_flag }} \"${{ steps.meta.outputs.container_path }}\" -scheme \"${{ steps.meta.outputs.scheme }}\" -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO -clonedSourcePackagesDirPath /tmp/spm_cache
           5. Do NOT modify anything inside _gal/."
 
