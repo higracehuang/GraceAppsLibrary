@@ -16,6 +16,8 @@ public enum GALDocValidationError: LocalizedError, Equatable {
     case missingPaywallTrigger(trigger: String)
     case missingUITestFile(path: String)
     case missingUITestCase(method: String, file: String)
+    case emptyReleaseNotes
+    case tooManyReleaseNotes(count: Int, maxCount: Int)
 
     public var errorDescription: String? {
         switch self {
@@ -33,12 +35,34 @@ public enum GALDocValidationError: LocalizedError, Equatable {
             return "UX Moments UI test file not found at: \(path). Every app must include a UXMomentsUITests.swift test suite."
         case .missingUITestCase(let method, let file):
             return "UI test case '\(method)' documented in UX_MOMENTS.md is missing from \(file)."
+        case .emptyReleaseNotes:
+            return "In-app release notes array must not be empty."
+        case .tooManyReleaseNotes(let count, let maxCount):
+            return "In-app release notes has \(count) entries, exceeding the display limit of \(maxCount). Run GraceAppsLibrary/scripts/prune_release_notes.py to prune older entries and clean unused Localizable.xcstrings keys."
         }
     }
 }
 
 /// Automated validator for auditing `UX_MOMENTS.md` action matrices against code implementations.
 public enum GALDocValidator {
+    
+    /// Maximum number of in-app release note versions displayed by `ReleaseNotesView`.
+    public static let maxReleaseNotesCount = 5
+
+    /// Validates that an app's in-app release notes array does not exceed `ReleaseNotesView`'s display limit.
+    @discardableResult
+    public static func validateReleaseNotes(
+        _ releaseNotes: [ReleaseNote],
+        maxCount: Int = maxReleaseNotesCount
+    ) throws -> Bool {
+        guard !releaseNotes.isEmpty else {
+            throw GALDocValidationError.emptyReleaseNotes
+        }
+        guard releaseNotes.count <= maxCount else {
+            throw GALDocValidationError.tooManyReleaseNotes(count: releaseNotes.count, maxCount: maxCount)
+        }
+        return true
+    }
     
     /// Required sections that must be present in every app's `UX_MOMENTS.md`.
     public static let defaultRequiredSections = [

@@ -650,4 +650,18 @@ final class ReleaseNotesTests: XCTestCase {
         XCTAssertEqual(orchestrator.activeSheetItem?.id, .releaseNotes, "Resetting release notes state must also reset orchestrator session count for .releaseNotes")
         orchestrator.dismissCurrentAction()
     }
+
+    func testGALDocValidatorReleaseNotesLimit() throws {
+        XCTAssertThrowsError(try GALDocValidator.validateReleaseNotes([])) { error in
+            XCTAssertEqual(error as? GALDocValidationError, .emptyReleaseNotes)
+        }
+
+        let fiveNotes = (1...5).map { ReleaseNote(version: "1.\($0).0", notes: ["Note \($0)"]) }
+        XCTAssertTrue(try GALDocValidator.validateReleaseNotes(fiveNotes))
+
+        let sixNotes = (1...6).map { ReleaseNote(version: "1.\($0).0", notes: ["Note \($0)"]) }
+        XCTAssertThrowsError(try GALDocValidator.validateReleaseNotes(sixNotes)) { error in
+            XCTAssertEqual(error as? GALDocValidationError, .tooManyReleaseNotes(count: 6, maxCount: 5))
+        }
+    }
 }

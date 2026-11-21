@@ -9,7 +9,7 @@ internal struct ReleaseNotesView: View {
 
     
     internal init(releaseNotes: [ReleaseNote], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil, onDismiss: @escaping () -> Void) {
-        self.releaseNotes = Array(releaseNotes.prefix(5))
+        self.releaseNotes = Array(releaseNotes.prefix(GALDocValidator.maxReleaseNotesCount))
         self.isPaidUser = isPaidUser
         self.tierName = tierName
         self.paywallAction = paywallAction
