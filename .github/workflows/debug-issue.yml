@@ -1,0 +1,183 @@
+name: Debug Issue
+
+on:
+  workflow_call:
+    inputs:
+      issue_number:
+        description: "Issue number to debug"
+        required: true
+        type: number
+      scheme:
+        description: "Xcode scheme to build"
+        required: true
+        type: string
+    secrets:
+      ANTHROPIC_API_KEY:
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  debug:
+    runs-on: macos-15
+    timeout-minutes: 120
+    concurrency:
+      group: claude-debug-${{ github.repository }}-${{ inputs.issue_number }}
+      cancel-in-progress: false
+    steps:
+      - name: Check out the app
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Load the issue case file
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue view "${{ inputs.issue_number }}" --json title,body,labels,comments > /tmp/issue.json
+          python3 - <<'EOF'
+          import json
+          d = json.load(open("/tmp/issue.json"))
+          out = [f"# Issue: {d['title']}", "", d.get("body") or ""]
+          for c in d.get("comments") or []:
+              out += ["", f"--- comment by {c['author']['login']} ---", c.get("body") or ""]
+          open("/tmp/case.md", "w").write("\n".join(out))
+          print("case file written")
+          EOF
+
+      - name: Mark the run as started on the issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for L in debug-running fix-proposed needs-decision not-a-bug; do
+            gh label create "$L" --color "ededed" 2>/dev/null || true
+          done
+          gh issue edit "${{ inputs.issue_number }}" --add-label "debug-running" || true
+          gh issue comment "${{ inputs.issue_number }}" --body "Claude debug run started: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" || true
+
+      - name: Resolve Xcode container
+        id: meta
+        run: |
+          if ls *.xcworkspace >/dev/null 2>&1; then
+            echo "container_flag=-workspace" >> "$GITHUB_OUTPUT"
+            echo "container_path=$(ls -d *.xcworkspace | head -1)" >> "$GITHUB_OUTPUT"
+          elif ls *.xcodeproj >/dev/null 2>&1; then
+            echo "container_flag=-project" >> "$GITHUB_OUTPUT"
+            echo "container_path=$(ls -d *.xcodeproj | head -1)" >> "$GITHUB_OUTPUT"
+          else
+            echo "No .xcworkspace or .xcodeproj found at repo root" >&2
+            exit 1
+          fi
+
+      - name: Set up Node.js & Claude Code CLI
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude Code debugging
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          PROMPT="You are debugging a user-reported problem in this iOS app, filed as GitHub issue #${{ inputs.issue_number }}.
+          1. Read the case file at /tmp/case.md first. It holds the user report, the app version, diagnostics, and any comments.
+          2. Find the code behind the symptom and pin down the root cause. Use git log and git show when history helps.
+          3. If it is a code bug you can fix safely, fix only that bug. Keep the change as small as the bug allows.
+          4. Scope: do not add features, do not refactor unrelated code, do not change version numbers, dependencies, or anything under .github/. If GAL offers a helper the app is not using, that is not part of this fix.
+          5. If the fix needs a product decision, a data migration, or changes to purchases or the paywall, do not guess. Stop and report needs-decision.
+          6. If the evidence says the app is behaving correctly and the cause sits on the user's side (a setting, an account state, a charge from another app), report not-a-bug and include a short reply the maintainer can send the user.
+          7. Verify your fix compiles using: xcodebuild build ${{ steps.meta.outputs.container_flag }} \"${{ steps.meta.outputs.container_path }}\" -scheme \"${{ inputs.scheme }}\" -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
+          8. Do not commit or push. The workflow handles git.
+          9. Write your final report to /tmp/debug-report.md. The first line must be exactly one of: OUTCOME: fixed, OUTCOME: needs-decision, OUTCOME: not-a-bug. Then write: the root cause, what you changed or checked, and the evidence. For not-a-bug, add the suggested user reply at the end."
+
+          claude -p "$PROMPT" \
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(xcodebuild:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(git status)" \
+            --max-turns 50 || true
+
+      - name: Verify Xcode build
+        id: build
+        run: |
+          set -o pipefail
+          if xcodebuild build \
+            ${{ steps.meta.outputs.container_flag }} "${{ steps.meta.outputs.container_path }}" \
+            -scheme "${{ inputs.scheme }}" \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/xcodebuild.log; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+            tail -n 60 /tmp/xcodebuild.log > /tmp/xcodebuild_tail.log
+          fi
+
+      - name: Open a PR if Claude fixed it and the build passes
+        id: pr
+        if: steps.build.outputs.passed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OUTCOME=$(head -1 /tmp/debug-report.md 2>/dev/null | tr -d '\r')
+          if [ "$OUTCOME" != "OUTCOME: fixed" ]; then
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B "fix/issue-${{ inputs.issue_number }}"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            echo "Claude reported a fix but changed no files." >> /tmp/debug-report.md
+            exit 0
+          fi
+          git commit -m "fix: address issue #${{ inputs.issue_number }}"
+          git push -f origin "fix/issue-${{ inputs.issue_number }}"
+          EXISTING_PR=$(gh pr list --head "fix/issue-${{ inputs.issue_number }}" --state open --json url --jq '.[0].url // empty')
+          if [ -n "$EXISTING_PR" ]; then
+            PR_URL="$EXISTING_PR"
+          else
+            PR_URL=$(gh pr create --head "fix/issue-${{ inputs.issue_number }}" --base main \
+              --title "Fix for issue #${{ inputs.issue_number }}" \
+              --body "$(cat /tmp/debug-report.md)
+
+          Closes #${{ inputs.issue_number }}")
+          fi
+          echo "created=true" >> "$GITHUB_OUTPUT"
+          echo "url=$PR_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Report the outcome on the issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OUTCOME=$(head -1 /tmp/debug-report.md 2>/dev/null | tr -d '\r')
+          case "$OUTCOME" in
+            "OUTCOME: fixed") RESULT_LABEL="fix-proposed" ;;
+            "OUTCOME: not-a-bug") RESULT_LABEL="not-a-bug" ;;
+            *) RESULT_LABEL="needs-decision" ;;
+          esac
+          if [ "${{ steps.pr.outputs.created }}" = "true" ]; then
+            RESULT_LABEL="fix-proposed"
+            echo "" >> /tmp/debug-report.md
+            echo "Fix PR: ${{ steps.pr.outputs.url }}" >> /tmp/debug-report.md
+          elif [ "$OUTCOME" = "OUTCOME: fixed" ] && [ "${{ steps.build.outputs.passed }}" != "true" ]; then
+            RESULT_LABEL="needs-decision"
+            {
+              echo ""
+              echo "A fix was attempted but the build failed. Compiler output (last 60 lines):"
+              echo ""
+              echo '```'
+              cat /tmp/xcodebuild_tail.log 2>/dev/null || echo "See workflow run."
+              echo '```'
+            } >> /tmp/debug-report.md
+          fi
+          if [ ! -s /tmp/debug-report.md ]; then
+            echo "The debug run ended without a report. See the workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" > /tmp/debug-report.md
+            RESULT_LABEL="needs-decision"
+          fi
+          gh issue comment "${{ inputs.issue_number }}" --body-file /tmp/debug-report.md || true
+          gh issue edit "${{ inputs.issue_number }}" --remove-label "debug-running" --add-label "$RESULT_LABEL" || true
