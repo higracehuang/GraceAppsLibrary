@@ -33,6 +33,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Cache SwiftPM packages
+        uses: actions/cache@v4
+        with:
+          path: /tmp/spm_cache
+          key: spm-${{ runner.os }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
       - name: Load the issue case file
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -91,7 +99,7 @@ jobs:
           4. Scope: do not add features, do not refactor unrelated code, do not change version numbers, dependencies, or anything under .github/. If GAL offers a helper the app is not using, that is not part of this fix.
           5. If the fix needs a product decision, a data migration, or changes to purchases or the paywall, do not guess. Stop and report needs-decision.
           6. If the evidence says the app is behaving correctly and the cause sits on the user's side (a setting, an account state, a charge from another app), report not-a-bug and include a short reply the maintainer can send the user.
-          7. Verify your fix compiles using: xcodebuild build ${{ steps.meta.outputs.container_flag }} \"${{ steps.meta.outputs.container_path }}\" -scheme \"${{ inputs.scheme }}\" -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
+          7. Verify your fix compiles using: xcodebuild build ${{ steps.meta.outputs.container_flag }} \"${{ steps.meta.outputs.container_path }}\" -scheme \"${{ inputs.scheme }}\" -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO -clonedSourcePackagesDirPath /tmp/spm_cache
           8. Do not commit or push. The workflow handles git.
           9. Write your final report to /tmp/debug-report.md. The first line must be exactly one of: OUTCOME: fixed, OUTCOME: needs-decision, OUTCOME: not-a-bug. Then write: the root cause, what you changed or checked, and the evidence. For not-a-bug, add the suggested user reply at the end."
 
@@ -107,6 +115,7 @@ jobs:
             ${{ steps.meta.outputs.container_flag }} "${{ steps.meta.outputs.container_path }}" \
             -scheme "${{ inputs.scheme }}" \
             -destination 'generic/platform=iOS Simulator' \
+            -clonedSourcePackagesDirPath /tmp/spm_cache \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/xcodebuild.log; then
             echo "passed=true" >> "$GITHUB_OUTPUT"
           else
