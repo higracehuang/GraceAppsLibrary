@@ -653,4 +653,75 @@ final class UXFlowOrchestratorTests: XCTestCase {
         }
         wait(for: [adExp], timeout: 1.0)
     }
+
+    func testStandardPolicyPaywallSuppressesReviewPrompt() {
+        ReviewPromptManager.debugResetReviewState()
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.policy = .standard
+
+        XCTAssertTrue(ReviewPromptManager.shared.isEligibleForPrompt(), "Precondition must be true so mutual exclusion is exercised")
+
+        var paywallPresented = false
+        var reviewPrompted = false
+
+        let paywallAction = UXAction(
+            id: .paywall,
+            priority: .paywall,
+            kind: .customAsync,
+            tags: [.paywall]
+        ) { completion in
+            paywallPresented = true
+            completion(.completed)
+        }
+        let reviewAction = UXAction.ratingPrompt {
+            reviewPrompted = true
+            return true
+        }
+
+        orchestrator.triggerFlow(actions: [paywallAction, reviewAction])
+
+        XCTAssertTrue(paywallPresented)
+        let exp = expectation(description: "Wait for flow settling")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            XCTAssertFalse(reviewPrompted, "UXPolicy.standard must suppress review prompts after a paywall in the same flow")
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+    }
+
+    func testStandardPolicyAdSuppressesReviewPrompt() {
+        ReviewPromptManager.debugResetReviewState()
+        let orchestrator = UXFlowOrchestrator.shared
+        orchestrator.policy = .standard
+
+        XCTAssertTrue(ReviewPromptManager.shared.isEligibleForPrompt(), "Precondition must be true so mutual exclusion is exercised")
+
+        var adPresented = false
+        var reviewPrompted = false
+
+        // Give the ad higher priority than review to verify symmetric .ad -> .review exclusion
+        let adAction = UXAction(
+            id: .interstitialAd,
+            priority: UXActionPriority(rawValue: 300),
+            kind: .customAsync,
+            tags: [.ad]
+        ) { completion in
+            adPresented = true
+            completion(.completed)
+        }
+        let reviewAction = UXAction.ratingPrompt {
+            reviewPrompted = true
+            return true
+        }
+
+        orchestrator.triggerFlow(actions: [adAction, reviewAction])
+
+        XCTAssertTrue(adPresented)
+        let exp = expectation(description: "Wait for flow settling")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            XCTAssertFalse(reviewPrompted, "UXPolicy.standard must suppress review prompts after an ad in the same flow")
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+    }
 }
