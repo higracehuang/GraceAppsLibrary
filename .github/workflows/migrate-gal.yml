@@ -163,9 +163,16 @@ jobs:
                   print(f"Updated minimumVersion to {target_ver} in {pbx}")
           EOF
 
+      - name: Cache SwiftPM packages
+        uses: actions/cache@v4
+        with:
+          path: /tmp/spm_cache
+          key: spm-${{ runner.os }}-${{ hashFiles('**/Package.resolved') }}-${{ steps.meta.outputs.target_sha }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
       - name: Resolve SwiftPM dependencies (retag-safe)
         run: |
-          rm -rf /tmp/spm_cache
           xcodebuild -resolvePackageDependencies \
             ${{ steps.meta.outputs.container_flag }} "${{ steps.meta.outputs.container_path }}" \
             -scheme "${{ steps.meta.outputs.scheme }}" \
