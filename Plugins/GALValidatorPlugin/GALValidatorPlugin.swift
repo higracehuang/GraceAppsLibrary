@@ -81,7 +81,9 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
     let rules: [(needle: String, message: String)] = [
         ("Purchases.configure(", "Use UniversalPurchaseCoordinator.shared.configure(...) instead of Purchases.configure(...)."),
         ("PaywallView(", "Use .universalPaywall(...) or UniversalPaywallPresenter instead of PaywallView(...) directly."),
-        ("SKStoreReviewController.requestReview", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of SKStoreReviewController.requestReview.")
+        ("SKStoreReviewController.requestReview", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of SKStoreReviewController.requestReview."),
+        ("setPrecondition(actionId: .interstitialAd", "Remove manual .interstitialAd precondition; UniversalPurchaseCoordinator.shared.configure(...) wires it automatically."),
+        ("setPrecondition(actionId: \"interstitial_ad\"", "Remove manual \"interstitial_ad\" precondition; UniversalPurchaseCoordinator.shared.configure(...) wires it automatically.")
     ]
 
     for fileURL in swiftFiles {
