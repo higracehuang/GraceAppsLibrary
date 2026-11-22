@@ -7,7 +7,8 @@ struct GALValidatorPlugin: BuildToolPlugin {
         guard let sourceTarget = target as? SourceModuleTarget else {
             return []
         }
-        let swiftFiles = sourceTarget.sourceFiles(withSuffix: "swift").map(\.url)
+        let swiftFiles = sourceTarget.sourceFiles(withSuffix: "swift")
+            .map { URL(fileURLWithPath: $0.path.string) }
         validateSwiftSources(swiftFiles, projectRoot: nil, allInputFiles: swiftFiles)
         return []
     }
@@ -18,11 +19,11 @@ import XcodeProjectPlugin
 
 extension GALValidatorPlugin: XcodeBuildToolPlugin {
     func createBuildCommands(context: XcodePluginContext, target: XcodeTarget) throws -> [Command] {
-        let allFiles = target.inputFiles.map(\.url)
+        let allFiles = target.inputFiles.map { URL(fileURLWithPath: $0.path.string) }
         let swiftFiles = target.inputFiles
-            .filter { $0.type == .source && $0.url.pathExtension == "swift" }
-            .map(\.url)
-        let projectRoot = context.xcodeProject.directoryURL
+            .filter { $0.type == .source && $0.path.extension == "swift" }
+            .map { URL(fileURLWithPath: $0.path.string) }
+        let projectRoot = URL(fileURLWithPath: context.xcodeProject.directory.string)
         validateSwiftSources(swiftFiles, projectRoot: projectRoot, allInputFiles: allFiles)
         return []
     }
