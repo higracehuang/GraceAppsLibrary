@@ -61,6 +61,48 @@ final class GraceAppsLibraryRevenueCatTests: XCTestCase {
         XCTAssertTrue(AdPacingEngine.shared.isProUser())
     }
 
+    func testInterstitialAdPreconditionAutoWiring() {
+        UXFlowOrchestrator.shared.resetForTesting()
+        coordinator.wirePacingEngines()
+        coordinator.debugOverride = .automatic
+
+        // Free user: precondition allows interstitialAd
+        coordinator.setStoreStatus(false)
+        XCTAssertEqual(UXFlowOrchestrator.shared.policy.preconditions[.interstitialAd]?(), true)
+
+        var adExecuted = false
+        let freeExp = expectation(description: "Interstitial ad runs for free user")
+        UXFlowOrchestrator.shared.requestActions([
+            UXAction(id: .interstitialAd, priority: .ad, kind: .customAsync, tags: [.ad]) { completion in
+                adExecuted = true
+                completion(.completed)
+            }
+        ]) {
+            freeExp.fulfill()
+        }
+        wait(for: [freeExp], timeout: 2.0)
+        XCTAssertTrue(adExecuted)
+
+        // Pro user: precondition suppresses interstitialAd
+        UXFlowOrchestrator.shared.resetForTesting()
+        coordinator.wirePacingEngines()
+        coordinator.setStoreStatus(true)
+        XCTAssertEqual(UXFlowOrchestrator.shared.policy.preconditions[.interstitialAd]?(), false)
+
+        var proAdExecuted = false
+        let proExp = expectation(description: "Interstitial ad suppressed for Pro user")
+        UXFlowOrchestrator.shared.requestActions([
+            UXAction(id: .interstitialAd, priority: .ad, kind: .customAsync, tags: [.ad]) { completion in
+                proAdExecuted = true
+                completion(.completed)
+            }
+        ]) {
+            proExp.fulfill()
+        }
+        wait(for: [proExp], timeout: 2.0)
+        XCTAssertFalse(proAdExecuted)
+    }
+
     func testCallbackNotification() {
         var callbackInvokedWith: Bool? = nil
         coordinator.onProStatusChanged = { isPro in

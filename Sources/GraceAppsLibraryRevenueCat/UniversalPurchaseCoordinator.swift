@@ -64,6 +64,11 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
     public func wirePacingEngines() {
         PaywallPacingEngine.shared.isProUser = { [weak self] in self?.isPro ?? false }
         AdPacingEngine.shared.isProUser = { [weak self] in self?.isPro ?? false }
+        UXFlowOrchestrator.shared.policy.setPrecondition(actionId: .interstitialAd) { [weak self] in
+            MainActor.assumeIsolated {
+                !(self?.isPro ?? false)
+            }
+        }
     }
 
     // MARK: - Public Configuration
@@ -99,9 +104,8 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
         self.initDebugOverride()
         #endif
 
-        // 3. Connect to GAL pacing engines automatically
-        PaywallPacingEngine.shared.isProUser = { [weak self] in self?.isPro ?? false }
-        AdPacingEngine.shared.isProUser = { [weak self] in self?.isPro ?? false }
+        // 3. Connect to GAL pacing engines and UX flow preconditions automatically
+        wirePacingEngines()
 
         // 4. Resolve initial effective state immediately
         self.syncEffective()
