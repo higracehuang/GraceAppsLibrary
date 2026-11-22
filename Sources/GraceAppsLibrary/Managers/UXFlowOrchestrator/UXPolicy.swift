@@ -35,7 +35,7 @@ public struct UXPolicy {
     /// - 20s cooldown between consecutive ads.
     /// - Rating prompts gated by `ReviewPromptManager.isEligibleForPrompt()`.
     @MainActor
-    public static var standard: UXPolicy {
+    internal static var standard: UXPolicy {
         var policy = UXPolicy()
         policy.mutuallyExclude(triggerTag: .review, suppressTag: .ad)
         policy.mutuallyExclude(triggerTag: .ad, suppressTag: .review)
