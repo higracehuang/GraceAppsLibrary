@@ -21,8 +21,8 @@ let package = Package(
             name: "GraceAppsLibraryRevenueCat",
             targets: ["GraceAppsLibraryRevenueCat"]),
         .plugin(
-            name: "ReleaseNotesValidatorPlugin",
-            targets: ["ReleaseNotesValidatorPlugin"]),
+            name: "GALValidatorPlugin",
+            targets: ["GALValidatorPlugin"]),
     ],
     dependencies: [
         .package(
@@ -75,7 +75,7 @@ let package = Package(
                 "GraceAppsLibrary",
             ]),
         .plugin(
-            name: "ReleaseNotesValidatorPlugin",
+            name: "GALValidatorPlugin",
             capability: .buildTool()),
     ]
 )
