@@ -19,8 +19,16 @@ public struct AboutAppSectionView: View {
     ///   - isPaidUser: Whether the user is a paid user.
     ///   - tierName: The name of the premium tier.
     public init(appStoreId: String? = nil, releaseNotes: [ReleaseNote]? = nil, isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil) {
+        let resolvedNotes = releaseNotes ?? ReleaseNotesManager.shared.configuredReleaseNotes
+        if resolvedNotes.count > GALDocValidator.maxReleaseNotesCount {
+            let message = "In-app release notes has \(resolvedNotes.count) entries, exceeding the display limit of \(GALDocValidator.maxReleaseNotesCount). Run GraceAppsLibrary/scripts/prune_release_notes.py to prune older entries."
+            GraceLogger.error(message)
+            #if DEBUG
+            assertionFailure(message)
+            #endif
+        }
         self.appStoreId = appStoreId
-        self.releaseNotes = releaseNotes ?? ReleaseNotesManager.shared.configuredReleaseNotes
+        self.releaseNotes = resolvedNotes
         self.isPaidUser = isPaidUser
         self.tierName = tierName
         self.paywallAction = paywallAction
