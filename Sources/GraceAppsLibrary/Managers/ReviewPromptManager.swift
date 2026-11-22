@@ -376,7 +376,7 @@ public final class ReviewPromptManager {
     /// Prompts for App Store review if the current version has not been prompted yet and no release notes were shown this session.
     /// Never gates app features or provides rewards/incentives for ratings.
     @discardableResult
-    public func recordPositiveValueMoment(
+    internal func recordPositiveValueMoment(
         _ eventName: String = "positive_value_moment",
         onNegativeFeedback: (() -> Void)? = nil
     ) -> Bool {
@@ -414,7 +414,7 @@ public final class ReviewPromptManager {
 
     /// Overload for PositiveValueMoment struct.
     @discardableResult
-    public func recordPositiveValueMoment(
+    internal func recordPositiveValueMoment(
         _ moment: PositiveValueMoment,
         onNegativeFeedback: (() -> Void)? = nil
     ) -> Bool {
@@ -423,7 +423,7 @@ public final class ReviewPromptManager {
 
     /// Alias for requestReviewIfPositiveValueMoment.
     @discardableResult
-    public func requestReviewIfPositiveValueMoment(
+    internal func requestReviewIfPositiveValueMoment(
         _ eventName: String = "positive_value_moment",
         onNegativeFeedback: (() -> Void)? = nil
     ) -> Bool {
@@ -433,7 +433,7 @@ public final class ReviewPromptManager {
     /// Records a milestone action with current count and target threshold.
     /// Prompts for review when count >= threshold and version has not been prompted yet.
     @discardableResult
-    public func recordMilestone(
+    internal func recordMilestone(
         count: Int,
         threshold: Int = 2,
         name: String = "milestone",
