@@ -214,8 +214,9 @@ extension UXAction {
     ///   - tags: Action tags (default: `[.releaseNotes]`).
     ///   - paywallAction: Optional closure invoked when the user taps the paywall upgrade CTA inside release notes.
     ///   - onDismiss: Optional closure invoked after the release notes sheet is dismissed.
+    /// - Note: Internal to GraceAppsLibrary. Client apps should call `ReleaseNotesManager.shared.configure(releaseNotes:...)` at launch and mount `.scopedUXFlow()`.
     @MainActor
-    public static func releaseNotes(
+    internal static func releaseNotes(
         id: UXActionID = .releaseNotes,
         releaseNotes: [ReleaseNote],
         isPaidUser: Bool = false,

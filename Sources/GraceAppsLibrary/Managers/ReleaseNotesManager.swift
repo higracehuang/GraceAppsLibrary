@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 public final class ReleaseNotesManager {
     public static let shared = ReleaseNotesManager()
@@ -12,9 +13,32 @@ public final class ReleaseNotesManager {
     /// Tracks whether launch release notes eligibility has already been evaluated in the current session,
     /// preventing redundant re-evaluations on tab switches or view re-appearances.
     public internal(set) var hasEvaluatedLaunchReleaseNotes: Bool = false
+
+    /// Release notes configured at app launch via `configure(releaseNotes:...)`.
+    public private(set) var configuredReleaseNotes: [ReleaseNote] = []
+    internal private(set) var configuredIsPaidUser: () -> Bool = { false }
+    internal private(set) var configuredTierName: LocalizedStringKey = "Premium"
+    internal private(set) var configuredSuppressOnFirstInstall: Bool = true
+    internal private(set) var configuredPaywallAction: (() -> Void)?
     
     public init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
+    }
+
+    /// Configures release notes once at app launch so `.scopedUXFlow()` and `AboutAppSectionView`
+    /// pick them up automatically without passing `releaseNotes` in individual views.
+    public func configure(
+        releaseNotes: [ReleaseNote],
+        isPaidUser: @escaping @autoclosure () -> Bool = false,
+        tierName: LocalizedStringKey = "Premium",
+        suppressOnFirstInstall: Bool = true,
+        paywallAction: (() -> Void)? = nil
+    ) {
+        configuredReleaseNotes = releaseNotes
+        configuredIsPaidUser = isPaidUser
+        configuredTierName = tierName
+        configuredSuppressOnFirstInstall = suppressOnFirstInstall
+        configuredPaywallAction = paywallAction
     }
     
     /// The current version of the app as defined in the main bundle's Info.plist

@@ -66,6 +66,18 @@ public extension View {
                 if !orchestrator.isBusy {
                     orchestrator.resetFlowState()
                 }
+                let manager = ReleaseNotesManager.shared
+                if !manager.configuredReleaseNotes.isEmpty, !manager.hasEvaluatedLaunchReleaseNotes {
+                    orchestrator.requestAction(
+                        .releaseNotes(
+                            releaseNotes: manager.configuredReleaseNotes,
+                            isPaidUser: manager.configuredIsPaidUser(),
+                            tierName: manager.configuredTierName,
+                            suppressOnFirstInstall: manager.configuredSuppressOnFirstInstall,
+                            paywallAction: manager.configuredPaywallAction
+                        )
+                    )
+                }
             }
             .onDisappear {
                 if !orchestrator.isBusy {

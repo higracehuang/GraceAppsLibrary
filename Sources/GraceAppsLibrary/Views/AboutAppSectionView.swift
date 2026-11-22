@@ -18,9 +18,9 @@ public struct AboutAppSectionView: View {
     ///   - releaseNotes: The array of `ReleaseNote` objects to show in the "What's New" sheet.
     ///   - isPaidUser: Whether the user is a paid user.
     ///   - tierName: The name of the premium tier.
-    public init(appStoreId: String? = nil, releaseNotes: [ReleaseNote] = [], isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil) {
+    public init(appStoreId: String? = nil, releaseNotes: [ReleaseNote]? = nil, isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil) {
         self.appStoreId = appStoreId
-        self.releaseNotes = releaseNotes
+        self.releaseNotes = releaseNotes ?? ReleaseNotesManager.shared.configuredReleaseNotes
         self.isPaidUser = isPaidUser
         self.tierName = tierName
         self.paywallAction = paywallAction
