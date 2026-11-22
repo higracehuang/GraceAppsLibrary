@@ -34,7 +34,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     // MARK: - Configuration
     
     /// Declarative policy rules governing priorities, cooldowns, and exclusions.
-    public var policy = UXPolicy()
+    public var policy: UXPolicy = .standard
     
     /// Delay between consecutive presentations allowing UIKit dismiss animations to complete (default: 0.45s).
     public var interPresentationDelay: TimeInterval = 0.45 {
