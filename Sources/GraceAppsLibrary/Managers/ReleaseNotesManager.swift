@@ -34,13 +34,6 @@ public final class ReleaseNotesManager {
         suppressOnFirstInstall: Bool = true,
         paywallAction: (() -> Void)? = nil
     ) {
-        if releaseNotes.count > GALDocValidator.maxReleaseNotesCount {
-            let message = "In-app release notes has \(releaseNotes.count) entries, exceeding the display limit of \(GALDocValidator.maxReleaseNotesCount). Run GraceAppsLibrary/scripts/prune_release_notes.py to prune older entries."
-            GraceLogger.error(message)
-            #if DEBUG
-            assertionFailure(message)
-            #endif
-        }
         configuredReleaseNotes = releaseNotes
         configuredIsPaidUser = isPaidUser
         configuredTierName = tierName
