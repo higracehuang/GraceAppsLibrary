@@ -3,6 +3,16 @@
 Release notes for GraceAppsLibrary, newest first. One section per release,
 each change listed with the feature name first.
 
+## 1.41.1 — Nov 21, 2026
+
+- Review Prompt: An ad or a paywall in the same flow now suppresses the rating prompt.
+- Review Prompt: requestReviewIfEligible is internal now, so rating prompts run through the UX Flow orchestrator.
+- Release Notes: New GALDocValidator.validateReleaseNotes check, with a script that prunes this file to the newest 10 sections.
+
+### Migration
+
+Marked ReviewPromptManager.requestReviewIfEligible internal in ReviewPromptManager.swift, so client apps go through UXFlowOrchestrator + UXAction.ratingPrompt.
+
 ## 1.41.0 — Nov 20, 2026
 
 - iCloud: New CloudKitSyncManager, plus ready-made iCloud sync views (CloudKitSyncSectionView and iCloudSyncView).
@@ -66,9 +76,4 @@ Marked all 4 requestDirectReviewIfEligible overloads internal in ReviewPromptMan
 - Preview Videos: New tooling to record App Store preview videos, with an overlay compositor and a 30fps encoder.
 - Docs: Translation principles, storefront check, and versioning docs moved to GraceAppKnowledge.
 
-## 1.35.0 — Oct 29, 2026
-
-- Screenshots: New panoramic App Store row view with scale controls, plus layout fixes so slides no longer clip or overflow.
-- Onboarding: Step transitions animate by default, and swiping between steps can be turned off.
-
-<!-- gal-notes-sha: 36ec449bc60e2510b6a0958afafa73baafccfb38 -->
+<!-- gal-notes-sha: 21e8aac02d46ea29cef4d68cfb06cfeae86e4699 -->
