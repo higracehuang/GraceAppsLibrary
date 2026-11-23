@@ -113,5 +113,6 @@ jobs:
             echo "No changes to RELEASE_NOTES.md."
           else
             git commit -m "docs: update RELEASE_NOTES.md for ${{ steps.check.outputs.latest_tag }} [skip ci]"
+            git pull --rebase origin main
             git push origin main
           fi
