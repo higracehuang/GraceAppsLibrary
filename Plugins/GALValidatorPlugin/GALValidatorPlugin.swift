@@ -51,12 +51,23 @@ private func validateSwiftSources(
 
 private func validateReleaseNotes(in swiftFiles: [URL]) {
     let maxCount = 5
-    for fileURL in swiftFiles {
-        guard fileURL.lastPathComponent.localizedCaseInsensitiveContains("ReleaseNotes") else { continue }
-        guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+    var releaseNotesFiles: [URL] = []
+    var hasConfigureCall = false
 
+    for fileURL in swiftFiles {
+        guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
         let stripped = stripComments(from: contents)
+
+        if stripped.contains("ReleaseNotesManager.shared.configure(") ||
+           stripped.contains("ReleaseNotesManager.shared.configureWithPaywall(") {
+            hasConfigureCall = true
+        }
+
+        guard fileURL.lastPathComponent.localizedCaseInsensitiveContains("ReleaseNotes") else { continue }
         let count = countOccurrences(of: "ReleaseNote(", in: stripped)
+        if count > 0 {
+            releaseNotesFiles.append(fileURL)
+        }
         if count > maxCount {
             Diagnostics.error(
                 "\(fileURL.path):1: In-app release notes has \(count) entries, exceeding the display limit of \(maxCount). Run GraceAppsLibrary/scripts/prune_release_notes.py to prune older entries."
@@ -73,6 +84,12 @@ private func validateReleaseNotes(in swiftFiles: [URL]) {
             Diagnostics.error("\(fileURL.path):1: ReleaseNote entry has an empty 'notes: []' array.")
         }
     }
+
+    if let firstReleaseNotesFile = releaseNotesFiles.first, !hasConfigureCall {
+        Diagnostics.error(
+            "\(firstReleaseNotesFile.path):1: ReleaseNotes are defined, but neither ReleaseNotesManager.shared.configure(...) nor configureWithPaywall(...) is called at launch."
+        )
+    }
 }
 
 // MARK: - 2. Legacy / Bypassed GAL API Guardrails
@@ -86,6 +103,10 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
         ("setPrecondition(actionId: \"interstitial_ad\"", "Remove manual \"interstitial_ad\" precondition; UniversalPurchaseCoordinator.shared.configure(...) wires it automatically.")
     ]
 
+    let usesRevenueCat = swiftFiles.contains { fileURL in
+        (try? String(contentsOf: fileURL, encoding: .utf8))?.contains("import GraceAppsLibraryRevenueCat") == true
+    }
+
     for fileURL in swiftFiles {
         guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
         let lines = contents.components(separatedBy: .newlines)
@@ -97,6 +118,19 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
             for rule in rules where trimmed.contains(rule.needle) {
                 Diagnostics.error("\(fileURL.path):\(index + 1): \(rule.message)")
             }
+        }
+
+        let stripped = stripComments(from: contents)
+        if usesRevenueCat,
+           stripped.range(of: #"ReleaseNotesManager\.shared\.configure\s*\([^)]*paywallAction\s*:"#, options: .regularExpression) != nil {
+            Diagnostics.error(
+                "\(fileURL.path):1: Use ReleaseNotesManager.shared.configureWithPaywall(...) instead of passing paywallAction: to ReleaseNotesManager.shared.configure(...)."
+            )
+        }
+        if stripped.range(of: #"AboutAppSectionView\s*\([^)]*releaseNotes\s*:"#, options: .regularExpression) != nil {
+            Diagnostics.error(
+                "\(fileURL.path):1: Omit releaseNotes: in AboutAppSectionView(...); it reads ReleaseNotesManager.shared.configuredReleaseNotes automatically."
+            )
         }
     }
 }

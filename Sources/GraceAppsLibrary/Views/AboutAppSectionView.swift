@@ -15,15 +15,22 @@ public struct AboutAppSectionView: View {
 
     /// - Parameters:
     ///   - appStoreId: The numeric App Store ID string (e.g. `"id1234567890"` or just `"1234567890"`).
-    ///   - releaseNotes: The array of `ReleaseNote` objects to show in the "What's New" sheet.
-    ///   - isPaidUser: Whether the user is a paid user.
-    ///   - tierName: The name of the premium tier.
-    public init(appStoreId: String? = nil, releaseNotes: [ReleaseNote]? = nil, isPaidUser: Bool = false, tierName: LocalizedStringKey = "Premium", paywallAction: (() -> Void)? = nil) {
+    ///   - releaseNotes: The array of `ReleaseNote` objects to show in the "What's New" sheet (defaults to `ReleaseNotesManager.shared.configuredReleaseNotes`).
+    ///   - isPaidUser: Whether the user is a paid user (defaults to `ReleaseNotesManager.shared.configuredIsPaidUser()`).
+    ///   - tierName: The name of the premium tier (defaults to `ReleaseNotesManager.shared.configuredTierName`).
+    ///   - paywallAction: Optional upgrade CTA closure (defaults to `ReleaseNotesManager.shared.configuredPaywallAction`).
+    public init(
+        appStoreId: String? = nil,
+        releaseNotes: [ReleaseNote]? = nil,
+        isPaidUser: Bool? = nil,
+        tierName: LocalizedStringKey? = nil,
+        paywallAction: (() -> Void)? = nil
+    ) {
         self.appStoreId = appStoreId
         self.releaseNotes = releaseNotes ?? ReleaseNotesManager.shared.configuredReleaseNotes
-        self.isPaidUser = isPaidUser
-        self.tierName = tierName
-        self.paywallAction = paywallAction
+        self.isPaidUser = isPaidUser ?? ReleaseNotesManager.shared.configuredIsPaidUser()
+        self.tierName = tierName ?? ReleaseNotesManager.shared.configuredTierName
+        self.paywallAction = paywallAction ?? ReleaseNotesManager.shared.configuredPaywallAction
     }
 
     // MARK: - Computed helpers
