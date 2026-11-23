@@ -199,4 +199,17 @@ final class GraceAppsLibraryRevenueCatTests: XCTestCase {
         let isSameType = (PaywallPresenter.self == UniversalPaywallPresenter.self)
         XCTAssertTrue(isSameType)
     }
+
+    func testReleaseNotesConfigureWithPaywallDefaults() {
+        let notes = [ReleaseNote(version: "1.0.0", notes: ["Initial release"])]
+        ReleaseNotesManager.shared.configureWithPaywall(releaseNotes: notes)
+        XCTAssertEqual(ReleaseNotesManager.shared.configuredReleaseNotes.count, 1)
+        XCTAssertEqual(ReleaseNotesManager.shared.configuredReleaseNotes.first?.version, "1.0.0")
+
+        ReleaseNotesManager.shared.configureWithPaywall(
+            releaseNotes: notes,
+            trigger: TestPaywallTrigger.settingsUpgrade
+        )
+        XCTAssertEqual(ReleaseNotesManager.shared.configuredReleaseNotes.count, 1)
+    }
 }
