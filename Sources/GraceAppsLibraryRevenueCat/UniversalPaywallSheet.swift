@@ -178,7 +178,7 @@ public typealias PaywallPresenter = UniversalPaywallPresenter
 extension View {
     /// Presents the standardized RevenueCat Paywall sheet with automatic pacing tracking,
     /// offering resolution, and purchase callbacks.
-    public func universalPaywall(
+    internal func universalPaywall(
         isPresented: Binding<Bool>,
         trigger: String = "paywall_sheet",
         offeringIdentifier: String? = nil,
@@ -193,7 +193,7 @@ extension View {
     }
 
     /// Generic overload for strongly typed trigger enums conforming to `RawRepresentable` where `RawValue == String`.
-    public func universalPaywall<T: RawRepresentable>(
+    internal func universalPaywall<T: RawRepresentable>(
         isPresented: Binding<Bool>,
         trigger: T,
         offeringIdentifier: String? = nil,
