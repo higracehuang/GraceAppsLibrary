@@ -104,6 +104,7 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
         ("Purchases.configure(", "Use UniversalPurchaseCoordinator.shared.configure(...) instead of Purchases.configure(...)."),
         ("Purchases.shared", "Use UniversalPurchaseCoordinator.shared instead of Purchases.shared."),
         ("PurchasesDelegate", "Use UniversalPurchaseCoordinator.shared instead of implementing PurchasesDelegate."),
+        ("customerInfo.entitlements[", "Use UniversalPurchaseCoordinator.shared.isPro instead of reading customerInfo.entitlements directly."),
         ("PaywallView(", "Use .universalPaywall(...) or UniversalPaywallPresenter instead of PaywallView(...) directly."),
         ("CustomerCenterView(", "Use UniversalSubscriptionSection or UniversalDebugMenu instead of CustomerCenterView(...) directly."),
         ("SKStoreReviewController.requestReview", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of SKStoreReviewController.requestReview."),
@@ -184,6 +185,12 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
            stripped.range(of: #"(?:class|struct|enum)\s+PaywallPromptManager\b"#, options: .regularExpression) != nil {
             Diagnostics.error(
                 "\(fileURL.path):1: Remove custom PaywallPromptManager; use PaywallPacingEngine / UXFlowOrchestrator from GraceAppsLibrary instead."
+            )
+        }
+        if !isWatchTarget,
+           stripped.range(of: #"@AppStorage\s*\([^)]*hasPurchased|UserDefaults\.standard\.bool\s*\(\s*forKey:\s*[^)]*hasPurchased"#, options: .regularExpression) != nil {
+            Diagnostics.error(
+                "\(fileURL.path):1: Use UniversalPurchaseCoordinator.shared.isPro instead of reading hasPurchased* from UserDefaults/@AppStorage."
             )
         }
         if stripped.contains(".scopedUXFlow(") {
