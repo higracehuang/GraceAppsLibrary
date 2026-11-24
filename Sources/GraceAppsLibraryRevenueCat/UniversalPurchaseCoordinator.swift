@@ -75,7 +75,7 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
     // MARK: - Free-Tier Limits
 
     /// Registers named free-tier item limits (e.g. `["photo_sets": 2, "photos_per_set": 10]`).
-    public func configureLimits(_ limits: [String: Int]) {
+    internal func configureLimits(_ limits: [String: Int]) {
         self.freeLimits = limits
     }
 
@@ -89,7 +89,7 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
     }
 
     /// Returns `true` if the user is Pro, no limit is registered for `key`, or `currentCount < limit`.
-    public func isWithinFreeLimit(_ key: String, currentCount: Int) -> Bool {
+    internal func isWithinFreeLimit(_ key: String, currentCount: Int) -> Bool {
         if isPro { return true }
         guard let limit = freeLimits[key] else { return true }
         return currentCount < limit
@@ -102,7 +102,7 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
 
     /// Checks `isWithinFreeLimit(_:currentCount:)`. If blocked, presents the paywall via `UniversalPaywallPresenter.present(trigger:offeringIdentifier:)` and returns `false`.
     @discardableResult
-    public func checkLimitOrPresentPaywall(
+    internal func checkLimitOrPresentPaywall(
         _ key: String,
         currentCount: Int,
         trigger: String? = nil,
