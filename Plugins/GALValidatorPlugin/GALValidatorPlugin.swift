@@ -105,6 +105,7 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
         ("CustomerCenterView(", "Use UniversalSubscriptionSection or UniversalDebugMenu instead of CustomerCenterView(...) directly."),
         ("SKStoreReviewController.requestReview", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of SKStoreReviewController.requestReview."),
         ("@Environment(\\.requestReview)", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of @Environment(\\.requestReview)."),
+        ("InterstitialAd.load(", "Use UniversalAdCoordinator.shared from GraceAppsLibraryAdMob instead of InterstitialAd.load(...)."),
         ("setPrecondition(actionId: .interstitialAd", "Remove manual .interstitialAd precondition; UniversalPurchaseCoordinator.shared.configure(...) wires it automatically."),
         ("setPrecondition(actionId: \"interstitial_ad\"", "Remove manual \"interstitial_ad\" precondition; UniversalPurchaseCoordinator.shared.configure(...) wires it automatically.")
     ]
@@ -115,6 +116,8 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
 
     var hasPurchaseCoordinatorConfigure = false
     var firstRevenueCatFile: URL? = nil
+    var hasAdCoordinatorConfigure = false
+    var firstAdMobFile: URL? = nil
     var hasScopedUXFlow = false
     var firstUXFlowCallerFile: URL? = nil
 
@@ -142,6 +145,12 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
            stripped.contains("import GraceAppsLibraryRevenueCat") || stripped.contains("UniversalSubscriptionSection(") {
             firstRevenueCatFile = fileURL
         }
+        if stripped.contains("UniversalAdCoordinator.shared.configure(") {
+            hasAdCoordinatorConfigure = true
+        }
+        if firstAdMobFile == nil, stripped.contains("import GraceAppsLibraryAdMob") {
+            firstAdMobFile = fileURL
+        }
         if stripped.contains(".scopedUXFlow(") {
             hasScopedUXFlow = true
         }
@@ -167,6 +176,12 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
     if let targetFile = firstRevenueCatFile, !hasPurchaseCoordinatorConfigure {
         Diagnostics.error(
             "\(targetFile.path):1: GraceAppsLibraryRevenueCat / UniversalSubscriptionSection is used, but UniversalPurchaseCoordinator.shared.configure(...) is not called at launch."
+        )
+    }
+
+    if let targetFile = firstAdMobFile, !hasAdCoordinatorConfigure {
+        Diagnostics.error(
+            "\(targetFile.path):1: GraceAppsLibraryAdMob is used, but UniversalAdCoordinator.shared.configure(...) is not called at launch."
         )
     }
 
