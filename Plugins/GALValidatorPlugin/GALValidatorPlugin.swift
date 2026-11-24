@@ -42,7 +42,7 @@ private func validateSwiftSources(
     validateLegacyAPIBypasses(in: swiftFiles)
     validateCloudKitEntitlements(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
     validateAdMobPlist(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
-    validateLegalSection(in: swiftFiles)
+    validateRequiredSettingsSections(in: swiftFiles, targetName: targetName)
     validateLoggerUsage(in: swiftFiles, targetName: targetName)
 
     if let projectRoot = projectRoot {
@@ -106,6 +106,8 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
         ("SKStoreReviewController.requestReview", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of SKStoreReviewController.requestReview."),
         ("@Environment(\\.requestReview)", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of @Environment(\\.requestReview)."),
         ("InterstitialAd.load(", "Use UniversalAdCoordinator.shared from GraceAppsLibraryAdMob instead of InterstitialAd.load(...)."),
+        ("RateAppLinkView(", "Use AboutAppSectionView(appStoreId:) instead of RateAppLinkView(...) directly."),
+        ("FeedbackToGraceNavigationView(", "Use AboutAppSectionView(appStoreId:) instead of FeedbackToGraceNavigationView(...) directly."),
         ("setPrecondition(actionId: .interstitialAd", "Remove manual .interstitialAd precondition; UniversalPurchaseCoordinator.shared.configure(...) wires it automatically."),
         ("setPrecondition(actionId: \"interstitial_ad\"", "Remove manual \"interstitial_ad\" precondition; UniversalPurchaseCoordinator.shared.configure(...) wires it automatically.")
     ]
@@ -321,36 +323,39 @@ private func validateFastlaneIAPs(in swiftFiles: [URL], projectRoot: URL) {
     }
 }
 
-// MARK: - 7. LegalSectionView for Paid / Ad-Supported Apps
+// MARK: - 7. Required Settings Sections (iOS App Targets Only)
 
-private func validateLegalSection(in swiftFiles: [URL]) {
-    var triggerFile: URL?
-    var hasLegalSection = false
+private func validateRequiredSettingsSections(in swiftFiles: [URL], targetName: String) {
+    if targetName.localizedCaseInsensitiveContains("watch") {
+        return
+    }
+    let isWatchTarget = swiftFiles.contains { url in
+        (try? String(contentsOf: url, encoding: .utf8))?.contains("import WatchKit") == true
+    }
+    if isWatchTarget {
+        return
+    }
+
+    var hasAboutApp = false
+    var hasLegal = false
+    var hasAboutDeveloper = false
 
     for fileURL in swiftFiles {
         guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
         let stripped = stripComments(from: contents)
-
-        if stripped.contains("LegalSectionView(") {
-            hasLegalSection = true
-        }
-
-        if triggerFile == nil && (
-            stripped.contains("UniversalPurchaseCoordinator") ||
-            stripped.contains("import RevenueCat") ||
-            stripped.contains("import GraceAppsLibraryRevenueCat") ||
-            stripped.contains("import StoreKit") ||
-            stripped.contains("import GraceAppsLibraryAdMob") ||
-            stripped.contains("import GoogleMobileAds")
-        ) {
-            triggerFile = fileURL
-        }
+        if stripped.contains("AboutAppSectionView(") { hasAboutApp = true }
+        if stripped.contains("LegalSectionView(") { hasLegal = true }
+        if stripped.contains("AboutDeveloperSectionView(") { hasAboutDeveloper = true }
     }
 
-    if let triggerFile = triggerFile, !hasLegalSection {
-        Diagnostics.error(
-            "\(triggerFile.path):1: App uses in-app purchases or ads, but LegalSectionView(...) is missing. Add LegalSectionView(privacyPolicyURL:) to Settings."
-        )
+    if !hasAboutApp {
+        Diagnostics.error("Missing AboutAppSectionView(...) in iOS app target '\(targetName)'. Add AboutAppSectionView(appStoreId:) to Settings.")
+    }
+    if !hasLegal {
+        Diagnostics.error("Missing LegalSectionView(...) in iOS app target '\(targetName)'. Add LegalSectionView(privacyPolicyURL:) to Settings.")
+    }
+    if !hasAboutDeveloper {
+        Diagnostics.error("Missing AboutDeveloperSectionView(...) in iOS app target '\(targetName)'. Add AboutDeveloperSectionView(excludingAppId:) to Settings.")
     }
 }
 
