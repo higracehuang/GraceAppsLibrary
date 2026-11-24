@@ -129,7 +129,7 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
 
     var hasPurchaseCoordinatorConfigure = false
     var firstRevenueCatFile: URL? = nil
-    var hasLimitsConfigure = false
+    var firstLimitsConfigureFile: URL? = nil
     var firstLimitUsageFile: URL? = nil
     var hasAdCoordinatorConfigure = false
     var firstAdMobFile: URL? = nil
@@ -161,8 +161,9 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
         if stripped.contains("UniversalPurchaseCoordinator.shared.configure(") {
             hasPurchaseCoordinatorConfigure = true
         }
-        if stripped.contains("UniversalPurchaseCoordinator.shared.configureLimits(") {
-            hasLimitsConfigure = true
+        if firstLimitsConfigureFile == nil,
+           stripped.contains("UniversalPurchaseCoordinator.shared.configureLimits(") {
+            firstLimitsConfigureFile = fileURL
         }
         if firstLimitUsageFile == nil,
            stripped.contains("isWithinFreeLimit(") || stripped.contains("checkLimitOrPresentPaywall(") {
@@ -236,9 +237,15 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
         )
     }
 
-    if !isWatchTarget, let limitFile = firstLimitUsageFile, !hasLimitsConfigure {
+    if !isWatchTarget, let limitFile = firstLimitUsageFile, firstLimitsConfigureFile == nil {
         Diagnostics.error(
             "\(limitFile.path):1: isWithinFreeLimit / checkLimitOrPresentPaywall is used, but UniversalPurchaseCoordinator.shared.configureLimits(...) is not called at launch."
+        )
+    }
+
+    if !isWatchTarget, let configureFile = firstLimitsConfigureFile, firstLimitUsageFile == nil {
+        Diagnostics.error(
+            "\(configureFile.path):1: UniversalPurchaseCoordinator.shared.configureLimits(...) is called, but neither isWithinFreeLimit(...) nor checkLimitOrPresentPaywall(...) is used."
         )
     }
 
