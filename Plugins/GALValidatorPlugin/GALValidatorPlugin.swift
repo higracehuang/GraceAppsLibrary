@@ -340,6 +340,9 @@ private func validateRequiredSettingsSections(in swiftFiles: [URL], targetName: 
     var hasAboutApp = false
     var hasLegal = false
     var hasAboutDeveloper = false
+    var usesRevenueCat = false
+    var hasUniversalDebug = false
+    var hasCoreDebug = false
 
     for fileURL in swiftFiles {
         guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
@@ -347,6 +350,17 @@ private func validateRequiredSettingsSections(in swiftFiles: [URL], targetName: 
         if stripped.contains("AboutAppSectionView(") { hasAboutApp = true }
         if stripped.contains("LegalSectionView(") { hasLegal = true }
         if stripped.contains("AboutDeveloperSectionView(") { hasAboutDeveloper = true }
+        if stripped.contains("import GraceAppsLibraryRevenueCat") || stripped.contains("UniversalPurchaseCoordinator") {
+            usesRevenueCat = true
+        }
+        if stripped.contains("UniversalDeveloperSection(") ||
+           stripped.contains("UniversalDebugLink(") ||
+           stripped.contains("UniversalDebugMenu(") {
+            hasUniversalDebug = true
+        }
+        if stripped.contains("DebugNavigationView(") || stripped.contains("DebugMenuView(") {
+            hasCoreDebug = true
+        }
     }
 
     if !hasAboutApp {
@@ -357,6 +371,11 @@ private func validateRequiredSettingsSections(in swiftFiles: [URL], targetName: 
     }
     if !hasAboutDeveloper {
         Diagnostics.error("Missing AboutDeveloperSectionView(...) in iOS app target '\(targetName)'. Add AboutDeveloperSectionView(excludingAppId:) to Settings.")
+    }
+    if usesRevenueCat && !hasUniversalDebug {
+        Diagnostics.error("Missing UniversalDeveloperSection(...) / UniversalDebugLink(...) in iOS app target '\(targetName)'. Add GAL's debug menu under #if DEBUG in Settings.")
+    } else if !usesRevenueCat && !hasUniversalDebug && !hasCoreDebug {
+        Diagnostics.error("Missing DebugNavigationView(...) / DebugMenuView(...) in iOS app target '\(targetName)'. Add GAL's debug menu under #if DEBUG in Settings.")
     }
 }
 
