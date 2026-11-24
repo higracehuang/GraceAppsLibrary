@@ -129,6 +129,8 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
 
     var hasPurchaseCoordinatorConfigure = false
     var firstRevenueCatFile: URL? = nil
+    var hasLimitsConfigure = false
+    var firstLimitUsageFile: URL? = nil
     var hasAdCoordinatorConfigure = false
     var firstAdMobFile: URL? = nil
     var hasReviewConfigure = false
@@ -158,6 +160,13 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
         let stripped = stripComments(from: contents)
         if stripped.contains("UniversalPurchaseCoordinator.shared.configure(") {
             hasPurchaseCoordinatorConfigure = true
+        }
+        if stripped.contains("UniversalPurchaseCoordinator.shared.configureLimits(") {
+            hasLimitsConfigure = true
+        }
+        if firstLimitUsageFile == nil,
+           stripped.contains("isWithinFreeLimit(") || stripped.contains("checkLimitOrPresentPaywall(") {
+            firstLimitUsageFile = fileURL
         }
         if firstRevenueCatFile == nil,
            stripped.contains("import GraceAppsLibraryRevenueCat") || stripped.contains("UniversalSubscriptionSection(") {
@@ -193,6 +202,12 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
                 "\(fileURL.path):1: Use UniversalPurchaseCoordinator.shared.isPro instead of reading hasPurchased* from UserDefaults/@AppStorage."
             )
         }
+        if !isWatchTarget,
+           stripped.range(of: #"(?:struct|enum|class)\s+FreeTierConstants\b|(?:<|<=|>|>=)\s*[A-Za-z0-9_.]*(?:freeNumberOf|numberOfFree|freeNum|maxFree|maxPhoto)[A-Za-z0-9_]*"#, options: .regularExpression) != nil {
+            Diagnostics.error(
+                "\(fileURL.path):1: Use UniversalPurchaseCoordinator.shared.configureLimits(...) and isWithinFreeLimit/checkLimitOrPresentPaywall instead of manual free-tier limit gating."
+            )
+        }
         if stripped.contains(".scopedUXFlow(") {
             hasScopedUXFlow = true
         }
@@ -218,6 +233,12 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
     if let targetFile = firstRevenueCatFile, !hasPurchaseCoordinatorConfigure {
         Diagnostics.error(
             "\(targetFile.path):1: GraceAppsLibraryRevenueCat / UniversalSubscriptionSection is used, but UniversalPurchaseCoordinator.shared.configure(...) is not called at launch."
+        )
+    }
+
+    if !isWatchTarget, let limitFile = firstLimitUsageFile, !hasLimitsConfigure {
+        Diagnostics.error(
+            "\(limitFile.path):1: isWithinFreeLimit / checkLimitOrPresentPaywall is used, but UniversalPurchaseCoordinator.shared.configureLimits(...) is not called at launch."
         )
     }
 
