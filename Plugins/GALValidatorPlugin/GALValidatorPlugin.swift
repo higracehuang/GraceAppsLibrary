@@ -9,7 +9,7 @@ struct GALValidatorPlugin: BuildToolPlugin {
         }
         let swiftFiles = sourceTarget.sourceFiles(withSuffix: "swift")
             .map { URL(fileURLWithPath: $0.path.string) }
-        validateSwiftSources(swiftFiles, projectRoot: nil, allInputFiles: swiftFiles)
+        validateSwiftSources(swiftFiles, projectRoot: nil, allInputFiles: swiftFiles, targetName: sourceTarget.name)
         return []
     }
 }
@@ -24,7 +24,7 @@ extension GALValidatorPlugin: XcodeBuildToolPlugin {
             .filter { $0.type == .source && $0.path.extension == "swift" }
             .map { URL(fileURLWithPath: $0.path.string) }
         let projectRoot = URL(fileURLWithPath: context.xcodeProject.directory.string)
-        validateSwiftSources(swiftFiles, projectRoot: projectRoot, allInputFiles: allFiles)
+        validateSwiftSources(swiftFiles, projectRoot: projectRoot, allInputFiles: allFiles, targetName: target.displayName)
         return []
     }
 }
@@ -35,13 +35,15 @@ extension GALValidatorPlugin: XcodeBuildToolPlugin {
 private func validateSwiftSources(
     _ swiftFiles: [URL],
     projectRoot: URL?,
-    allInputFiles: [URL]
+    allInputFiles: [URL],
+    targetName: String
 ) {
     validateReleaseNotes(in: swiftFiles)
     validateLegacyAPIBypasses(in: swiftFiles)
     validateCloudKitEntitlements(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
     validateAdMobPlist(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
     validateLegalSection(in: swiftFiles)
+    validateLoggerUsage(in: swiftFiles, targetName: targetName)
 
     if let projectRoot = projectRoot {
         validateUXMoments(in: projectRoot)
@@ -334,6 +336,44 @@ private func validateLegalSection(in swiftFiles: [URL]) {
         Diagnostics.error(
             "\(triggerFile.path):1: App uses in-app purchases or ads, but LegalSectionView(...) is missing. Add LegalSectionView(privacyPolicyURL:) to Settings."
         )
+    }
+}
+
+// MARK: - 8. GraceLogger Enforcement (iOS App Targets Only)
+
+private func validateLoggerUsage(in swiftFiles: [URL], targetName: String) {
+    if targetName.localizedCaseInsensitiveContains("watch") {
+        return
+    }
+    let isWatchTarget = swiftFiles.contains { url in
+        (try? String(contentsOf: url, encoding: .utf8))?.contains("import WatchKit") == true
+    }
+    if isWatchTarget {
+        return
+    }
+
+    let customLoggerPattern = #"(?:^|\n)[ \t]*(?:(?:public|private|internal|fileprivate|final)[ \t]+)*(?:class|struct|enum)[ \t]+(?!GraceLogger\b)[A-Za-z0-9_]*Logger\b"#
+
+    for fileURL in swiftFiles {
+        guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+        let stripped = stripComments(from: contents)
+
+        // Allow target-safe GraceLogger bridges guarded for non-main-app targets (e.g. watch/widget).
+        if stripped.contains("enum GraceLogger") {
+            continue
+        }
+
+        if stripped.range(of: customLoggerPattern, options: .regularExpression) != nil {
+            Diagnostics.error(
+                "\(fileURL.path):1: Custom Logger type is disallowed in iOS app targets. Use GraceLogger from GraceAppsLibrary instead."
+            )
+        }
+
+        if stripped.contains("import OSLog") || stripped.contains("os.Logger(") || stripped.contains("Logger(subsystem:") {
+            Diagnostics.error(
+                "\(fileURL.path):1: Direct OSLog / os.Logger usage is disallowed in iOS app targets. Use GraceLogger from GraceAppsLibrary instead."
+            )
+        }
     }
 }
 
