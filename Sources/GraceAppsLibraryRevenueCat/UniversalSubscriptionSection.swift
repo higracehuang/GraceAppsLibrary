@@ -38,7 +38,6 @@ public struct UniversalSubscriptionSection: View {
     public let style: UniversalSubscriptionStyle
     public let showHeader: Bool
     public let headerTitle: LocalizedStringKey?
-    public let tierName: String?
     public let subtitle: LocalizedStringKey?
     public let features: [UniversalSubscriptionFeature]
     public let gradientColors: [Color]
@@ -52,7 +51,6 @@ public struct UniversalSubscriptionSection: View {
         style: UniversalSubscriptionStyle = .hero,
         showHeader: Bool? = nil,
         headerTitle: LocalizedStringKey? = nil,
-        tierName: String? = nil,
         subtitle: LocalizedStringKey? = nil,
         features: [UniversalSubscriptionFeature] = [],
         gradientColors: [Color] = [Color.orange, Color.yellow],
@@ -63,7 +61,6 @@ public struct UniversalSubscriptionSection: View {
         self.style = style
         self.showHeader = showHeader ?? (style == .compact)
         self.headerTitle = headerTitle
-        self.tierName = tierName
         self.subtitle = subtitle
         self.features = features
         self.gradientColors = gradientColors
@@ -77,7 +74,6 @@ public struct UniversalSubscriptionSection: View {
         style: UniversalSubscriptionStyle = .hero,
         showHeader: Bool? = nil,
         headerTitle: LocalizedStringKey? = nil,
-        tierName: String? = nil,
         subtitle: LocalizedStringKey? = nil,
         features: [LocalizedStringKey],
         gradientColors: [Color] = [Color.orange, Color.yellow],
@@ -89,7 +85,6 @@ public struct UniversalSubscriptionSection: View {
             style: style,
             showHeader: showHeader,
             headerTitle: headerTitle,
-            tierName: tierName,
             subtitle: subtitle,
             features: features.map { UniversalSubscriptionFeature(title: $0) },
             gradientColors: gradientColors,
@@ -100,7 +95,7 @@ public struct UniversalSubscriptionSection: View {
     }
 
     private var resolvedTierName: String {
-        tierName ?? coordinator.tierName
+        coordinator.tierName
     }
 
     public var body: some View {

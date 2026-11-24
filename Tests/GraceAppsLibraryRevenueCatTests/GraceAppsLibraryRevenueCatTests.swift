@@ -136,7 +136,6 @@ final class GraceAppsLibraryRevenueCatTests: XCTestCase {
     func testUniversalSubscriptionSectionInitialization() {
         let heroSection = UniversalSubscriptionSection(
             style: .hero,
-            tierName: "TallyCoin Pro",
             features: [
                 UniversalSubscriptionFeature(icon: "person.2.fill", title: "Unlimited Helpers"),
                 UniversalSubscriptionFeature(icon: "repeat", title: "Automated Schedules")
@@ -147,8 +146,7 @@ final class GraceAppsLibraryRevenueCatTests: XCTestCase {
         XCTAssertEqual(heroSection.features.count, 2)
 
         let compactSection = UniversalSubscriptionSection(
-            style: .compact,
-            tierName: "DialIn Pro"
+            style: .compact
         )
         XCTAssertEqual(compactSection.style, .compact)
         XCTAssertTrue(compactSection.showHeader)
