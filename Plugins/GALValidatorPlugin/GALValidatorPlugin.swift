@@ -108,6 +108,7 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
         ("CustomerCenterView(", "Use UniversalSubscriptionSection or UniversalDebugMenu instead of CustomerCenterView(...) directly."),
         ("SKStoreReviewController.requestReview", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of SKStoreReviewController.requestReview."),
         ("@Environment(\\.requestReview)", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of @Environment(\\.requestReview)."),
+        ("requestDirectNativeReview(", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of requestDirectNativeReview()."),
         ("InterstitialAd.load(", "Use UniversalAdCoordinator.shared from GraceAppsLibraryAdMob instead of InterstitialAd.load(...)."),
         ("RateAppLinkView(", "Use AboutAppSectionView(appStoreId:) instead of RateAppLinkView(...) directly."),
         ("FeedbackToGraceNavigationView(", "Use AboutAppSectionView(appStoreId:) instead of FeedbackToGraceNavigationView(...) directly."),
