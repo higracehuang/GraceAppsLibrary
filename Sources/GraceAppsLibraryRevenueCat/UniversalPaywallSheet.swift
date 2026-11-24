@@ -105,9 +105,9 @@ internal struct UniversalPaywallSheet: ViewModifier {
     }
 }
 
-public extension UXAction {
+extension UXAction {
     /// Creates a critical-priority sheet action for RevenueCat paywalls managed by `UXFlowOrchestrator`.
-    static func paywall(
+    internal static func paywall(
         trigger: String = "paywall_sheet",
         offeringIdentifier: String? = nil,
         onPurchaseCompleted: ((CustomerInfo) -> Void)? = nil
@@ -126,8 +126,20 @@ public extension UXAction {
         }
     }
 
+    /// Creates a paywall action with the default `"paywall_sheet"` trigger.
+    public static func paywall(
+        offeringIdentifier: String? = nil,
+        onPurchaseCompleted: ((CustomerInfo) -> Void)? = nil
+    ) -> UXAction {
+        paywall(
+            trigger: "paywall_sheet",
+            offeringIdentifier: offeringIdentifier,
+            onPurchaseCompleted: onPurchaseCompleted
+        )
+    }
+
     /// Overload for raw-representable trigger enums.
-    static func paywall<T: RawRepresentable>(
+    public static func paywall<T: RawRepresentable>(
         trigger: T,
         offeringIdentifier: String? = nil,
         onPurchaseCompleted: ((CustomerInfo) -> Void)? = nil
@@ -144,7 +156,7 @@ public extension UXAction {
 @MainActor
 public enum UniversalPaywallPresenter {
     /// Presents the RevenueCat Paywall sheet through `UXFlowOrchestrator` if the user is not Pro.
-    public static func present(
+    internal static func present(
         trigger: String = "paywall_sheet",
         offeringIdentifier: String? = nil,
         onPurchaseCompleted: ((CustomerInfo) -> Void)? = nil
@@ -156,6 +168,18 @@ public enum UniversalPaywallPresenter {
                 offeringIdentifier: offeringIdentifier,
                 onPurchaseCompleted: onPurchaseCompleted
             )
+        )
+    }
+
+    /// Presents the RevenueCat Paywall sheet with the default `"paywall_sheet"` trigger.
+    public static func present(
+        offeringIdentifier: String? = nil,
+        onPurchaseCompleted: ((CustomerInfo) -> Void)? = nil
+    ) {
+        present(
+            trigger: "paywall_sheet",
+            offeringIdentifier: offeringIdentifier,
+            onPurchaseCompleted: onPurchaseCompleted
         )
     }
 

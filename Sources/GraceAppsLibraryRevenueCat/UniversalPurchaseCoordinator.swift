@@ -118,18 +118,33 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
         return false
     }
 
-    /// Overload for raw-representable limit key enums.
+    /// Overload for raw-representable limit key enums (uses default `"\(key.rawValue)_limit"` trigger).
     @discardableResult
     public func checkLimitOrPresentPaywall<K: RawRepresentable>(
         _ key: K,
         currentCount: Int,
-        trigger: String? = nil,
         offeringIdentifier: String? = nil
     ) -> Bool where K.RawValue == String {
         checkLimitOrPresentPaywall(
             key.rawValue,
             currentCount: currentCount,
-            trigger: trigger,
+            trigger: nil,
+            offeringIdentifier: offeringIdentifier
+        )
+    }
+
+    /// Overload for raw-representable limit key and paywall trigger enums.
+    @discardableResult
+    public func checkLimitOrPresentPaywall<K: RawRepresentable, T: RawRepresentable>(
+        _ key: K,
+        currentCount: Int,
+        trigger: T,
+        offeringIdentifier: String? = nil
+    ) -> Bool where K.RawValue == String, T.RawValue == String {
+        checkLimitOrPresentPaywall(
+            key.rawValue,
+            currentCount: currentCount,
+            trigger: trigger.rawValue,
             offeringIdentifier: offeringIdentifier
         )
     }

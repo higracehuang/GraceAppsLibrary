@@ -1,13 +1,13 @@
 import SwiftUI
 import GraceAppsLibrary
 
-public extension ReleaseNotesManager {
+extension ReleaseNotesManager {
     /// Configures release notes with RevenueCat paywall integration:
     /// automatically evaluates `UniversalPurchaseCoordinator.shared.isPro`, defaults `tierName`
     /// to `UniversalPurchaseCoordinator.shared.tierName`, and wires `paywallAction` to
     /// `UniversalPaywallPresenter.present(trigger:)`.
     @MainActor
-    func configureWithPaywall(
+    internal func configureWithPaywall(
         releaseNotes: [ReleaseNote],
         tierName: LocalizedStringKey? = nil,
         suppressOnFirstInstall: Bool = true,
@@ -27,9 +27,24 @@ public extension ReleaseNotesManager {
         )
     }
 
+    /// Configures release notes with RevenueCat paywall integration using the default `"release_notes"` trigger.
+    @MainActor
+    public func configureWithPaywall(
+        releaseNotes: [ReleaseNote],
+        tierName: LocalizedStringKey? = nil,
+        suppressOnFirstInstall: Bool = true
+    ) {
+        configureWithPaywall(
+            releaseNotes: releaseNotes,
+            tierName: tierName,
+            suppressOnFirstInstall: suppressOnFirstInstall,
+            trigger: "release_notes"
+        )
+    }
+
     /// Generic overload for raw-representable paywall trigger enums.
     @MainActor
-    func configureWithPaywall<T: RawRepresentable>(
+    public func configureWithPaywall<T: RawRepresentable>(
         releaseNotes: [ReleaseNote],
         tierName: LocalizedStringKey? = nil,
         suppressOnFirstInstall: Bool = true,
