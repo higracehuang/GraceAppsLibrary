@@ -43,6 +43,7 @@ private func validateSwiftSources(
     validateCloudKitEntitlements(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
     validateAdMobPlist(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
     validateRequiredSettingsSections(in: swiftFiles, targetName: targetName)
+    validateUXOrchestration(in: swiftFiles, targetName: targetName)
     validateLoggerUsage(in: swiftFiles, targetName: targetName)
 
     if let projectRoot = projectRoot {
@@ -356,6 +357,42 @@ private func validateRequiredSettingsSections(in swiftFiles: [URL], targetName: 
     }
     if !hasAboutDeveloper {
         Diagnostics.error("Missing AboutDeveloperSectionView(...) in iOS app target '\(targetName)'. Add AboutDeveloperSectionView(excludingAppId:) to Settings.")
+    }
+}
+
+// MARK: - 7b. UX Orchestration Enforcement (iOS App Targets Only)
+
+private func validateUXOrchestration(in swiftFiles: [URL], targetName: String) {
+    if targetName.localizedCaseInsensitiveContains("watch") {
+        return
+    }
+    let isWatchTarget = swiftFiles.contains { url in
+        (try? String(contentsOf: url, encoding: .utf8))?.contains("import WatchKit") == true
+    }
+    if isWatchTarget {
+        return
+    }
+
+    var hasScopedUXFlow = false
+    var hasOrchestratorAction = false
+
+    for fileURL in swiftFiles {
+        guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+        let stripped = stripComments(from: contents)
+        if stripped.contains(".scopedUXFlow(") {
+            hasScopedUXFlow = true
+        }
+        if stripped.contains("UXFlowOrchestrator.shared.requestAction(") ||
+           stripped.contains("UXFlowOrchestrator.shared.requestActions(") {
+            hasOrchestratorAction = true
+        }
+    }
+
+    if !hasScopedUXFlow {
+        Diagnostics.error("Missing .scopedUXFlow() in iOS app target '\(targetName)'. Mount .scopedUXFlow() on a root view.")
+    }
+    if !hasOrchestratorAction {
+        Diagnostics.error("Missing UXFlowOrchestrator.shared.requestAction(...) / requestActions(...) in iOS app target '\(targetName)'.")
     }
 }
 
