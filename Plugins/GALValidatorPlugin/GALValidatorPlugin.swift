@@ -39,7 +39,7 @@ private func validateSwiftSources(
     targetName: String
 ) {
     validateReleaseNotes(in: swiftFiles)
-    validateLegacyAPIBypasses(in: swiftFiles)
+    validateLegacyAPIBypasses(in: swiftFiles, targetName: targetName)
     validateCloudKitEntitlements(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
     validateAdMobPlist(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
     validateRequiredSettingsSections(in: swiftFiles, targetName: targetName)
@@ -99,9 +99,11 @@ private func validateReleaseNotes(in swiftFiles: [URL]) {
 
 // MARK: - 2. Legacy / Bypassed GAL API Guardrails
 
-private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
+private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String) {
     let rules: [(needle: String, message: String)] = [
         ("Purchases.configure(", "Use UniversalPurchaseCoordinator.shared.configure(...) instead of Purchases.configure(...)."),
+        ("Purchases.shared", "Use UniversalPurchaseCoordinator.shared instead of Purchases.shared."),
+        ("PurchasesDelegate", "Use UniversalPurchaseCoordinator.shared instead of implementing PurchasesDelegate."),
         ("PaywallView(", "Use .universalPaywall(...) or UniversalPaywallPresenter instead of PaywallView(...) directly."),
         ("CustomerCenterView(", "Use UniversalSubscriptionSection or UniversalDebugMenu instead of CustomerCenterView(...) directly."),
         ("SKStoreReviewController.requestReview", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of SKStoreReviewController.requestReview."),
@@ -113,8 +115,8 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
         ("setPrecondition(actionId: \"interstitial_ad\"", "Remove manual \"interstitial_ad\" precondition; UniversalPurchaseCoordinator.shared.configure(...) wires it automatically.")
     ]
 
-    let usesRevenueCat = swiftFiles.contains { fileURL in
-        (try? String(contentsOf: fileURL, encoding: .utf8))?.contains("import GraceAppsLibraryRevenueCat") == true
+    let isWatchTarget = targetName.localizedCaseInsensitiveContains("watch") || swiftFiles.contains { url in
+        (try? String(contentsOf: url, encoding: .utf8))?.contains("import WatchKit") == true
     }
 
     var hasPurchaseCoordinatorConfigure = false
@@ -135,7 +137,7 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
             for rule in rules where trimmed.contains(rule.needle) {
                 Diagnostics.error("\(fileURL.path):\(index + 1): \(rule.message)")
             }
-            if usesRevenueCat, (trimmed == "import RevenueCat" || trimmed == "import RevenueCatUI") {
+            if !isWatchTarget, (trimmed == "import RevenueCat" || trimmed == "import RevenueCatUI") {
                 Diagnostics.error("\(fileURL.path):\(index + 1): Remove direct '\(trimmed)'; use GraceAppsLibraryRevenueCat instead.")
             }
         }
@@ -163,7 +165,7 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
            stripped.contains("UniversalPaywallPresenter.present(") {
             firstUXFlowCallerFile = fileURL
         }
-        if usesRevenueCat,
+        if !isWatchTarget,
            stripped.range(of: #"ReleaseNotesManager\.shared\.configure\s*\([^)]*paywallAction\s*:"#, options: .regularExpression) != nil {
             Diagnostics.error(
                 "\(fileURL.path):1: Use ReleaseNotesManager.shared.configureWithPaywall(...) instead of passing paywallAction: to ReleaseNotesManager.shared.configure(...)."
