@@ -107,6 +107,9 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
         (try? String(contentsOf: fileURL, encoding: .utf8))?.contains("import GraceAppsLibraryRevenueCat") == true
     }
 
+    var hasPurchaseCoordinatorConfigure = false
+    var firstRevenueCatFile: URL? = nil
+
     for fileURL in swiftFiles {
         guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
         let lines = contents.components(separatedBy: .newlines)
@@ -121,6 +124,13 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
         }
 
         let stripped = stripComments(from: contents)
+        if stripped.contains("UniversalPurchaseCoordinator.shared.configure(") {
+            hasPurchaseCoordinatorConfigure = true
+        }
+        if firstRevenueCatFile == nil,
+           stripped.contains("import GraceAppsLibraryRevenueCat") || stripped.contains("UniversalSubscriptionSection(") {
+            firstRevenueCatFile = fileURL
+        }
         if usesRevenueCat,
            stripped.range(of: #"ReleaseNotesManager\.shared\.configure\s*\([^)]*paywallAction\s*:"#, options: .regularExpression) != nil {
             Diagnostics.error(
@@ -132,6 +142,12 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
                 "\(fileURL.path):1: Omit releaseNotes: in AboutAppSectionView(...); it reads ReleaseNotesManager.shared.configuredReleaseNotes automatically."
             )
         }
+    }
+
+    if let targetFile = firstRevenueCatFile, !hasPurchaseCoordinatorConfigure {
+        Diagnostics.error(
+            "\(targetFile.path):1: GraceAppsLibraryRevenueCat / UniversalSubscriptionSection is used, but UniversalPurchaseCoordinator.shared.configure(...) is not called at launch."
+        )
     }
 }
 
