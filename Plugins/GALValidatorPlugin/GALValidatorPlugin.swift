@@ -180,6 +180,12 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
                 "\(fileURL.path):1: Use ReviewPromptManager.shared.configure(minMilestoneEvents:) and recordMilestoneEvent(...) instead of manual reviewPromptThreshold gating."
             )
         }
+        if !isWatchTarget,
+           stripped.range(of: #"(?:class|struct|enum)\s+PaywallPromptManager\b"#, options: .regularExpression) != nil {
+            Diagnostics.error(
+                "\(fileURL.path):1: Remove custom PaywallPromptManager; use PaywallPacingEngine / UXFlowOrchestrator from GraceAppsLibrary instead."
+            )
+        }
         if stripped.contains(".scopedUXFlow(") {
             hasScopedUXFlow = true
         }
