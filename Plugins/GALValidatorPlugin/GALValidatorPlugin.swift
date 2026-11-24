@@ -41,9 +41,11 @@ private func validateSwiftSources(
     validateLegacyAPIBypasses(in: swiftFiles)
     validateCloudKitEntitlements(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
     validateAdMobPlist(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
+    validateLegalSection(in: swiftFiles)
 
     if let projectRoot = projectRoot {
         validateUXMoments(in: projectRoot)
+        validateFastlaneIAPs(in: swiftFiles, projectRoot: projectRoot)
     }
 }
 
@@ -267,6 +269,71 @@ private func validateUXMoments(in projectRoot: URL) {
         }
     } else {
         Diagnostics.error("UXMomentsUITests.swift not found in project to verify tests documented in UX_MOMENTS.md.")
+    }
+}
+
+// MARK: - 6. Fastlane IAP Configs
+
+private func validateFastlaneIAPs(in swiftFiles: [URL], projectRoot: URL) {
+    var firstPurchaseCoordinatorFile: URL?
+    for fileURL in swiftFiles {
+        guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+        let stripped = stripComments(from: contents)
+        if stripped.contains("UniversalPurchaseCoordinator") {
+            firstPurchaseCoordinatorFile = fileURL
+            break
+        }
+    }
+    guard let triggerFile = firstPurchaseCoordinatorFile else { return }
+
+    let iapsDir = projectRoot.appendingPathComponent("fastlane/iaps")
+    var isDir: ObjCBool = false
+    guard FileManager.default.fileExists(atPath: iapsDir.path, isDirectory: &isDir), isDir.boolValue else {
+        Diagnostics.error(
+            "\(triggerFile.path):1: UniversalPurchaseCoordinator is used, but fastlane/iaps/ directory is missing at \(iapsDir.path). Add fastlane/iaps/<product_id>.json configs for update_iap_names."
+        )
+        return
+    }
+
+    let entries = (try? FileManager.default.contentsOfDirectory(at: iapsDir, includingPropertiesForKeys: nil)) ?? []
+    let jsonFiles = entries.filter { $0.pathExtension.lowercased() == "json" }
+    if jsonFiles.isEmpty {
+        Diagnostics.error(
+            "\(triggerFile.path):1: UniversalPurchaseCoordinator is used, but fastlane/iaps/ contains no *.json product ID files."
+        )
+    }
+}
+
+// MARK: - 7. LegalSectionView for Paid / Ad-Supported Apps
+
+private func validateLegalSection(in swiftFiles: [URL]) {
+    var triggerFile: URL?
+    var hasLegalSection = false
+
+    for fileURL in swiftFiles {
+        guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+        let stripped = stripComments(from: contents)
+
+        if stripped.contains("LegalSectionView(") {
+            hasLegalSection = true
+        }
+
+        if triggerFile == nil && (
+            stripped.contains("UniversalPurchaseCoordinator") ||
+            stripped.contains("import RevenueCat") ||
+            stripped.contains("import GraceAppsLibraryRevenueCat") ||
+            stripped.contains("import StoreKit") ||
+            stripped.contains("import GraceAppsLibraryAdMob") ||
+            stripped.contains("import GoogleMobileAds")
+        ) {
+            triggerFile = fileURL
+        }
+    }
+
+    if let triggerFile = triggerFile, !hasLegalSection {
+        Diagnostics.error(
+            "\(triggerFile.path):1: App uses in-app purchases or ads, but LegalSectionView(...) is missing. Add LegalSectionView(privacyPolicyURL:) to Settings."
+        )
     }
 }
 
