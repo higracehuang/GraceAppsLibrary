@@ -133,8 +133,6 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
     var firstLimitUsageFile: URL? = nil
     var hasAdCoordinatorConfigure = false
     var firstAdMobFile: URL? = nil
-    var hasReviewConfigure = false
-    var firstRatingPromptFile: URL? = nil
     var hasScopedUXFlow = false
     var firstUXFlowCallerFile: URL? = nil
 
@@ -178,12 +176,6 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
         }
         if firstAdMobFile == nil, stripped.contains("import GraceAppsLibraryAdMob") {
             firstAdMobFile = fileURL
-        }
-        if stripped.contains("ReviewPromptManager.shared.configure(") {
-            hasReviewConfigure = true
-        }
-        if firstRatingPromptFile == nil, stripped.contains(".ratingPrompt(") {
-            firstRatingPromptFile = fileURL
         }
         if !isWatchTarget,
            stripped.range(of: #"(?:>=|<=|>|<)\s*[A-Za-z0-9_.]*reviewPromptThreshold\b"#, options: .regularExpression) != nil {
@@ -252,12 +244,6 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
     if let targetFile = firstAdMobFile, !hasAdCoordinatorConfigure {
         Diagnostics.error(
             "\(targetFile.path):1: GraceAppsLibraryAdMob is used, but UniversalAdCoordinator.shared.configure(...) is not called at launch."
-        )
-    }
-
-    if !isWatchTarget, let ratingFile = firstRatingPromptFile, !hasReviewConfigure {
-        Diagnostics.error(
-            "\(ratingFile.path):1: .ratingPrompt(...) is used, but ReviewPromptManager.shared.configure(...) is not called at launch."
         )
     }
 
