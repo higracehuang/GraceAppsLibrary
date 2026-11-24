@@ -98,7 +98,9 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
     let rules: [(needle: String, message: String)] = [
         ("Purchases.configure(", "Use UniversalPurchaseCoordinator.shared.configure(...) instead of Purchases.configure(...)."),
         ("PaywallView(", "Use .universalPaywall(...) or UniversalPaywallPresenter instead of PaywallView(...) directly."),
+        ("CustomerCenterView(", "Use UniversalSubscriptionSection or UniversalDebugMenu instead of CustomerCenterView(...) directly."),
         ("SKStoreReviewController.requestReview", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of SKStoreReviewController.requestReview."),
+        ("@Environment(\\.requestReview)", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of @Environment(\\.requestReview)."),
         ("setPrecondition(actionId: .interstitialAd", "Remove manual .interstitialAd precondition; UniversalPurchaseCoordinator.shared.configure(...) wires it automatically."),
         ("setPrecondition(actionId: \"interstitial_ad\"", "Remove manual \"interstitial_ad\" precondition; UniversalPurchaseCoordinator.shared.configure(...) wires it automatically.")
     ]
@@ -109,6 +111,8 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
 
     var hasPurchaseCoordinatorConfigure = false
     var firstRevenueCatFile: URL? = nil
+    var hasScopedUXFlow = false
+    var firstUXFlowCallerFile: URL? = nil
 
     for fileURL in swiftFiles {
         guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
@@ -121,6 +125,9 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
             for rule in rules where trimmed.contains(rule.needle) {
                 Diagnostics.error("\(fileURL.path):\(index + 1): \(rule.message)")
             }
+            if usesRevenueCat, (trimmed == "import RevenueCat" || trimmed == "import RevenueCatUI") {
+                Diagnostics.error("\(fileURL.path):\(index + 1): Remove direct '\(trimmed)'; use GraceAppsLibraryRevenueCat instead.")
+            }
         }
 
         let stripped = stripComments(from: contents)
@@ -131,15 +138,24 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
            stripped.contains("import GraceAppsLibraryRevenueCat") || stripped.contains("UniversalSubscriptionSection(") {
             firstRevenueCatFile = fileURL
         }
+        if stripped.contains(".scopedUXFlow(") {
+            hasScopedUXFlow = true
+        }
+        if firstUXFlowCallerFile == nil,
+           stripped.contains("UXFlowOrchestrator.shared.requestAction(") ||
+           stripped.contains("UXFlowOrchestrator.shared.requestActions(") ||
+           stripped.contains("UniversalPaywallPresenter.present(") {
+            firstUXFlowCallerFile = fileURL
+        }
         if usesRevenueCat,
            stripped.range(of: #"ReleaseNotesManager\.shared\.configure\s*\([^)]*paywallAction\s*:"#, options: .regularExpression) != nil {
             Diagnostics.error(
                 "\(fileURL.path):1: Use ReleaseNotesManager.shared.configureWithPaywall(...) instead of passing paywallAction: to ReleaseNotesManager.shared.configure(...)."
             )
         }
-        if stripped.range(of: #"AboutAppSectionView\s*\([^)]*releaseNotes\s*:"#, options: .regularExpression) != nil {
+        if stripped.range(of: #"AboutAppSectionView\s*\([^)]*(releaseNotes|isPaidUser|tierName|paywallAction)\s*:"#, options: .regularExpression) != nil {
             Diagnostics.error(
-                "\(fileURL.path):1: Omit releaseNotes: in AboutAppSectionView(...); it reads ReleaseNotesManager.shared.configuredReleaseNotes automatically."
+                "\(fileURL.path):1: Omit releaseNotes/isPaidUser/tierName/paywallAction in AboutAppSectionView(...); it reads ReleaseNotesManager.shared configuration automatically."
             )
         }
     }
@@ -147,6 +163,12 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL]) {
     if let targetFile = firstRevenueCatFile, !hasPurchaseCoordinatorConfigure {
         Diagnostics.error(
             "\(targetFile.path):1: GraceAppsLibraryRevenueCat / UniversalSubscriptionSection is used, but UniversalPurchaseCoordinator.shared.configure(...) is not called at launch."
+        )
+    }
+
+    if let callerFile = firstUXFlowCallerFile, !hasScopedUXFlow {
+        Diagnostics.error(
+            "\(callerFile.path):1: UXFlowOrchestrator / UniversalPaywallPresenter is used, but .scopedUXFlow() is not mounted on a root view."
         )
     }
 }
