@@ -109,6 +109,8 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
         ("SKStoreReviewController.requestReview", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of SKStoreReviewController.requestReview."),
         ("@Environment(\\.requestReview)", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of @Environment(\\.requestReview)."),
         ("requestDirectNativeReview(", "Use UXFlowOrchestrator.shared.requestAction(.ratingPrompt(...)) instead of requestDirectNativeReview()."),
+        ("SolicitReviewLibrary(", "Use GraceAppsLibrary (ReviewPromptManager / UXFlowOrchestrator) instead of SolicitReviewLibrary(...)."),
+        ("SolicitReviewLibrary.", "Use GraceAppsLibrary (ReviewPromptManager / UXFlowOrchestrator) instead of SolicitReviewLibrary."),
         ("InterstitialAd.load(", "Use UniversalAdCoordinator.shared from GraceAppsLibraryAdMob instead of InterstitialAd.load(...)."),
         ("RateAppLinkView(", "Use AboutAppSectionView(appStoreId:) instead of RateAppLinkView(...) directly."),
         ("FeedbackToGraceNavigationView(", "Use AboutAppSectionView(appStoreId:) instead of FeedbackToGraceNavigationView(...) directly."),
@@ -140,6 +142,9 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
             }
             if !isWatchTarget, (trimmed == "import RevenueCat" || trimmed == "import RevenueCatUI") {
                 Diagnostics.error("\(fileURL.path):\(index + 1): Remove direct '\(trimmed)'; use GraceAppsLibraryRevenueCat instead.")
+            }
+            if !isWatchTarget, trimmed == "import SolicitReviewLibrary" {
+                Diagnostics.error("\(fileURL.path):\(index + 1): Remove direct '\(trimmed)'; use GraceAppsLibrary (ReviewPromptManager / UXFlowOrchestrator) instead.")
             }
         }
 
