@@ -210,4 +210,37 @@ final class GraceAppsLibraryRevenueCatTests: XCTestCase {
         )
         XCTAssertEqual(ReleaseNotesManager.shared.configuredReleaseNotes.count, 1)
     }
+
+    private enum TestLimitKey: String {
+        case photoSets = "photo_sets"
+        case photosPerSet = "photos_per_set"
+    }
+
+    func testFreeTierLimitsForFreeAndProUsers() {
+        coordinator.configureLimits(["photo_sets": 2])
+        coordinator.debugOverride = .automatic
+
+        // Free user: allowed below limit, blocked at or above limit
+        coordinator.setStoreStatus(false)
+        XCTAssertTrue(coordinator.isWithinFreeLimit("photo_sets", currentCount: 0))
+        XCTAssertTrue(coordinator.isWithinFreeLimit("photo_sets", currentCount: 1))
+        XCTAssertFalse(coordinator.isWithinFreeLimit("photo_sets", currentCount: 2))
+        XCTAssertFalse(coordinator.isWithinFreeLimit("photo_sets", currentCount: 5))
+        XCTAssertTrue(coordinator.isWithinFreeLimit("unconfigured_key", currentCount: 999))
+
+        // Pro user: always allowed regardless of count
+        coordinator.setStoreStatus(true)
+        XCTAssertTrue(coordinator.isWithinFreeLimit("photo_sets", currentCount: 2))
+        XCTAssertTrue(coordinator.isWithinFreeLimit("photo_sets", currentCount: 100))
+
+        // Enum overload
+        coordinator.configureLimits([TestLimitKey.photosPerSet: 10])
+        coordinator.setStoreStatus(false)
+        XCTAssertTrue(coordinator.isWithinFreeLimit(TestLimitKey.photosPerSet, currentCount: 9))
+        XCTAssertFalse(coordinator.isWithinFreeLimit(TestLimitKey.photosPerSet, currentCount: 10))
+        XCTAssertTrue(coordinator.checkLimitOrPresentPaywall(TestLimitKey.photosPerSet, currentCount: 9))
+        XCTAssertFalse(coordinator.checkLimitOrPresentPaywall(TestLimitKey.photosPerSet, currentCount: 10))
+
+        coordinator.configureLimits([String: Int]())
+    }
 }

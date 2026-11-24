@@ -44,6 +44,7 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
 
     public private(set) var entitlementId: String = "pro"
     public private(set) var tierName: String = "Pro"
+    public private(set) var freeLimits: [String: Int] = [:]
     public var syncedStorageKey: String? = nil
     public var overrideStorageKey: String = defaultOverrideStorageKey
 
@@ -69,6 +70,68 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
                 !(self?.isPro ?? false)
             }
         }
+    }
+
+    // MARK: - Free-Tier Limits
+
+    /// Registers named free-tier item limits (e.g. `["photo_sets": 2, "photos_per_set": 10]`).
+    public func configureLimits(_ limits: [String: Int]) {
+        self.freeLimits = limits
+    }
+
+    /// Overload for raw-representable limit key enums.
+    public func configureLimits<T: Hashable & RawRepresentable>(_ limits: [T: Int]) where T.RawValue == String {
+        var mapped: [String: Int] = [:]
+        for (key, value) in limits {
+            mapped[key.rawValue] = value
+        }
+        self.freeLimits = mapped
+    }
+
+    /// Returns `true` if the user is Pro, no limit is registered for `key`, or `currentCount < limit`.
+    public func isWithinFreeLimit(_ key: String, currentCount: Int) -> Bool {
+        if isPro { return true }
+        guard let limit = freeLimits[key] else { return true }
+        return currentCount < limit
+    }
+
+    /// Overload for raw-representable limit key enums.
+    public func isWithinFreeLimit<T: RawRepresentable>(_ key: T, currentCount: Int) -> Bool where T.RawValue == String {
+        isWithinFreeLimit(key.rawValue, currentCount: currentCount)
+    }
+
+    /// Checks `isWithinFreeLimit(_:currentCount:)`. If blocked, presents the paywall via `UniversalPaywallPresenter.present(trigger:offeringIdentifier:)` and returns `false`.
+    @discardableResult
+    public func checkLimitOrPresentPaywall(
+        _ key: String,
+        currentCount: Int,
+        trigger: String? = nil,
+        offeringIdentifier: String? = nil
+    ) -> Bool {
+        if isWithinFreeLimit(key, currentCount: currentCount) {
+            return true
+        }
+        UniversalPaywallPresenter.present(
+            trigger: trigger ?? "\(key)_limit",
+            offeringIdentifier: offeringIdentifier
+        )
+        return false
+    }
+
+    /// Overload for raw-representable limit key enums.
+    @discardableResult
+    public func checkLimitOrPresentPaywall<K: RawRepresentable>(
+        _ key: K,
+        currentCount: Int,
+        trigger: String? = nil,
+        offeringIdentifier: String? = nil
+    ) -> Bool where K.RawValue == String {
+        checkLimitOrPresentPaywall(
+            key.rawValue,
+            currentCount: currentCount,
+            trigger: trigger,
+            offeringIdentifier: offeringIdentifier
+        )
     }
 
     // MARK: - Public Configuration
