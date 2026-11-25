@@ -1,7 +1,62 @@
 import SwiftUI
 
-/// Reusable Pro-gated container for Watch apps using `WatchSyncChannel<WatchEntitlementEnvelope<Payload>>`.
-public struct WatchProGateView<Payload: Codable & Equatable, Content: View>: View {
+/// Reusable Pro-gated container for Watch apps.
+/// - `isPro == nil`: shows `WatchSyncingView`
+/// - `isPro == false`: shows `WatchProRequiredView`
+/// - `isPro == true`: renders `content`
+public struct WatchProGateView<Content: View>: View {
+    private let isPro: Bool?
+    private let lockedTitle: LocalizedStringKey?
+    private let lockedSubtitle: LocalizedStringKey?
+    private let refreshTitle: LocalizedStringKey?
+    private let syncingTitle: LocalizedStringKey?
+    private let onRefresh: () -> Void
+    private let content: () -> Content
+
+    public init(
+        isPro: Bool?,
+        lockedTitle: LocalizedStringKey? = nil,
+        lockedSubtitle: LocalizedStringKey? = nil,
+        refreshTitle: LocalizedStringKey? = nil,
+        syncingTitle: LocalizedStringKey? = nil,
+        onRefresh: @escaping () -> Void,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.isPro = isPro
+        self.lockedTitle = lockedTitle
+        self.lockedSubtitle = lockedSubtitle
+        self.refreshTitle = refreshTitle
+        self.syncingTitle = syncingTitle
+        self.onRefresh = onRefresh
+        self.content = content
+    }
+
+    public var body: some View {
+        Group {
+            if let isPro {
+                if isPro {
+                    content()
+                } else {
+                    WatchProRequiredView(
+                        title: lockedTitle,
+                        subtitle: lockedSubtitle,
+                        refreshTitle: refreshTitle,
+                        onRefresh: onRefresh
+                    )
+                }
+            } else {
+                WatchSyncingView(
+                    title: syncingTitle,
+                    refreshTitle: refreshTitle,
+                    onRefresh: onRefresh
+                )
+            }
+        }
+    }
+}
+
+/// Convenience Pro-gated container bound directly to a `WatchSyncChannel<WatchEntitlementEnvelope<Payload>>`.
+public struct WatchChannelProGateView<Payload: Codable & Equatable, Content: View>: View {
     @ObservedObject private var channel: WatchSyncChannel<WatchEntitlementEnvelope<Payload>>
     private let lockedTitle: LocalizedStringKey?
     private let lockedSubtitle: LocalizedStringKey?
@@ -26,24 +81,16 @@ public struct WatchProGateView<Payload: Codable & Equatable, Content: View>: Vie
     }
 
     public var body: some View {
-        Group {
-            if let envelope = channel.state {
-                if envelope.isPro {
-                    content(envelope.payload)
-                } else {
-                    WatchProRequiredView(
-                        title: lockedTitle,
-                        subtitle: lockedSubtitle,
-                        refreshTitle: refreshTitle,
-                        onRefresh: { channel.requestStateFromCounterpart() }
-                    )
-                }
-            } else {
-                WatchSyncingView(
-                    title: syncingTitle,
-                    refreshTitle: refreshTitle,
-                    onRefresh: { channel.requestStateFromCounterpart() }
-                )
+        WatchProGateView(
+            isPro: channel.state?.isPro,
+            lockedTitle: lockedTitle,
+            lockedSubtitle: lockedSubtitle,
+            refreshTitle: refreshTitle,
+            syncingTitle: syncingTitle,
+            onRefresh: { channel.requestStateFromCounterpart() }
+        ) {
+            if let payload = channel.state?.payload {
+                content(payload)
             }
         }
     }
