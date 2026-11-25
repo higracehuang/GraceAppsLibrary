@@ -148,6 +148,33 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
         }
     }
 
+    public static var defaultTimestampKey: String { "action_timestamp" }
+
+    /// Sends `[actionKey: true, timestampKey: date.timeIntervalSince1970]` (merged with `extraPayload`).
+    public func sendTimestampedAction(
+        _ actionKey: String,
+        at date: Date = Date(),
+        timestampKey: String = WatchSyncChannel.defaultTimestampKey,
+        extraPayload: [String: Any] = [:],
+        fallbackToUserInfo: Bool = true
+    ) {
+        var payload = extraPayload
+        payload[actionKey] = true
+        payload[timestampKey] = date.timeIntervalSince1970
+        sendAction(payload, fallbackToUserInfo: fallbackToUserInfo)
+    }
+
+    /// Extracts an action timestamp from an incoming payload, falling back to `Date()`.
+    public static func actionTimestamp(
+        from payload: [String: Any],
+        key: String = WatchSyncChannel.defaultTimestampKey
+    ) -> Date {
+        if let ts = payload[key] as? TimeInterval {
+            return Date(timeIntervalSince1970: ts)
+        }
+        return Date()
+    }
+
     // MARK: - Internal Helpers
 
     /// Synchronously reads the last cached state from App Group `UserDefaults`, if configured.

@@ -249,4 +249,24 @@ final class WatchSyncChannelTests: XCTestCase {
         XCTAssertEqual(channel.state?.payload.count, 2)
         XCTAssertEqual(channel.state?.payload.title, "ProUpdated")
     }
+
+    @MainActor
+    func testSendTimestampedActionPacksAndExtractsTimestamp() {
+        let mock = MockWatchSession()
+        mock.activationState = .activated
+        mock.isReachable = true
+        let channel = WatchSyncChannel<WatchEntitlementEnvelope<SampleWatchPayload>>(
+            session: mock,
+            reloadWidgetsOnUpdate: false
+        )
+
+        let timestamp = Date(timeIntervalSince1970: 12_345)
+        channel.sendTimestampedAction("start_reading", at: timestamp)
+
+        XCTAssertEqual(mock.sentMessages.count, 1)
+        let sent = mock.sentMessages[0]
+        XCTAssertEqual(sent["start_reading"] as? Bool, true)
+        let extracted = WatchSyncChannel<WatchEntitlementEnvelope<SampleWatchPayload>>.actionTimestamp(from: sent)
+        XCTAssertEqual(extracted.timeIntervalSince1970, timestamp.timeIntervalSince1970, accuracy: 0.001)
+    }
 }
