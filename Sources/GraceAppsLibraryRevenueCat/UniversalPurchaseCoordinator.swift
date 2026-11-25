@@ -88,16 +88,63 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
         self.freeLimits = mapped
     }
 
-    /// Returns `true` if the user is Pro, no limit is registered for `key`, or `currentCount < limit`.
+    /// Returns `true` if the user is Pro, no limit is registered for `key`, or `currentCount < limit + earnedCredits`.
     internal func isWithinFreeLimit(_ key: String, currentCount: Int) -> Bool {
         if isPro { return true }
         guard let limit = freeLimits[key] else { return true }
-        return currentCount < limit
+        let credits = UserDefaults.standard.integer(forKey: "GraceApps_FreeLimit_Credits_\(key)")
+        return currentCount < (limit + credits)
     }
 
     /// Overload for raw-representable limit key enums.
     public func isWithinFreeLimit<T: RawRepresentable>(_ key: T, currentCount: Int) -> Bool where T.RawValue == String {
         isWithinFreeLimit(key.rawValue, currentCount: currentCount)
+    }
+
+    /// Overload using persisted `recordedUsage(for: key)` as `currentCount`.
+    public func isWithinFreeLimit<T: RawRepresentable>(_ key: T) -> Bool where T.RawValue == String {
+        isWithinFreeLimit(key.rawValue, currentCount: recordedUsage(for: key))
+    }
+
+    /// Returns persisted earned bonus credits for the given limit key.
+    public func earnedCredits<T: RawRepresentable>(for key: T) -> Int where T.RawValue == String {
+        UserDefaults.standard.integer(forKey: "GraceApps_FreeLimit_Credits_\(key.rawValue)")
+    }
+
+    /// Returns persisted usage count for the given limit key.
+    public func recordedUsage<T: RawRepresentable>(for key: T) -> Int where T.RawValue == String {
+        UserDefaults.standard.integer(forKey: "GraceApps_FreeLimit_Usage_\(key.rawValue)")
+    }
+
+    /// Returns remaining free uses (`max(0, baseLimit + earnedCredits - usedCount)`), or `Int.max` if Pro or unconfigured.
+    public func remainingFreeLimit<T: RawRepresentable>(for key: T, currentCount: Int? = nil) -> Int where T.RawValue == String {
+        if isPro { return Int.max }
+        guard let limit = freeLimits[key.rawValue] else { return Int.max }
+        let used = currentCount ?? recordedUsage(for: key)
+        return max(0, (limit + earnedCredits(for: key)) - used)
+    }
+
+    /// Increments persisted usage count for the given limit key.
+    public func recordUsage<T: RawRepresentable>(for key: T, amount: Int = 1) where T.RawValue == String {
+        let storageKey = "GraceApps_FreeLimit_Usage_\(key.rawValue)"
+        let updated = UserDefaults.standard.integer(forKey: storageKey) + amount
+        UserDefaults.standard.set(updated, forKey: storageKey)
+        objectWillChange.send()
+    }
+
+    /// Adds earned bonus credits (e.g. from rewarded ads) for the given limit key.
+    public func earnCredits<T: RawRepresentable>(_ amount: Int, for key: T) where T.RawValue == String {
+        let storageKey = "GraceApps_FreeLimit_Credits_\(key.rawValue)"
+        let updated = UserDefaults.standard.integer(forKey: storageKey) + amount
+        UserDefaults.standard.set(updated, forKey: storageKey)
+        objectWillChange.send()
+    }
+
+    /// Resets persisted usage and earned credits for the given limit key (e.g. upon Pro upgrade).
+    public func resetCreditsAndUsage<T: RawRepresentable>(for key: T) where T.RawValue == String {
+        UserDefaults.standard.set(0, forKey: "GraceApps_FreeLimit_Usage_\(key.rawValue)")
+        UserDefaults.standard.set(0, forKey: "GraceApps_FreeLimit_Credits_\(key.rawValue)")
+        objectWillChange.send()
     }
 
     /// Checks `isWithinFreeLimit(_:currentCount:)`. If blocked, presents the paywall via `UniversalPaywallPresenter.present(trigger:offeringIdentifier:)` and returns `false`.

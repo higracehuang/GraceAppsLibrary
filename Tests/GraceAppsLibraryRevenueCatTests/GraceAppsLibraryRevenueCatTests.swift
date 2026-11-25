@@ -243,4 +243,29 @@ final class GraceAppsLibraryRevenueCatTests: XCTestCase {
 
         coordinator.configureLimits([String: Int]())
     }
+
+    func testEarnedCreditsAndUsageTracking() {
+        coordinator.configureLimits([TestLimitKey.photoSets: 2])
+        coordinator.resetCreditsAndUsage(for: TestLimitKey.photoSets)
+        coordinator.debugOverride = .automatic
+        coordinator.setStoreStatus(false)
+
+        XCTAssertEqual(coordinator.remainingFreeLimit(for: TestLimitKey.photoSets), 2)
+        XCTAssertTrue(coordinator.isWithinFreeLimit(TestLimitKey.photoSets))
+
+        coordinator.recordUsage(for: TestLimitKey.photoSets)
+        coordinator.recordUsage(for: TestLimitKey.photoSets)
+        XCTAssertEqual(coordinator.remainingFreeLimit(for: TestLimitKey.photoSets), 0)
+        XCTAssertFalse(coordinator.isWithinFreeLimit(TestLimitKey.photoSets))
+
+        coordinator.earnCredits(1, for: TestLimitKey.photoSets)
+        XCTAssertEqual(coordinator.earnedCredits(for: TestLimitKey.photoSets), 1)
+        XCTAssertEqual(coordinator.remainingFreeLimit(for: TestLimitKey.photoSets), 1)
+        XCTAssertTrue(coordinator.isWithinFreeLimit(TestLimitKey.photoSets))
+
+        coordinator.resetCreditsAndUsage(for: TestLimitKey.photoSets)
+        XCTAssertEqual(coordinator.recordedUsage(for: TestLimitKey.photoSets), 0)
+        XCTAssertEqual(coordinator.earnedCredits(for: TestLimitKey.photoSets), 0)
+        coordinator.configureLimits([String: Int]())
+    }
 }
