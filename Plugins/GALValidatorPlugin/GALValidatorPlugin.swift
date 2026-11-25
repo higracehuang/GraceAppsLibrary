@@ -48,7 +48,7 @@ private func validateSwiftSources(
 
     if let projectRoot = projectRoot {
         validateUXMoments(in: projectRoot)
-        validateFastlaneIAPs(in: swiftFiles, projectRoot: projectRoot)
+        validateFastlaneIAPs(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
     }
 }
 
@@ -357,7 +357,7 @@ private func validateUXMoments(in projectRoot: URL) {
 
 // MARK: - 6. Fastlane IAP Configs
 
-private func validateFastlaneIAPs(in swiftFiles: [URL], projectRoot: URL) {
+private func validateFastlaneIAPs(in swiftFiles: [URL], allInputFiles: [URL], projectRoot: URL) {
     var firstPurchaseCoordinatorFile: URL?
     for fileURL in swiftFiles {
         guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
@@ -379,11 +379,118 @@ private func validateFastlaneIAPs(in swiftFiles: [URL], projectRoot: URL) {
     }
 
     let entries = (try? FileManager.default.contentsOfDirectory(at: iapsDir, includingPropertiesForKeys: nil)) ?? []
-    let jsonFiles = entries.filter { $0.pathExtension.lowercased() == "json" }
-    if jsonFiles.isEmpty {
+    let jsonFiles = entries.filter { $0.pathExtension.lowercased() == "json" }.sorted { $0.lastPathComponent < $1.lastPathComponent }
+    guard !jsonFiles.isEmpty else {
         Diagnostics.error(
             "\(triggerFile.path):1: UniversalPurchaseCoordinator is used, but fastlane/iaps/ contains no *.json product ID files."
         )
+        return
+    }
+
+    let metadataLocales = discoverFastlaneMetadataLocales(in: projectRoot)
+    let xcstringsLanguages = discoverXCStringsLanguages(in: allInputFiles, projectRoot: projectRoot)
+
+    for jsonFile in jsonFiles {
+        validateIAPJSONFile(jsonFile, metadataLocales: metadataLocales, xcstringsLanguages: xcstringsLanguages)
+    }
+}
+
+private func discoverFastlaneMetadataLocales(in projectRoot: URL) -> [String] {
+    let metadataDir = projectRoot.appendingPathComponent("fastlane/metadata")
+    var isDir: ObjCBool = false
+    guard FileManager.default.fileExists(atPath: metadataDir.path, isDirectory: &isDir), isDir.boolValue else {
+        return []
+    }
+    let ignoredDirs: Set<String> = ["review_information", "trade_representative_contact_information", "default"]
+    let entries = (try? FileManager.default.contentsOfDirectory(at: metadataDir, includingPropertiesForKeys: [.isDirectoryKey])) ?? []
+    return entries.compactMap { url in
+        let name = url.lastPathComponent
+        guard !name.hasPrefix("."), !ignoredDirs.contains(name) else { return nil }
+        let values = try? url.resourceValues(forKeys: [.isDirectoryKey])
+        guard values?.isDirectory == true else { return nil }
+        return name
+    }.sorted()
+}
+
+private func discoverXCStringsLanguages(in allInputFiles: [URL], projectRoot: URL) -> Set<String> {
+    var xcstringsFiles = allInputFiles.filter { $0.lastPathComponent == "Localizable.xcstrings" }
+    if xcstringsFiles.isEmpty {
+        let rootCatalog = projectRoot.appendingPathComponent("Localizable.xcstrings")
+        if FileManager.default.fileExists(atPath: rootCatalog.path) {
+            xcstringsFiles = [rootCatalog]
+        }
+    }
+
+    var languages = Set<String>()
+    for url in xcstringsFiles {
+        guard let data = try? Data(contentsOf: url),
+              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
+        if let source = root["sourceLanguage"] as? String, !source.isEmpty {
+            languages.insert(source)
+        }
+        if let strings = root["strings"] as? [String: Any] {
+            for (_, entryAny) in strings {
+                guard let entry = entryAny as? [String: Any],
+                      let locs = entry["localizations"] as? [String: Any] else { continue }
+                for lang in locs.keys where !lang.isEmpty {
+                    languages.insert(lang)
+                }
+            }
+        }
+    }
+    return languages
+}
+
+private func validateIAPJSONFile(
+    _ jsonFile: URL,
+    metadataLocales: [String],
+    xcstringsLanguages: Set<String>
+) {
+    guard let data = try? Data(contentsOf: jsonFile),
+          let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+        Diagnostics.error("\(jsonFile.path):1: Invalid JSON in fastlane IAP config \(jsonFile.lastPathComponent).")
+        return
+    }
+
+    let refName = (root["reference_name"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    if refName.isEmpty {
+        Diagnostics.error("\(jsonFile.path):1: Missing or empty 'reference_name' in \(jsonFile.lastPathComponent).")
+    }
+
+    guard let localizations = root["localizations"] as? [String: [String: Any]], !localizations.isEmpty else {
+        Diagnostics.error("\(jsonFile.path):1: Missing or empty 'localizations' dictionary in \(jsonFile.lastPathComponent).")
+        return
+    }
+
+    for (locale, entry) in localizations.sorted(by: { $0.key < $1.key }) {
+        let name = (entry["name"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let desc = (entry["description"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if name.isEmpty {
+            Diagnostics.error("\(jsonFile.path):1: Empty 'name' for locale '\(locale)' in \(jsonFile.lastPathComponent).")
+        }
+        if desc.isEmpty {
+            Diagnostics.error("\(jsonFile.path):1: Empty 'description' for locale '\(locale)' in \(jsonFile.lastPathComponent).")
+        }
+    }
+
+    for expectedLocale in metadataLocales where localizations[expectedLocale] == nil {
+        Diagnostics.error(
+            "\(jsonFile.path):1: Missing '\(expectedLocale)' localization in \(jsonFile.lastPathComponent) (required by fastlane/metadata/\(expectedLocale))."
+        )
+    }
+
+    if xcstringsLanguages.count > 1 {
+        let iapLocales = Set(localizations.keys)
+        for lang in xcstringsLanguages.sorted() {
+            let isCovered = iapLocales.contains { loc in
+                loc == lang || (!lang.contains("-") && loc.hasPrefix("\(lang)-"))
+            }
+            if !isCovered {
+                Diagnostics.error(
+                    "\(jsonFile.path):1: Missing localization for '\(lang)' in \(jsonFile.lastPathComponent) (app supports '\(lang)' in Localizable.xcstrings)."
+                )
+            }
+        }
     }
 }
 
