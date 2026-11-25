@@ -154,6 +154,9 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
             if !isWatchTarget, trimmed == "import SolicitReviewLibrary" {
                 Diagnostics.error("\(fileURL.path):\(index + 1): Remove direct '\(trimmed)'; use GraceAppsLibrary (ReviewPromptManager / UXFlowOrchestrator) instead.")
             }
+            if !isWatchTarget, trimmed == "import MonetizationToolkit" {
+                Diagnostics.error("\(fileURL.path):\(index + 1): Remove direct '\(trimmed)'; use GraceAppsLibrary (PaywallPacingEngine / UXFlowOrchestrator) instead.")
+            }
         }
 
         let stripped = stripComments(from: contents)
