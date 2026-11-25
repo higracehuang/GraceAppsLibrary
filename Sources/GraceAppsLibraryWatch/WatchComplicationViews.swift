@@ -229,4 +229,41 @@ public struct WatchProgressComplicationView: View {
         }
     }
 }
+
+// MARK: - Pro-Gated Complication Wrapper
+
+/// Shows `content` when `isPro == true`, and falls back to `WatchLauncherComplicationView` otherwise.
+public struct WatchComplicationGate<Content: View>: View {
+    private let isPro: Bool?
+    private let systemImage: String
+    private let title: String
+    private let subtitle: LocalizedStringKey?
+    private let content: () -> Content
+
+    public init(
+        isPro: Bool?,
+        systemImage: String,
+        title: String,
+        subtitle: LocalizedStringKey? = nil,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.isPro = isPro
+        self.systemImage = systemImage
+        self.title = title
+        self.subtitle = subtitle
+        self.content = content
+    }
+
+    public var body: some View {
+        if isPro == true {
+            content()
+        } else {
+            WatchLauncherComplicationView(
+                systemImage: systemImage,
+                title: title,
+                subtitle: subtitle
+            )
+        }
+    }
+}
 #endif
