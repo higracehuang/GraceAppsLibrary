@@ -666,4 +666,20 @@ final class UniversalAdCoordinatorTests: XCTestCase {
         NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
         await fulfillment(of: [exp], timeout: 2.0)
     }
+
+    private enum TestRewardedTrigger: String {
+        case rewardedDuringQuiz = "rewarded_during_quiz"
+    }
+
+    func testConfigureRewardedAdUnits() {
+        let coordinator = UniversalAdCoordinator.shared
+        coordinator.configureRewarded(adUnits: [
+            TestRewardedTrigger.rewardedDuringQuiz: "ca-app-pub-3940256099942544/1712485313"
+        ])
+        XCTAssertEqual(
+            coordinator.rewardedAdUnitMap[TestRewardedTrigger.rewardedDuringQuiz.rawValue],
+            "ca-app-pub-3940256099942544/1712485313"
+        )
+        XCTAssertFalse(coordinator.isRewardedAdReady(for: TestRewardedTrigger.rewardedDuringQuiz))
+    }
 }

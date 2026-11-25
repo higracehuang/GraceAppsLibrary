@@ -117,6 +117,7 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
         ("enableBannerAd", "Remove 'enableBannerAd' toggle flag; ads are always enabled for non-Pro users via UniversalAdCoordinator."),
         ("adsEnabled", "Remove 'adsEnabled' toggle flag; ads are always enabled for non-Pro users via UniversalAdCoordinator."),
         ("InterstitialAd.load(", "Use UniversalAdCoordinator.shared from GraceAppsLibraryAdMob instead of InterstitialAd.load(...)."),
+        ("RewardedAd.load(", "Use UniversalAdCoordinator.shared from GraceAppsLibraryAdMob instead of RewardedAd.load(...)."),
         ("RateAppLinkView(", "Use AboutAppSectionView(appStoreId:) instead of RateAppLinkView(...) directly."),
         ("FeedbackToGraceNavigationView(", "Use AboutAppSectionView(appStoreId:) instead of FeedbackToGraceNavigationView(...) directly."),
         ("setPrecondition(actionId: .interstitialAd", "Remove manual .interstitialAd precondition; UniversalPurchaseCoordinator.shared.configure(...) wires it automatically."),

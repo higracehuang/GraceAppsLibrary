@@ -45,6 +45,15 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
     /// Read-only snapshot of cached interstitial ads by trigger.
     @Published public internal(set) var cachedAds: [String: UniversalPresentableAd] = [:]
 
+    /// Mapping of rewarded ad trigger identifiers to AdMob ad unit IDs.
+    @Published public private(set) var rewardedAdUnitMap: [String: String] = [:]
+
+    /// Whether at least one rewarded ad is currently loaded and ready to present.
+    @Published public private(set) var isRewardedAdReady: Bool = false
+
+    internal var cachedRewardedAds: [String: RewardedAd] = [:]
+    internal var activeRewardedLoadingTriggers: Set<String> = []
+
     // MARK: - Internal State
 
     internal var adLoadDates: [String: Date] = [:]
@@ -552,6 +561,82 @@ extension UniversalAdCoordinator {
     /// Checks whether a cached ad is ready using any String-backed enum trigger.
     public func isAdReady<T: RawRepresentable>(for trigger: T) -> Bool where T.RawValue == String {
         isAdReady(for: trigger.rawValue)
+    }
+
+    // MARK: - Rewarded Ads
+
+    /// Configures rewarded ad unit IDs using a String-backed enum trigger.
+    public func configureRewarded<T: Hashable & RawRepresentable>(
+        adUnits: [T: String],
+        isPro: (() -> Bool)? = nil
+    ) where T.RawValue == String {
+        var mapped: [String: String] = [:]
+        for (key, value) in adUnits {
+            mapped[key.rawValue] = value
+        }
+        self.rewardedAdUnitMap = mapped
+        if let isPro = isPro {
+            self.pacing.isProUser = isPro
+        }
+        GraceLogger.ads("Configured UniversalAdCoordinator with \(mapped.count) rewarded ad units.", level: .info)
+    }
+
+    /// Returns whether a rewarded ad is loaded and ready for the given enum trigger.
+    public func isRewardedAdReady<T: RawRepresentable>(for trigger: T) -> Bool where T.RawValue == String {
+        cachedRewardedAds[trigger.rawValue] != nil
+    }
+
+    /// Preloads a rewarded ad for the given enum trigger if the user is not Pro.
+    public func loadRewardedAd<T: RawRepresentable>(for trigger: T) async where T.RawValue == String {
+        let key = trigger.rawValue
+        guard canShowAds else { return }
+        guard cachedRewardedAds[key] == nil, !activeRewardedLoadingTriggers.contains(key) else { return }
+        guard let unitID = rewardedAdUnitMap[key], !unitID.isEmpty else {
+            GraceLogger.ads("No rewarded ad unit ID registered for trigger '\(key)'.", level: .warning)
+            return
+        }
+
+        activeRewardedLoadingTriggers.insert(key)
+        defer { activeRewardedLoadingTriggers.remove(key) }
+
+        do {
+            let ad = try await RewardedAd.load(with: unitID, request: Request())
+            ad.fullScreenContentDelegate = self
+            cachedRewardedAds[key] = ad
+            isRewardedAdReady = !cachedRewardedAds.isEmpty
+            GraceLogger.ads("Loaded rewarded ad for trigger '\(key)'.", level: .info)
+        } catch {
+            GraceLogger.ads("Failed to load rewarded ad for '\(key)': \(error.localizedDescription)", level: .error)
+        }
+    }
+
+    /// Presents a cached rewarded ad for the given enum trigger, invoking `onReward` with the earned reward amount.
+    @discardableResult
+    public func presentRewardedAd<T: RawRepresentable>(
+        for trigger: T,
+        from viewController: UIViewController? = nil,
+        onReward: @escaping (Int) -> Void
+    ) -> Bool where T.RawValue == String {
+        let key = trigger.rawValue
+        guard canShowAds else { return false }
+        guard let ad = cachedRewardedAds.removeValue(forKey: key) else {
+            GraceLogger.ads("Rewarded ad not ready for trigger '\(key)'.", level: .warning)
+            isRewardedAdReady = !cachedRewardedAds.isEmpty
+            return false
+        }
+        isRewardedAdReady = !cachedRewardedAds.isEmpty
+        guard let hostVC = viewController ?? resolveTopViewController() else {
+            GraceLogger.ads("Could not find host view controller for rewarded ad '\(key)'.", level: .error)
+            return false
+        }
+
+        isShowingAd = true
+        ad.present(from: hostVC) {
+            let amount = Int(truncating: ad.adReward.amount)
+            GraceLogger.ads("Rewarded ad granted reward: \(amount) for '\(key)'.", level: .info)
+            onReward(amount)
+        }
+        return true
     }
 }
 
