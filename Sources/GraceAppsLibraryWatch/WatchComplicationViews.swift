@@ -148,6 +148,7 @@ public struct WatchLauncherComplicationView: View {
 /// Reusable `Gauge`-based watchOS complication view for goal/timer apps.
 public struct WatchProgressComplicationView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.isLuminanceReduced) private var isLuminanceReduced
 
     private let systemImage: String
     private let title: String
@@ -198,7 +199,7 @@ public struct WatchProgressComplicationView: View {
                         .font(.headline)
                         .lineLimit(1)
                 }
-                if let timerStart {
+                if let timerStart, !isLuminanceReduced {
                     Text(timerStart, style: .timer)
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)

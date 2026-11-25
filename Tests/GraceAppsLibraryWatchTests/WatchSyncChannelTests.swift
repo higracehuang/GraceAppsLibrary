@@ -7,11 +7,33 @@ private struct SampleWatchPayload: Codable, Equatable {
     let title: String
 }
 
+private final class MockUserInfoTransfer: WCSessionUserInfoTransfer {
+    private let mockUserInfo: [String: Any]
+
+    init(userInfo: [String: Any]) {
+        self.mockUserInfo = userInfo
+        super.init()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var userInfo: [String: Any] {
+        mockUserInfo
+    }
+}
+
 private final class MockWatchSession: WatchSessionProtocol {
     weak var delegate: WCSessionDelegate?
     var activationState: WCSessionActivationState = .notActivated
     var isReachable: Bool = false
     var receivedApplicationContext: [String: Any] = [:]
+    var outstandingUserInfoTransfers: [WCSessionUserInfoTransfer] = []
+    #if os(iOS)
+    var isPaired: Bool = true
+    var isWatchAppInstalled: Bool = true
+    #endif
 
     var activateCount = 0
     var updatedContexts: [[String: Any]] = []
@@ -41,7 +63,9 @@ private final class MockWatchSession: WatchSessionProtocol {
 
     func transferUserInfo(_ userInfo: [String: Any]) -> WCSessionUserInfoTransfer {
         transferredUserInfos.append(userInfo)
-        return WCSessionUserInfoTransfer()
+        let transfer = MockUserInfoTransfer(userInfo: userInfo)
+        outstandingUserInfoTransfers.append(transfer)
+        return transfer
     }
 }
 
@@ -71,6 +95,31 @@ final class WatchSyncChannelTests: XCTestCase {
         XCTAssertEqual(mock.updatedContexts.count, 2)
     }
 
+    #if os(iOS)
+    @MainActor
+    func testPushStateSkipsTransmissionWhenWatchNotInstalled() {
+        let mock = MockWatchSession()
+        mock.activationState = .activated
+        mock.isPaired = true
+        mock.isWatchAppInstalled = false
+
+        let channel = WatchSyncChannel<WatchEntitlementEnvelope<SampleWatchPayload>>(
+            session: mock,
+            reloadWidgetsOnUpdate: false
+        )
+
+        let envelope = WatchEntitlementEnvelope(
+            isPro: true,
+            updatedAt: Date(timeIntervalSince1970: 1_000),
+            payload: SampleWatchPayload(count: 5, title: "Queued")
+        )
+
+        channel.pushState(envelope)
+        XCTAssertEqual(mock.updatedContexts.count, 0)
+        XCTAssertEqual(channel.state, envelope)
+    }
+    #endif
+
     @MainActor
     func testSendActionUsesSendMessageWhenReachableAndFallsBackToUserInfo() {
         let mock = MockWatchSession()
@@ -94,6 +143,51 @@ final class WatchSyncChannelTests: XCTestCase {
         channel.sendAction(["action": "sync"])
         XCTAssertEqual(mock.sentMessages.count, 2)
         XCTAssertEqual(mock.transferredUserInfos.count, 2)
+    }
+
+    @MainActor
+    func testRequestStateDeduplicatesOutstandingOfflineTransfers() {
+        let mock = MockWatchSession()
+        mock.activationState = .activated
+        mock.isReachable = false
+        let channel = WatchSyncChannel<WatchEntitlementEnvelope<SampleWatchPayload>>(
+            session: mock,
+            reloadWidgetsOnUpdate: false
+        )
+
+        channel.requestStateFromCounterpart()
+        channel.requestStateFromCounterpart()
+
+        XCTAssertEqual(mock.transferredUserInfos.count, 1)
+    }
+
+    @MainActor
+    func testIncomingPayloadIgnoresStaleTimestampedState() async throws {
+        let mock = MockWatchSession()
+        mock.activationState = .activated
+        let channel = WatchSyncChannel<WatchEntitlementEnvelope<SampleWatchPayload>>(
+            session: mock,
+            reloadWidgetsOnUpdate: false
+        )
+
+        let newer = WatchEntitlementEnvelope(
+            isPro: true,
+            updatedAt: Date(timeIntervalSince1970: 2_000),
+            payload: SampleWatchPayload(count: 10, title: "Newer")
+        )
+        let older = WatchEntitlementEnvelope(
+            isPro: false,
+            updatedAt: Date(timeIntervalSince1970: 1_000),
+            payload: SampleWatchPayload(count: 1, title: "Older")
+        )
+
+        channel.handleIncomingPayload([channel.stateKey: try JSONEncoder().encode(newer)], replyHandler: nil)
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(channel.state, newer)
+
+        channel.handleIncomingPayload([channel.stateKey: try JSONEncoder().encode(older)], replyHandler: nil)
+        try await Task.sleep(nanoseconds: 50_000_000)
+        XCTAssertEqual(channel.state, newer)
     }
 
     @MainActor

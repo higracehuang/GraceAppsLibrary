@@ -1,7 +1,12 @@
 import Foundation
 
+/// Optional protocol for Watch state models to reject out-of-order stale deliveries.
+public protocol WatchTimestampedState {
+    var updatedAt: Date { get }
+}
+
 /// Standard Pro-gated envelope pushed from iOS to Watch via `WatchSyncChannel`.
-public struct WatchEntitlementEnvelope<Payload: Codable & Equatable>: Codable, Equatable {
+public struct WatchEntitlementEnvelope<Payload: Codable & Equatable>: Codable, Equatable, WatchTimestampedState {
     public let isPro: Bool
     public let updatedAt: Date
     public let payload: Payload

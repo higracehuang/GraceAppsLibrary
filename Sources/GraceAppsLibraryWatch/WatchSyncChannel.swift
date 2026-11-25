@@ -7,10 +7,14 @@ import UIKit
 #endif
 
 /// Generic, testable `WCSession` state & action channel shared between iOS and watchOS targets.
+///
+/// - Important: Call `activate()` early in app startup (e.g. `App.init` or `AppDelegate`)
+///   so background `WCSession` wakeups always have a delegate attached.
 public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, ObservableObject, WCSessionDelegate {
     @MainActor @Published public private(set) var state: State?
     @MainActor @Published public private(set) var isActivated: Bool = false
     @MainActor @Published public private(set) var isReachable: Bool = false
+    @MainActor @Published public private(set) var isWatchAppInstalled: Bool = false
 
     /// Called on the main actor when an action payload (not a state snapshot) arrives from the counterpart.
     public var onReceiveAction: (@MainActor (_ payload: [String: Any], _ replyHandler: (([String: Any]) -> Void)?) -> Void)?
@@ -30,6 +34,7 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
 
     private var lastSentState: State?
     private var pendingState: State?
+    private var pendingStateRequest = false
 
     public init(
         session: WatchSessionProtocol? = WCSession.isSupported() ? WCSession.default : nil,
@@ -79,6 +84,11 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
             return
         }
 
+        guard canCommunicateWithCounterpart(session) else {
+            pendingState = newState
+            return
+        }
+
         pendingState = nil
         sendEncodedState(newState, over: session)
     }
@@ -94,20 +104,24 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
 
     public func requestStateFromCounterpart() {
         guard let session, session.activationState == .activated else {
-            GraceWatchLogger.sync("Cannot request state: WCSession not activated", level: .warning)
+            pendingStateRequest = true
+            GraceWatchLogger.sync("Queued state request until WCSession activates")
             return
         }
 
+        guard canCommunicateWithCounterpart(session) else { return }
+
+        pendingStateRequest = false
         let payload: [String: Any] = [requestStateKey: true]
         if session.isReachable {
             session.sendMessage(payload, replyHandler: { [weak self] reply in
                 self?.handleIncomingPayload(reply, replyHandler: nil)
             }, errorHandler: { [weak self] error in
                 GraceWatchLogger.sync("State request failed (\(error.localizedDescription)); falling back to transferUserInfo", level: .warning)
-                _ = self?.session?.transferUserInfo(payload)
+                self?.queueStateRequestTransferIfNeeded(payload, over: session)
             })
         } else {
-            _ = session.transferUserInfo(payload)
+            queueStateRequestTransferIfNeeded(payload, over: session)
         }
     }
 
@@ -116,6 +130,8 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
             GraceWatchLogger.sync("Cannot send action: WCSession not activated", level: .warning)
             return
         }
+
+        guard canCommunicateWithCounterpart(session) else { return }
 
         if session.isReachable {
             session.sendMessage(payload, replyHandler: nil) { error in
@@ -137,6 +153,25 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
         return try? decoder.decode(State.self, from: data)
     }
 
+    private func canCommunicateWithCounterpart(_ session: WatchSessionProtocol) -> Bool {
+        #if os(iOS)
+        return session.isPaired && session.isWatchAppInstalled
+        #else
+        return true
+        #endif
+    }
+
+    private func queueStateRequestTransferIfNeeded(_ payload: [String: Any], over session: WatchSessionProtocol) {
+        let alreadyQueued = session.outstandingUserInfoTransfers.contains {
+            ($0.userInfo[requestStateKey] as? Bool) == true
+        }
+        guard !alreadyQueued else {
+            GraceWatchLogger.sync("Skipping duplicate state request transferUserInfo")
+            return
+        }
+        _ = session.transferUserInfo(payload)
+    }
+
     private func loadCachedStateIfAvailable() {
         guard let cached = cachedState else { return }
         Task { @MainActor [weak self] in
@@ -147,6 +182,13 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
 
     @MainActor
     private func applyLocalState(_ newState: State) {
+        if let incomingTimestamped = newState as? WatchTimestampedState,
+           let currentTimestamped = self.state as? WatchTimestampedState,
+           incomingTimestamped.updatedAt < currentTimestamped.updatedAt {
+            GraceWatchLogger.sync("Ignoring stale Watch state (\(incomingTimestamped.updatedAt) < \(currentTimestamped.updatedAt))")
+            return
+        }
+
         self.state = newState
         if let defaults = appGroupDefaults, let data = try? encoder.encode(newState) {
             defaults.set(data, forKey: cacheKey)
@@ -237,17 +279,27 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
         let activated = (activationState == .activated)
         let reachable = session.isReachable
         let receivedContext = session.receivedApplicationContext
+        #if os(iOS)
+        let watchInstalled = session.isPaired && session.isWatchAppInstalled
+        #else
+        let watchInstalled = true
+        #endif
 
         Task { @MainActor [weak self] in
             guard let self else { return }
             self.isActivated = activated
             self.isReachable = reachable
+            self.isWatchAppInstalled = watchInstalled
 
             guard activated else { return }
 
-            if let pending = self.pendingState {
+            if watchInstalled, let pending = self.pendingState {
                 self.pendingState = nil
                 self.pushState(pending, force: true)
+            }
+
+            if self.pendingStateRequest {
+                self.requestStateFromCounterpart()
             }
 
             if !receivedContext.isEmpty {
@@ -286,6 +338,18 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
     }
 
     #if os(iOS)
+    public func sessionWatchStateDidChange(_ session: WCSession) {
+        let watchInstalled = session.isPaired && session.isWatchAppInstalled
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.isWatchAppInstalled = watchInstalled
+            if watchInstalled, let stateToSync = self.pendingState ?? self.state {
+                self.pendingState = nil
+                self.pushState(stateToSync, force: true)
+            }
+        }
+    }
+
     public func sessionDidBecomeInactive(_ session: WCSession) {
         GraceWatchLogger.session("Session became inactive", level: .info)
     }
