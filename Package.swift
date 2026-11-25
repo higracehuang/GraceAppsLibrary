@@ -65,7 +65,10 @@ let package = Package(
         ),
         .target(
             name: "GraceAppsLibraryWatch",
-            dependencies: []
+            dependencies: [],
+            resources: [
+                .process("Resources"),
+            ]
         ),
         .testTarget(
             name: "GraceAppsLibraryWatchTests",

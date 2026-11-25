@@ -3,18 +3,18 @@ import SwiftUI
 /// Reusable Pro-gated container for Watch apps using `WatchSyncChannel<WatchEntitlementEnvelope<Payload>>`.
 public struct WatchProGateView<Payload: Codable & Equatable, Content: View>: View {
     @ObservedObject private var channel: WatchSyncChannel<WatchEntitlementEnvelope<Payload>>
-    private let lockedTitle: LocalizedStringKey
-    private let lockedSubtitle: LocalizedStringKey
-    private let refreshTitle: LocalizedStringKey
-    private let syncingTitle: LocalizedStringKey
+    private let lockedTitle: LocalizedStringKey?
+    private let lockedSubtitle: LocalizedStringKey?
+    private let refreshTitle: LocalizedStringKey?
+    private let syncingTitle: LocalizedStringKey?
     private let content: (Payload) -> Content
 
     public init(
         channel: WatchSyncChannel<WatchEntitlementEnvelope<Payload>>,
-        lockedTitle: LocalizedStringKey = "Pro Required",
-        lockedSubtitle: LocalizedStringKey = "Upgrade to Pro on your iPhone to unlock the Watch app.",
-        refreshTitle: LocalizedStringKey = "Refresh",
-        syncingTitle: LocalizedStringKey = "Syncing...",
+        lockedTitle: LocalizedStringKey? = nil,
+        lockedSubtitle: LocalizedStringKey? = nil,
+        refreshTitle: LocalizedStringKey? = nil,
+        syncingTitle: LocalizedStringKey? = nil,
         @ViewBuilder content: @escaping (Payload) -> Content
     ) {
         self.channel = channel
@@ -50,15 +50,15 @@ public struct WatchProGateView<Payload: Codable & Equatable, Content: View>: Vie
 }
 
 public struct WatchProRequiredView: View {
-    private let title: LocalizedStringKey
-    private let subtitle: LocalizedStringKey
-    private let refreshTitle: LocalizedStringKey
+    private let title: LocalizedStringKey?
+    private let subtitle: LocalizedStringKey?
+    private let refreshTitle: LocalizedStringKey?
     private let onRefresh: () -> Void
 
     public init(
-        title: LocalizedStringKey = "Pro Required",
-        subtitle: LocalizedStringKey = "Upgrade to Pro on your iPhone to unlock the Watch app.",
-        refreshTitle: LocalizedStringKey = "Refresh",
+        title: LocalizedStringKey? = nil,
+        subtitle: LocalizedStringKey? = nil,
+        refreshTitle: LocalizedStringKey? = nil,
         onRefresh: @escaping () -> Void
     ) {
         self.title = title
@@ -74,17 +74,36 @@ public struct WatchProRequiredView: View {
                     .font(.title3)
                     .foregroundStyle(.secondary)
 
-                Text(title)
-                    .font(.headline)
-                    .multilineTextAlignment(.center)
+                if let title {
+                    Text(title)
+                        .font(.headline)
+                        .multilineTextAlignment(.center)
+                } else {
+                    Text("Pro Required", bundle: .module)
+                        .font(.headline)
+                        .multilineTextAlignment(.center)
+                }
 
-                Text(subtitle)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                } else {
+                    Text("Upgrade to Pro on your iPhone to unlock the Watch app.", bundle: .module)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
 
-                Button(refreshTitle, action: onRefresh)
-                    .buttonStyle(.borderedProminent)
+                Button(action: onRefresh) {
+                    if let refreshTitle {
+                        Text(refreshTitle)
+                    } else {
+                        Text("Refresh", bundle: .module)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
             }
             .padding()
         }
@@ -92,13 +111,13 @@ public struct WatchProRequiredView: View {
 }
 
 public struct WatchSyncingView: View {
-    private let title: LocalizedStringKey
-    private let refreshTitle: LocalizedStringKey
+    private let title: LocalizedStringKey?
+    private let refreshTitle: LocalizedStringKey?
     private let onRefresh: () -> Void
 
     public init(
-        title: LocalizedStringKey = "Syncing...",
-        refreshTitle: LocalizedStringKey = "Refresh",
+        title: LocalizedStringKey? = nil,
+        refreshTitle: LocalizedStringKey? = nil,
         onRefresh: @escaping () -> Void
     ) {
         self.title = title
@@ -109,11 +128,23 @@ public struct WatchSyncingView: View {
     public var body: some View {
         VStack(spacing: 10) {
             ProgressView()
-            Text(title)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-            Button(refreshTitle, action: onRefresh)
-                .buttonStyle(.bordered)
+            if let title {
+                Text(title)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("Syncing...", bundle: .module)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            Button(action: onRefresh) {
+                if let refreshTitle {
+                    Text(refreshTitle)
+                } else {
+                    Text("Refresh", bundle: .module)
+                }
+            }
+            .buttonStyle(.bordered)
         }
         .padding()
     }

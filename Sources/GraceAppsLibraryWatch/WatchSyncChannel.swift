@@ -2,6 +2,9 @@ import Combine
 import Foundation
 import WatchConnectivity
 import WidgetKit
+#if os(iOS)
+import UIKit
+#endif
 
 /// Generic, testable `WCSession` state & action channel shared between iOS and watchOS targets.
 public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, ObservableObject, WCSessionDelegate {
@@ -128,11 +131,14 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
 
     // MARK: - Internal Helpers
 
+    /// Synchronously reads the last cached state from App Group `UserDefaults`, if configured.
+    public var cachedState: State? {
+        guard let data = appGroupDefaults?.data(forKey: cacheKey) else { return nil }
+        return try? decoder.decode(State.self, from: data)
+    }
+
     private func loadCachedStateIfAvailable() {
-        guard let data = appGroupDefaults?.data(forKey: cacheKey),
-              let cached = try? decoder.decode(State.self, from: data) else {
-            return
-        }
+        guard let cached = cachedState else { return }
         Task { @MainActor [weak self] in
             guard let self, self.state == nil else { return }
             self.state = cached
@@ -194,7 +200,24 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
         }
 
         Task { @MainActor [weak self] in
-            self?.onReceiveAction?(payload, replyHandler)
+            guard let self else { return }
+            #if os(iOS)
+            let isExtension = Bundle.main.bundlePath.hasSuffix(".appex")
+            var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
+            var sharedApp: UIApplication?
+            if !isExtension,
+               let appClass = NSClassFromString("UIApplication") as? NSObject.Type,
+               let app = appClass.perform(NSSelectorFromString("sharedApplication"))?.takeUnretainedValue() as? UIApplication {
+                sharedApp = app
+                backgroundTaskID = app.beginBackgroundTask(withName: "GALWatchSync") {}
+            }
+            defer {
+                if let sharedApp, backgroundTaskID != .invalid {
+                    sharedApp.endBackgroundTask(backgroundTaskID)
+                }
+            }
+            #endif
+            self.onReceiveAction?(payload, replyHandler)
         }
     }
 

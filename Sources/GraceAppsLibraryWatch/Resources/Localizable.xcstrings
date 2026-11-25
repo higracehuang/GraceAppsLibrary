@@ -1,0 +1,66 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Pro Required" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Pro erforderlich" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pro Required" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Requiere Pro" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pro requis" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Proが必要です" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "Pro 필요" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "需要 Pro 版" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "需要 Pro 版" } }
+      }
+    },
+    "Refresh" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisieren" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Refresh" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizar" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Actualiser" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "새로고침" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "刷新" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "重新整理" } }
+      }
+    },
+    "Syncing..." : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Synchronisieren..." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Syncing..." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sincronizando..." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Synchronisation..." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "同期中..." } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "동기화 중..." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "同步中..." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "同步中..." } }
+      }
+    },
+    "Tap to Open" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zum Öffnen tippen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap to Open" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Toca para abrir" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Toucher pour ouvrir" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "タップして開く" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "탭하여 열기" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "轻点打开" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "輕點開啟" } }
+      }
+    },
+    "Upgrade to Pro on your iPhone to unlock the Watch app." : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Führe auf deinem iPhone ein Upgrade auf Pro durch, um die Watch-App freizuschalten." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Upgrade to Pro on your iPhone to unlock the Watch app." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualiza a Pro en tu iPhone para desbloquear la app del Watch." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Passez à Pro sur votre iPhone pour débloquer l’app Watch." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "Watchアプリを利用するには、iPhoneでProにアップグレードしてください。" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "Watch 앱을 잠금 해제하려면 iPhone에서 Pro로 업그레이드하세요." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在 iPhone 上升级到 Pro 版以解锁 Watch 应用。" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "在 iPhone 上升級至 Pro 版以解鎖 Watch App。" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}
