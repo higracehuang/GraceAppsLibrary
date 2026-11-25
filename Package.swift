@@ -7,7 +7,8 @@ let package = Package(
     name: "GraceAppsLibrary",
     defaultLocalization: "en",
     platforms: [
-        .iOS(.v15)
+        .iOS(.v15),
+        .watchOS(.v9)
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -20,6 +21,9 @@ let package = Package(
         .library(
             name: "GraceAppsLibraryRevenueCat",
             targets: ["GraceAppsLibraryRevenueCat"]),
+        .library(
+            name: "GraceAppsLibraryWatch",
+            targets: ["GraceAppsLibraryWatch"]),
         .plugin(
             name: "GALValidatorPlugin",
             targets: ["GALValidatorPlugin"]),
@@ -58,6 +62,14 @@ let package = Package(
                 .product(name: "RevenueCat", package: "purchases-ios"),
                 .product(name: "RevenueCatUI", package: "purchases-ios"),
             ]
+        ),
+        .target(
+            name: "GraceAppsLibraryWatch",
+            dependencies: []
+        ),
+        .testTarget(
+            name: "GraceAppsLibraryWatchTests",
+            dependencies: ["GraceAppsLibraryWatch"]
         ),
         .testTarget(
             name: "GraceAppsLibraryTests",
