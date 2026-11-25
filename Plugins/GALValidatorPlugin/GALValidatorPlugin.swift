@@ -627,14 +627,10 @@ private func validateLoggerUsage(in swiftFiles: [URL], targetName: String) {
 // MARK: - 10. Pre-Release Smoke Test Doc
 
 private func validateSmokeTest(in projectRoot: URL) {
-    let candidates = [
-        projectRoot.appendingPathComponent("SMOKE_TEST.md"),
-        projectRoot.appendingPathComponent("AppInfo/SMOKE_TEST.md"),
-        projectRoot.appendingPathComponent("ProjectInfo/SMOKE_TEST.md")
-    ]
-    guard let docURL = candidates.first(where: { FileManager.default.fileExists(atPath: $0.path) }) else {
+    let docURL = projectRoot.appendingPathComponent("AppInfo/SMOKE_TEST.md")
+    guard FileManager.default.fileExists(atPath: docURL.path) else {
         Diagnostics.error(
-            "SMOKE_TEST.md not found at project root, AppInfo/, or ProjectInfo/. Ask an agent to summarize commits since the last release tag into SMOKE_TEST.md (see GraceAppsLibrary/Skills/PRE_RELEASE_SMOKE_TEST.md)."
+            "AppInfo/SMOKE_TEST.md not found. Ask an agent to summarize commits since the last release tag into AppInfo/SMOKE_TEST.md (see GraceAppsLibrary/Skills/PRE_RELEASE_SMOKE_TEST.md)."
         )
         return
     }

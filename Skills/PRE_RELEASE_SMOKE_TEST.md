@@ -1,6 +1,6 @@
 # Pre-Release Smoke Test Generation (`SMOKE_TEST.md`)
 
-Every app using `GraceAppsLibrary` must maintain a `SMOKE_TEST.md` file (at the project root, `AppInfo/SMOKE_TEST.md`, or `ProjectInfo/SMOKE_TEST.md`). `GALValidatorPlugin` enforces its presence and structure on every Xcode build.
+Every app using `GraceAppsLibrary` must maintain an `AppInfo/SMOKE_TEST.md` file. `GALValidatorPlugin` enforces its presence and structure on every Xcode build.
 
 ## When to Update `SMOKE_TEST.md`
 

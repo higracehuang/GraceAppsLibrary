@@ -4,16 +4,9 @@ set -euo pipefail
 APP_ROOT="${1:-.}"
 cd "$APP_ROOT"
 
-SMOKE_FILE=""
-for candidate in "SMOKE_TEST.md" "AppInfo/SMOKE_TEST.md" "ProjectInfo/SMOKE_TEST.md"; do
-  if [ -f "$candidate" ]; then
-    SMOKE_FILE="$candidate"
-    break
-  fi
-done
-
-if [ -z "$SMOKE_FILE" ]; then
-  echo "❌ Missing SMOKE_TEST.md (checked root, AppInfo/, ProjectInfo/)"
+SMOKE_FILE="AppInfo/SMOKE_TEST.md"
+if [ ! -f "$SMOKE_FILE" ]; then
+  echo "❌ Missing $SMOKE_FILE"
   exit 1
 fi
 
