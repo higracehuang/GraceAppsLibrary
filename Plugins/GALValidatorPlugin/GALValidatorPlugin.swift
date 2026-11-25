@@ -50,6 +50,7 @@ private func validateSwiftSources(
         validateUXMoments(in: projectRoot)
         validateFastlaneIAPs(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
         validateSmokeTest(in: projectRoot)
+        validateWatchTranslations(in: projectRoot, allInputFiles: allInputFiles)
     }
 }
 
@@ -652,6 +653,74 @@ private func validateSmokeTest(in projectRoot: URL) {
         Diagnostics.error(
             "\(docURL.path):1: SMOKE_TEST.md must contain at least one markdown checklist item ('- [ ] ...') summarizing pre-release smoke tests."
         )
+    }
+}
+
+// MARK: - 11. Watch App & Widget Translations
+
+private func validateWatchTranslations(in projectRoot: URL, allInputFiles: [URL]) {
+    let appLanguages = discoverXCStringsLanguages(in: allInputFiles, projectRoot: projectRoot)
+    guard appLanguages.count > 1 else { return }
+
+    let fm = FileManager.default
+    let topEntries = (try? fm.contentsOfDirectory(
+        at: projectRoot,
+        includingPropertiesForKeys: [.isDirectoryKey]
+    )) ?? []
+
+    let watchDirs = topEntries.filter { url in
+        let name = url.lastPathComponent
+        guard !name.hasPrefix("."),
+              name.localizedCaseInsensitiveContains("watch"),
+              !name.localizedCaseInsensitiveContains("test"),
+              !name.localizedCaseInsensitiveContains("screenshot") else {
+            return false
+        }
+        let isDir = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
+        guard isDir else { return false }
+        let children = (try? fm.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)) ?? []
+        return children.contains { $0.pathExtension.lowercased() == "swift" }
+    }.sorted { $0.lastPathComponent < $1.lastPathComponent }
+
+    for watchDir in watchDirs {
+        let xcstringsURL = watchDir.appendingPathComponent("Localizable.xcstrings")
+        guard fm.fileExists(atPath: xcstringsURL.path) else {
+            Diagnostics.error(
+                "\(watchDir.path):1: Watch target '\(watchDir.lastPathComponent)' is missing Localizable.xcstrings (app supports \(appLanguages.sorted().joined(separator: ", ")))."
+            )
+            continue
+        }
+
+        guard let data = try? Data(contentsOf: xcstringsURL),
+              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let strings = root["strings"] as? [String: Any] else {
+            Diagnostics.error("\(xcstringsURL.path):1: Invalid Localizable.xcstrings JSON in \(watchDir.lastPathComponent).")
+            continue
+        }
+
+        let sourceLanguage = (root["sourceLanguage"] as? String) ?? "en"
+        let requiredLanguages = appLanguages.filter { $0 != sourceLanguage }.sorted()
+
+        for (key, valueAny) in strings.sorted(by: { $0.key < $1.key }) {
+            guard let entry = valueAny as? [String: Any] else { continue }
+            if let shouldTranslate = entry["shouldTranslate"] as? Bool, !shouldTranslate {
+                continue
+            }
+            let locs = entry["localizations"] as? [String: Any] ?? [:]
+            let missing = requiredLanguages.filter { lang in
+                guard let langEntry = locs[lang] as? [String: Any],
+                      let unit = langEntry["stringUnit"] as? [String: Any],
+                      let value = unit["value"] as? String else {
+                    return true
+                }
+                return value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }
+            if !missing.isEmpty {
+                Diagnostics.error(
+                    "\(xcstringsURL.path):1: Key '\(key)' in \(watchDir.lastPathComponent)/Localizable.xcstrings is missing translations for: \(missing.joined(separator: ", "))."
+                )
+            }
+        }
     }
 }
 
