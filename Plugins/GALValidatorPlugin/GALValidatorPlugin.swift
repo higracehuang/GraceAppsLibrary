@@ -190,9 +190,9 @@ private func validateLegacyAPIBypasses(in swiftFiles: [URL], targetName: String)
             )
         }
         if !isWatchTarget,
-           stripped.range(of: #"@AppStorage\s*\([^)]*hasPurchased|UserDefaults\.standard\.bool\s*\(\s*forKey:\s*[^)]*hasPurchased"#, options: .regularExpression) != nil {
+           stripped.range(of: #"@AppStorage\s*\([^)]*(?:hasPurchased|hasUnlimitedAccess)|UserDefaults\.standard\.bool\s*\(\s*forKey:\s*[^)]*(?:hasPurchased|hasUnlimitedAccess)"#, options: .regularExpression) != nil {
             Diagnostics.error(
-                "\(fileURL.path):1: Use UniversalPurchaseCoordinator.shared.isPro instead of reading hasPurchased* from UserDefaults/@AppStorage."
+                "\(fileURL.path):1: Use UniversalPurchaseCoordinator.shared.isPro instead of reading hasPurchased*/hasUnlimitedAccess from UserDefaults/@AppStorage."
             )
         }
         if !isWatchTarget,
