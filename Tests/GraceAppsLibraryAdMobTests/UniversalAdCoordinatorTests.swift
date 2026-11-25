@@ -671,14 +671,23 @@ final class UniversalAdCoordinatorTests: XCTestCase {
         case rewardedDuringQuiz = "rewarded_during_quiz"
     }
 
+    private enum TestLimitKey: String {
+        case quizzes = "quizzes"
+    }
+
     func testConfigureRewardedAdUnits() {
         let coordinator = UniversalAdCoordinator.shared
-        coordinator.configureRewarded(adUnits: [
-            TestRewardedTrigger.rewardedDuringQuiz: "ca-app-pub-3940256099942544/1712485313"
-        ])
+        coordinator.configureRewarded(
+            adUnits: [TestRewardedTrigger.rewardedDuringQuiz: "ca-app-pub-3940256099942544/1712485313"],
+            grantsCreditsFor: [TestRewardedTrigger.rewardedDuringQuiz: TestLimitKey.quizzes]
+        )
         XCTAssertEqual(
             coordinator.rewardedAdUnitMap[TestRewardedTrigger.rewardedDuringQuiz.rawValue],
             "ca-app-pub-3940256099942544/1712485313"
+        )
+        XCTAssertEqual(
+            coordinator.rewardedCreditTargets[TestRewardedTrigger.rewardedDuringQuiz.rawValue],
+            TestLimitKey.quizzes.rawValue
         )
         XCTAssertFalse(coordinator.isRewardedAdReady(for: TestRewardedTrigger.rewardedDuringQuiz))
     }

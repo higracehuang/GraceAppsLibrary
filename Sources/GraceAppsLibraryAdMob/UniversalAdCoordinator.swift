@@ -48,6 +48,9 @@ public final class UniversalAdCoordinator: NSObject, FullScreenContentDelegate, 
     /// Mapping of rewarded ad trigger identifiers to AdMob ad unit IDs.
     @Published public private(set) var rewardedAdUnitMap: [String: String] = [:]
 
+    /// Mapping of rewarded ad trigger identifiers to `FreeLimit` keys that receive earned credits.
+    public private(set) var rewardedCreditTargets: [String: String] = [:]
+
     /// Whether at least one rewarded ad is currently loaded and ready to present.
     @Published public private(set) var isRewardedAdReady: Bool = false
 
@@ -575,10 +578,25 @@ extension UniversalAdCoordinator {
             mapped[key.rawValue] = value
         }
         self.rewardedAdUnitMap = mapped
+        self.rewardedCreditTargets = [:]
         if let isPro = isPro {
             self.pacing.isProUser = isPro
         }
         GraceLogger.ads("Configured UniversalAdCoordinator with \(mapped.count) rewarded ad units.", level: .info)
+    }
+
+    /// Configures rewarded ad unit IDs and maps triggers to `FreeLimit` keys that automatically receive earned credits.
+    public func configureRewarded<T: Hashable & RawRepresentable, L: RawRepresentable>(
+        adUnits: [T: String],
+        grantsCreditsFor: [T: L],
+        isPro: (() -> Bool)? = nil
+    ) where T.RawValue == String, L.RawValue == String {
+        configureRewarded(adUnits: adUnits, isPro: isPro)
+        var targets: [String: String] = [:]
+        for (trigger, limitKey) in grantsCreditsFor {
+            targets[trigger.rawValue] = limitKey.rawValue
+        }
+        self.rewardedCreditTargets = targets
     }
 
     /// Returns whether a rewarded ad is loaded and ready for the given enum trigger.
@@ -610,12 +628,12 @@ extension UniversalAdCoordinator {
         }
     }
 
-    /// Presents a cached rewarded ad for the given enum trigger, invoking `onReward` with the earned reward amount.
+    /// Presents a cached rewarded ad for the given enum trigger, automatically granting credits to any configured `FreeLimit` key and invoking optional `onReward`.
     @discardableResult
     public func presentRewardedAd<T: RawRepresentable>(
         for trigger: T,
         from viewController: UIViewController? = nil,
-        onReward: @escaping (Int) -> Void
+        onReward: ((Int) -> Void)? = nil
     ) -> Bool where T.RawValue == String {
         let key = trigger.rawValue
         guard canShowAds else { return false }
@@ -631,10 +649,13 @@ extension UniversalAdCoordinator {
         }
 
         isShowingAd = true
-        ad.present(from: hostVC) {
+        ad.present(from: hostVC) { [weak self] in
             let amount = Int(truncating: ad.adReward.amount)
             GraceLogger.ads("Rewarded ad granted reward: \(amount) for '\(key)'.", level: .info)
-            onReward(amount)
+            if let limitKey = self?.rewardedCreditTargets[key] {
+                FreeLimitBonusStore.shared.addCredits(amount, for: limitKey)
+            }
+            onReward?(amount)
         }
         return true
     }

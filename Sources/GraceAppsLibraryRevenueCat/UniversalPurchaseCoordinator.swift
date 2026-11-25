@@ -56,10 +56,20 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
     public var onProStatusChanged: ((Bool) -> Void)? = nil
 
     private var customerInfoStreamTask: Task<Void, Never>? = nil
+    private var bonusStoreObserver: NSObjectProtocol? = nil
 
     private override init() {
         super.init()
         wirePacingEngines()
+        bonusStoreObserver = NotificationCenter.default.addObserver(
+            forName: FreeLimitBonusStore.didChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.objectWillChange.send()
+            }
+        }
     }
 
     public func wirePacingEngines() {
@@ -92,7 +102,7 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
     internal func isWithinFreeLimit(_ key: String, currentCount: Int) -> Bool {
         if isPro { return true }
         guard let limit = freeLimits[key] else { return true }
-        let credits = UserDefaults.standard.integer(forKey: "GraceApps_FreeLimit_Credits_\(key)")
+        let credits = FreeLimitBonusStore.shared.credits(for: key)
         return currentCount < (limit + credits)
     }
 
@@ -108,7 +118,7 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
 
     /// Returns persisted earned bonus credits for the given limit key.
     public func earnedCredits<T: RawRepresentable>(for key: T) -> Int where T.RawValue == String {
-        UserDefaults.standard.integer(forKey: "GraceApps_FreeLimit_Credits_\(key.rawValue)")
+        FreeLimitBonusStore.shared.credits(for: key.rawValue)
     }
 
     /// Returns persisted usage count for the given limit key.
@@ -134,16 +144,13 @@ public final class UniversalPurchaseCoordinator: NSObject, ObservableObject {
 
     /// Adds earned bonus credits (e.g. from rewarded ads) for the given limit key.
     public func earnCredits<T: RawRepresentable>(_ amount: Int, for key: T) where T.RawValue == String {
-        let storageKey = "GraceApps_FreeLimit_Credits_\(key.rawValue)"
-        let updated = UserDefaults.standard.integer(forKey: storageKey) + amount
-        UserDefaults.standard.set(updated, forKey: storageKey)
-        objectWillChange.send()
+        FreeLimitBonusStore.shared.addCredits(amount, for: key.rawValue)
     }
 
     /// Resets persisted usage and earned credits for the given limit key (e.g. upon Pro upgrade).
     public func resetCreditsAndUsage<T: RawRepresentable>(for key: T) where T.RawValue == String {
         UserDefaults.standard.set(0, forKey: "GraceApps_FreeLimit_Usage_\(key.rawValue)")
-        UserDefaults.standard.set(0, forKey: "GraceApps_FreeLimit_Credits_\(key.rawValue)")
+        FreeLimitBonusStore.shared.resetCredits(for: key.rawValue)
         objectWillChange.send()
     }
 
