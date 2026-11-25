@@ -26,6 +26,7 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
     public let requestStateKey: String
     public let cacheKey: String
     public let reloadWidgetsOnUpdate: Bool
+    public let autoRequestStateOnActivate: Bool
 
     private let appGroupDefaults: UserDefaults?
     private let session: WatchSessionProtocol?
@@ -42,7 +43,8 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
         requestStateKey: String = "gal_request_state",
         appGroupSuiteName: String? = nil,
         cacheKey: String = "gal_watch_cached_state",
-        reloadWidgetsOnUpdate: Bool = true
+        reloadWidgetsOnUpdate: Bool = true,
+        autoRequestStateOnActivate: Bool = true
     ) {
         self.session = session
         self.stateKey = stateKey
@@ -50,6 +52,7 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
         self.appGroupDefaults = appGroupSuiteName.flatMap { UserDefaults(suiteName: $0) }
         self.cacheKey = cacheKey
         self.reloadWidgetsOnUpdate = reloadWidgetsOnUpdate
+        self.autoRequestStateOnActivate = autoRequestStateOnActivate
         super.init()
 
         self.session?.delegate = self
@@ -300,6 +303,12 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
 
             if self.pendingStateRequest {
                 self.requestStateFromCounterpart()
+            } else {
+                #if os(watchOS)
+                if self.autoRequestStateOnActivate {
+                    self.requestStateFromCounterpart()
+                }
+                #endif
             }
 
             if !receivedContext.isEmpty {
@@ -359,4 +368,18 @@ public final class WatchSyncChannel<State: Codable & Equatable>: NSObject, Obser
         session.activate()
     }
     #endif
+}
+
+public extension WatchSyncChannel {
+    /// Optimistically mutates the cached `WatchEntitlementEnvelope` payload on the Watch when `isPro == true`.
+    @MainActor
+    func updateProPayloadIfUnlocked<Payload: Codable & Equatable>(
+        at now: Date = Date(),
+        _ mutate: (inout Payload) -> Void
+    ) where State == WatchEntitlementEnvelope<Payload> {
+        guard let envelope = state, envelope.isPro else { return }
+        var payload = envelope.payload
+        mutate(&payload)
+        updateLocalState(WatchEntitlementEnvelope(isPro: true, updatedAt: now, payload: payload))
+    }
 }

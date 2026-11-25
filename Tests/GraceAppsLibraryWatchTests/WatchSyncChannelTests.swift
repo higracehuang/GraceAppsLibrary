@@ -218,4 +218,35 @@ final class WatchSyncChannelTests: XCTestCase {
         XCTAssertEqual(channel.state, incoming)
         XCTAssertEqual(receivedAction?["start_reading"] as? Bool, true)
     }
+
+    @MainActor
+    func testUpdateProPayloadIfUnlockedMutatesOnlyWhenPro() {
+        let mock = MockWatchSession()
+        mock.activationState = .activated
+        let channel = WatchSyncChannel<WatchEntitlementEnvelope<SampleWatchPayload>>(
+            session: mock,
+            reloadWidgetsOnUpdate: false
+        )
+
+        let free = WatchEntitlementEnvelope(
+            isPro: false,
+            updatedAt: Date(timeIntervalSince1970: 1_000),
+            payload: SampleWatchPayload(count: 1, title: "Free")
+        )
+        channel.updateLocalState(free)
+        channel.updateProPayloadIfUnlocked { $0 = SampleWatchPayload(count: 99, title: "Changed") }
+        XCTAssertEqual(channel.state?.payload.count, 1)
+
+        let pro = WatchEntitlementEnvelope(
+            isPro: true,
+            updatedAt: Date(timeIntervalSince1970: 2_000),
+            payload: SampleWatchPayload(count: 1, title: "Pro")
+        )
+        channel.updateLocalState(pro)
+        channel.updateProPayloadIfUnlocked(at: Date(timeIntervalSince1970: 3_000)) {
+            $0 = SampleWatchPayload(count: 2, title: "ProUpdated")
+        }
+        XCTAssertEqual(channel.state?.payload.count, 2)
+        XCTAssertEqual(channel.state?.payload.title, "ProUpdated")
+    }
 }
