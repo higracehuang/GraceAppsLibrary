@@ -149,6 +149,37 @@ public protocol ScreenshotDemoCoordinating: ObservableObject {
     func resetAppState()
 }
 
+/// Protocol for screenshot coordinators or demo seeders that provide explicit store-safe
+/// clear and seed operations (for automated presets, QA debug buttons, and unit tests).
+@MainActor
+public protocol ScreenshotMockDataSeeding {
+    associatedtype StoreContext
+
+    /// Removes existing records from `context`.
+    func clearDemoData(in context: StoreContext)
+
+    /// Seeds deterministic demo records into `context` for `language`.
+    func seedDemoData(in context: StoreContext, language: ScreenshotLanguage)
+}
+
+public extension ScreenshotMockDataSeeding {
+    /// Clears and seeds demo data only if `safety.validate()` passes.
+    /// Returns `nil` when seeding ran, or the block reason string when blocked.
+    @discardableResult
+    func safelyClearAndSeedDemoData(
+        in context: StoreContext,
+        language: ScreenshotLanguage,
+        safety: ScreenshotStoreSafety
+    ) -> String? {
+        if let reason = safety.validate() {
+            return reason
+        }
+        clearDemoData(in: context)
+        seedDemoData(in: context, language: language)
+        return nil
+    }
+}
+
 /// Base coordinator engine for App Store screenshot automation and in-app QA preview.
 ///
 /// Subclass `ScreenshotEngine` and override `ScreenshotDemoCoordinating` template methods,

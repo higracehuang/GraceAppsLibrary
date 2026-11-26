@@ -1420,4 +1420,37 @@ final class ScreenshotAutomationTests: XCTestCase {
         XCTAssertEqual(coordinator.entitlement, .automatic)
         XCTAssertNil(suite.object(forKey: "subKey"))
     }
+
+    @MainActor
+    func testScreenshotMockDataSeedingSafetyHelper() {
+        @MainActor
+        final class Seeder: ScreenshotMockDataSeeding {
+            var records: [String] = ["existing"]
+
+            func clearDemoData(in context: Void) {
+                records.removeAll()
+            }
+
+            func seedDemoData(in context: Void, language: ScreenshotLanguage) {
+                records.append("seeded-\(language.appleLanguageCode)")
+            }
+        }
+
+        let seeder = Seeder()
+        let blocked = seeder.safelyClearAndSeedDemoData(
+            in: (),
+            language: .japanese,
+            safety: .custom("Unsafe store") { false }
+        )
+        XCTAssertEqual(blocked, "Unsafe store")
+        XCTAssertEqual(seeder.records, ["existing"])
+
+        let succeeded = seeder.safelyClearAndSeedDemoData(
+            in: (),
+            language: .japanese,
+            safety: .custom("Safe store") { true }
+        )
+        XCTAssertNil(succeeded)
+        XCTAssertEqual(seeder.records, ["seeded-ja"])
+    }
 }
