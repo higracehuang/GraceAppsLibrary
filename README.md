@@ -12,7 +12,7 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 - Built-in views for displaying apps, feedback, release notes, FAQs, and emoji input
 - Shared Onboarding framework (`OnboardingContainer`, `OnboardingSlideLayout`, `OnboardingCoordinator`)
 - Smart review prompting (`ReviewPromptManager`) with 2-step pre-filter & feedback redirection
-- Automated App Store Screenshot framework (`ScreenshotPresetProvider`, `ScreenshotEngine`, `DebugScreenshotSection`, and CLI runner script)
+- Automated App Store Screenshot framework (`ScreenshotPresetProvider`, `ScreenshotEngine`, `screenshotTabCoordination`, and CLI runner script)
 - Action-agnostic presentation, smart paywall & ad-pacing orchestrator (`UXFlowOrchestrator`, `UXPolicy`, `PaywallPacingEngine`, `AdPacingEngine`, `.scopedUXFlow()`) preventing prompt collisions, premature sheet cancel-outs, and wasted ad requests
 
 ## Installation
@@ -20,7 +20,7 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 1. Add this package to your Xcode project using Swift Package Manager.
 2. Link the products based on your target's needs:
    - **`GraceAppsLibrary`**: Core library with **zero external dependencies**. Safe and lightweight for iOS apps, watchOS apps, widgets, and app extensions.
-   - **`GraceAppsLibraryDebug`**: Automated App Store screenshot engine, preset providers, SwiftUI tab coordination, and `DebugScreenshotSection`. Import under `#if DEBUG import GraceAppsLibraryDebug` so screenshot automation never leaks into Release code paths.
+   - **`GraceAppsLibraryDebug`**: Automated App Store screenshot engine, preset providers, store safety gating, and SwiftUI tab coordination. Import under `#if DEBUG import GraceAppsLibraryDebug` so screenshot automation never leaks into Release code paths.
    - **`GraceAppsLibraryAdMob`**: Centralized Google Mobile Ads (AdMob) integration providing `UniversalAdCoordinator`. Link only to iOS main app targets displaying ads.
 
 ```swift
@@ -435,8 +435,6 @@ See [TRANSLATION_PRINCIPLES.md](https://github.com/higracehuang/GraceAppKnowledg
 - **`ScreenshotPresetProvider`**: Protocol defining your app's marketing presets (slot label, headline, suggested filename, system icon, CLI token parser).
 - **`ScreenshotLanguage`**: Multi-language registry (`en`, `zh`, `de`, `es`, `ja`, `fr`, `auto`) resolving Apple locale codes and folder naming conventions.
 - **`ScreenshotEngine<Preset>`**: `@MainActor` base manager that parses launch arguments (`-SCREENSHOT_PRESET`, `-SCREENSHOT_LANG`), manages active presets, forces Pro entitlement override, and coordinates mock data seeding.
-- **`DebugScreenshotSection`**: SwiftUI view section for previewing and testing presets inside the app.
-- **`DebugMenuView` Integration**: Directly embeds screenshot preset testing as a first-class section inside `DebugMenuView`.
 - **`scripts/capture_screenshots.sh`**: Universal simulator capture runner with bundle ID auto-discovery, simulator focus, cold-launch process cooldown, and Vision frame-variance splash-screen verification.
 
 ##### Step-by-Step Implementation
@@ -608,45 +606,19 @@ final class AppScreenshotManager: ScreenshotEngine<AppScreenshotPreset> {
 }
 ```
 
-###### Step 3: Embed Directly in `DebugMenuView`
-`DebugMenuView` includes built-in support for `screenshotEngine`. Simply pass your engine to the initializer:
-
-```swift
-DebugMenuView(
-    entitlementOverride: $debugOverride,
-    screenshotEngine: AppScreenshotManager.shared,
-    onApplyScreenshotPreset: { preset in
-        AppScreenshotManager.shared.apply(preset: preset)
-    },
-    onResetScreenshotPreset: {
-        AppScreenshotManager.shared.reset()
-    }
-)
-```
-
-Alternatively, you can embed [`DebugScreenshotSection`](file:///Users/lehuang/Projects/apps/GraceAppsLibrary/Sources/GraceAppsLibrary/Views/Debug/DebugScreenshotSection.swift) standalone in any custom debug view:
-
-```swift
-DebugScreenshotSection(
-    engine: AppScreenshotManager.shared,
-    onApplyPreset: { preset in
-        AppScreenshotManager.shared.apply(preset: preset)
-    }
-)
-```
-
-###### Step 4: Handle App Cold-Launch
+###### Step 3: Handle App Cold-Launch
 In your root `ContentView` or App struct, check for launch arguments when launched by the CLI runner:
 
 ```swift
 #if DEBUG
+.screenshotTabCoordination(engine: AppScreenshotManager.shared, selectedTab: $selectedTab)
 .onAppear {
     AppScreenshotManager.shared.handleAppLaunch(selectedTab: $selectedTab)
 }
 #endif
 ```
 
-###### Step 5: Automate Simulator Captures via CLI
+###### Step 4: Automate Simulator Captures via CLI
 Run the universal runner script from `GraceAppsLibrary/scripts/capture_screenshots.sh`:
 
 ```bash

@@ -253,30 +253,6 @@ final class ScreenshotAutomationTests: XCTestCase {
         XCTAssertNil(engine.activePreset)
     }
 
-    @MainActor
-    func testDebugMenuViewWithScreenshotEngine() {
-        let engine = ScreenshotEngine<MockPreset>(arguments: [], environment: [:])
-        let menu = DebugMenuView(
-            screenshotEngine: engine,
-            onApplyScreenshotPreset: { _ in },
-            onResetScreenshotPreset: { }
-        )
-
-        XCTAssertNotNil(menu.screenshotSection)
-    }
-
-    @MainActor
-    func testDebugNavigationViewWithScreenshotEngine() {
-        let engine = ScreenshotEngine<MockPreset>(arguments: [], environment: [:])
-        let nav = DebugNavigationView(
-            screenshotEngine: engine,
-            onApplyScreenshotPreset: { _ in },
-            onResetScreenshotPreset: { }
-        )
-
-        XCTAssertNotNil(nav.screenshotSection)
-    }
-
     func testStandardScreenshotPreset() {
         XCTAssertEqual(StandardScreenshotPreset.allCases.count, 7)
         XCTAssertEqual(StandardScreenshotPreset.from(token: "1"), .slot1Benefit)
@@ -1360,5 +1336,88 @@ final class ScreenshotAutomationTests: XCTestCase {
         XCTAssertEqual(suite.url(forKey: "existingFileURL"), originalFileURL)
         XCTAssertNil(suite.url(forKey: "absentURL"))
         XCTAssertNil(suite.object(forKey: "absentURL"))
+    }
+
+    @MainActor
+    func testTemplateSubclassOverridesCoordinatingHooks() throws {
+        @MainActor
+        final class SubclassCoordinator: ScreenshotEngine<MockPreset> {
+            let suite: UserDefaults
+            var isSafeStore = false
+            var entitlement = DebugEntitlementOverride.automatic
+            var seededRecords: [(MockPreset, ScreenshotLanguage)] = []
+            var coordinatedPresets: [MockPreset] = []
+            var didResetAppState = false
+
+            init(suite: UserDefaults, arguments: [String]) {
+                self.suite = suite
+                super.init(arguments: arguments, environment: [:])
+            }
+
+            override func makeEnvironmentConfig() -> ScreenshotEnvironmentConfig {
+                ScreenshotEnvironmentConfig(
+                    userDefaultsSuite: suite,
+                    defaultsOverrides: ["subKey": true],
+                    suppressReleaseNotes: false
+                )
+            }
+
+            override func makeStoreSafety() -> ScreenshotStoreSafety? {
+                .custom("Unsafe store") { self.isSafeStore }
+            }
+
+            override func makeEntitlementOverrideBinding() -> Binding<DebugEntitlementOverride>? {
+                Binding(get: { self.entitlement }, set: { self.entitlement = $0 })
+            }
+
+            override func seedMockData(for preset: MockPreset, language: ScreenshotLanguage) {
+                seededRecords.append((preset, language))
+            }
+
+            override func coordinateNavigation(for preset: MockPreset) {
+                coordinatedPresets.append(preset)
+            }
+
+            override func resetAppState() {
+                didResetAppState = true
+                entitlement = .automatic
+            }
+        }
+
+        let suiteName = "ScreenshotAutomationTests.\(UUID().uuidString)"
+        let suite = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { suite.removePersistentDomain(forName: suiteName) }
+
+        let coordinator = SubclassCoordinator(
+            suite: suite,
+            arguments: ["MyApp", "-SCREENSHOT_PRESET", "2", "-SCREENSHOT_LANG", "ja"]
+        )
+
+        // Blocked store prevents seeding, navigation, defaults, and entitlement override
+        let blocked = coordinator.handleAppLaunch()
+        XCTAssertEqual(blocked, .blockedUnsafeStore("Unsafe store"))
+        XCTAssertTrue(coordinator.seededRecords.isEmpty)
+        XCTAssertTrue(coordinator.coordinatedPresets.isEmpty)
+        XCTAssertNil(suite.object(forKey: "subKey"))
+        XCTAssertEqual(coordinator.entitlement, .automatic)
+
+        // Safe store runs all template hooks in order
+        coordinator.isSafeStore = true
+        var tab = 0
+        let applied = coordinator.handleAppLaunch(selectedTab: Binding(get: { tab }, set: { tab = $0 }))
+        XCTAssertEqual(applied, .applied(presetId: "2", language: .japanese))
+        XCTAssertEqual(tab, 1)
+        XCTAssertEqual(coordinator.entitlement, .forcePro)
+        XCTAssertTrue(suite.bool(forKey: "subKey"))
+        XCTAssertEqual(coordinator.seededRecords.count, 1)
+        XCTAssertEqual(coordinator.seededRecords.first?.0, .second)
+        XCTAssertEqual(coordinator.seededRecords.first?.1, .japanese)
+        XCTAssertEqual(coordinator.coordinatedPresets, [.second])
+
+        // Reset restores defaults and invokes resetAppState()
+        coordinator.reset()
+        XCTAssertTrue(coordinator.didResetAppState)
+        XCTAssertEqual(coordinator.entitlement, .automatic)
+        XCTAssertNil(suite.object(forKey: "subKey"))
     }
 }

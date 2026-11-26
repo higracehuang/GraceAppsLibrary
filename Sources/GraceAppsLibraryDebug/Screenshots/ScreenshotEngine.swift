@@ -114,17 +114,61 @@ public struct ScreenshotEnvironmentConfig {
     }
 }
 
+/// Template contract for app-specific `ScreenshotDemoManager` coordinators.
+///
+/// `ScreenshotEngine` conforms to this protocol and handles launch parsing,
+/// store-safety gating, one-shot launch protection, environment snapshot/restore,
+/// and SwiftUI tab coordination. App coordinators subclass `ScreenshotEngine`
+/// and override only the hooks they need.
+@MainActor
+public protocol ScreenshotDemoCoordinating: ObservableObject {
+    associatedtype Preset: ScreenshotPresetProvider
+
+    var activePreset: Preset? { get set }
+    var selectedLanguage: ScreenshotLanguage { get set }
+    var isScreenshotCaptureActive: Bool { get }
+    var effectiveLanguage: ScreenshotLanguage { get }
+    var navigationTriggerId: UUID { get }
+
+    /// Scoped `UserDefaults` overrides and release-notes suppression applied for screenshots.
+    func makeEnvironmentConfig() -> ScreenshotEnvironmentConfig
+
+    /// Store safety validator checked before any demo seeding runs.
+    func makeStoreSafety() -> ScreenshotStoreSafety?
+
+    /// Optional entitlement override binding (e.g., `UniversalPurchaseCoordinator.shared.debugOverride`).
+    func makeEntitlementOverrideBinding() -> Binding<DebugEntitlementOverride>?
+
+    /// Seeds app-specific mock data for the validated preset and resolved language.
+    func seedMockData(for preset: Preset, language: ScreenshotLanguage)
+
+    /// Updates app-specific navigation / sheet / simulation state for the preset.
+    func coordinateNavigation(for preset: Preset)
+
+    /// Resets app-specific state when `reset()` is called.
+    func resetAppState()
+}
+
 /// Base coordinator engine for App Store screenshot automation and in-app QA preview.
 ///
-/// Subclass or instantiate inside your app's debug setup:
+/// Subclass `ScreenshotEngine` and override `ScreenshotDemoCoordinating` template methods,
+/// or attach closures (`onApply`, `onReset`, `storeSafetyProvider`) for lightweight setups:
 /// ```swift
 /// @MainActor
-/// final class AppScreenshotManager: ScreenshotEngine<StandardScreenshotPreset> {
-///     static let shared = AppScreenshotManager()
+/// final class ScreenshotDemoManager: ScreenshotEngine<AppScreenshotPreset> {
+///     static let shared = ScreenshotDemoManager()
+///
+///     override func makeStoreSafety() -> ScreenshotStoreSafety? {
+///         .coreData(PersistenceController.shared.container.viewContext)
+///     }
+///
+///     override func seedMockData(for preset: AppScreenshotPreset, language: ScreenshotLanguage) {
+///         ...
+///     }
 /// }
 /// ```
 @MainActor
-open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject {
+open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoordinating {
 
     @Published open var activePreset: Preset?
     @Published open var selectedLanguage: ScreenshotLanguage = .auto
@@ -211,10 +255,37 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
         selectedLanguage.resolved
     }
 
-    /// The supported screenshot languages detected for the current application bundle.
+    /// Supported screenshot languages detected for the current application bundle.
     open var supportedLanguages: [ScreenshotLanguage] {
         ScreenshotLanguage.supportedLanguages(in: .main)
     }
+
+    // MARK: - Template Hooks (`ScreenshotDemoCoordinating`)
+
+    /// Returns the scoped environment config to snapshot and apply. Defaults to `environmentConfig`.
+    open func makeEnvironmentConfig() -> ScreenshotEnvironmentConfig {
+        environmentConfig
+    }
+
+    /// Returns the store safety validator evaluated when `apply` / `handleAppLaunch` is called without an explicit `storeSafety`.
+    /// Defaults to `storeSafetyProvider?() ?? defaultStoreSafety`.
+    open func makeStoreSafety() -> ScreenshotStoreSafety? {
+        storeSafetyProvider?() ?? defaultStoreSafety
+    }
+
+    /// Returns the entitlement override binding configured during screenshot launches/applies. Defaults to `nil`.
+    open func makeEntitlementOverrideBinding() -> Binding<DebugEntitlementOverride>? {
+        nil
+    }
+
+    /// Override in subclasses to populate CoreData/SwiftData mock records for `preset` and `language`.
+    open func seedMockData(for preset: Preset, language: ScreenshotLanguage) {}
+
+    /// Override in subclasses to update app-specific navigation / sheet / simulation flags for `preset`.
+    open func coordinateNavigation(for preset: Preset) {}
+
+    /// Override in subclasses to clear app-specific state during `reset()`.
+    open func resetAppState() {}
 
     /// Automatically switches the selected tab if the active preset defines a `targetTabIndex`,
     /// configures Pro entitlement if `assumeForcedPro` is enabled (respecting `-FORCE_FREE` / `.forceFree`),
@@ -228,29 +299,30 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
     ) -> ScreenshotApplyResult {
         #if DEBUG
         guard !hasAppliedLaunchPreset else { return .noPreset }
+        let effectiveEntitlement = entitlementOverride ?? makeEntitlementOverrideBinding()
         guard let preset = activePreset else {
             if assumeForcedPro && isScreenshotCaptureActive {
-                configureMarketingEntitlement(entitlementOverride: entitlementOverride)
+                configureMarketingEntitlement(entitlementOverride: effectiveEntitlement)
             }
             return .noPreset
         }
 
         if autoApply {
-            let effectiveSafety = storeSafety ?? storeSafetyProvider?() ?? defaultStoreSafety
+            let effectiveSafety = storeSafety ?? makeStoreSafety()
             if let reason = effectiveSafety?.validate() {
                 return .blockedUnsafeStore(reason)
             }
             hasAppliedLaunchPreset = true
             if assumeForcedPro && isScreenshotCaptureActive {
-                configureMarketingEntitlement(entitlementOverride: entitlementOverride)
+                configureMarketingEntitlement(entitlementOverride: effectiveEntitlement)
             }
             if let targetTab = tabIndexForPreset?(preset) ?? preset.targetTabIndex {
                 selectedTab?.wrappedValue = targetTab
             }
-            return applyValidated(preset: preset)
+            return applyValidated(preset: preset, entitlementOverride: effectiveEntitlement)
         } else {
             if assumeForcedPro && isScreenshotCaptureActive {
-                configureMarketingEntitlement(entitlementOverride: entitlementOverride)
+                configureMarketingEntitlement(entitlementOverride: effectiveEntitlement)
             }
             if let targetTab = tabIndexForPreset?(preset) ?? preset.targetTabIndex {
                 selectedTab?.wrappedValue = targetTab
@@ -297,44 +369,57 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
         #endif
     }
 
-    /// Applies a preset after validating store safety, applying scoped environment overrides, and invoking `onApply`.
+    /// Applies a preset after validating store safety, applying scoped environment overrides,
+    /// seeding mock data, coordinating navigation, and invoking `onApply`.
     @discardableResult
     open func apply(
         preset: Preset,
         storeSafety: ScreenshotStoreSafety? = nil
     ) -> ScreenshotApplyResult {
         #if DEBUG
-        let effectiveSafety = storeSafety ?? storeSafetyProvider?() ?? defaultStoreSafety
+        let effectiveSafety = storeSafety ?? makeStoreSafety()
         if let reason = effectiveSafety?.validate() {
             return .blockedUnsafeStore(reason)
         }
-        return applyValidated(preset: preset)
+        return applyValidated(preset: preset, entitlementOverride: makeEntitlementOverrideBinding())
         #else
         return .noPreset
         #endif
     }
 
-    /// Resets screenshot state to default normal launch, restores snapshotted environment state, and invokes `onReset`.
+    /// Resets screenshot state to default normal launch, restores snapshotted environment state,
+    /// calls `resetAppState()`, and invokes `onReset`.
     open func reset() {
         #if DEBUG
         hasAppliedLaunchPreset = false
         activePreset = nil
         isLaunchCaptureFlagged = false
         restoreEnvironmentSnapshot()
+        resetAppState()
         navigationTriggerId = UUID()
         onReset?()
         #endif
     }
 
     #if DEBUG
-    private func applyValidated(preset: Preset) -> ScreenshotApplyResult {
-        captureEnvironmentSnapshotIfNeeded()
-        applyEnvironmentOverrides()
+    private func applyValidated(
+        preset: Preset,
+        entitlementOverride: Binding<DebugEntitlementOverride>?
+    ) -> ScreenshotApplyResult {
+        let config = makeEnvironmentConfig()
+        captureEnvironmentSnapshotIfNeeded(using: config)
+        applyEnvironmentOverrides(using: config)
 
         self.activePreset = preset
+        if assumeForcedPro {
+            configureMarketingEntitlement(entitlementOverride: entitlementOverride)
+        }
+        let resolvedLanguage = effectiveLanguage
+        seedMockData(for: preset, language: resolvedLanguage)
+        coordinateNavigation(for: preset)
         onApply?(preset)
         navigationTriggerId = UUID()
-        return .applied(presetId: preset.id, language: effectiveLanguage)
+        return .applied(presetId: preset.id, language: resolvedLanguage)
     }
 
     private static func hasForceFreeFlag(
@@ -352,14 +437,14 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
         return false
     }
 
-    private func captureEnvironmentSnapshotIfNeeded() {
+    private func captureEnvironmentSnapshotIfNeeded(using config: ScreenshotEnvironmentConfig) {
         var snapshot = environmentSnapshot ?? EnvironmentSnapshot()
 
-        let suite = environmentConfig.userDefaultsSuite
+        let suite = config.userDefaultsSuite
         let suiteId = ObjectIdentifier(suite)
         var suiteEntry = snapshot.suiteSnapshots[suiteId] ?? (suite: suite, values: [:])
 
-        for key in environmentConfig.defaultsOverrides.keys where suiteEntry.values[key] == nil {
+        for key in config.defaultsOverrides.keys where suiteEntry.values[key] == nil {
             if let existingValue = suite.object(forKey: key) {
                 suiteEntry.values[key] = .present(existingValue)
             } else {
@@ -368,7 +453,7 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
         }
         snapshot.suiteSnapshots[suiteId] = suiteEntry
 
-        if environmentConfig.suppressReleaseNotes && snapshot.releaseNotesSnapshot == nil {
+        if config.suppressReleaseNotes && snapshot.releaseNotesSnapshot == nil {
             snapshot.releaseNotesSnapshot = (
                 evaluated: ReleaseNotesManager.shared.hasEvaluatedLaunchReleaseNotes,
                 shown: ReleaseNotesManager.hasShownReleaseNotesThisSession
@@ -378,9 +463,9 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
         environmentSnapshot = snapshot
     }
 
-    private func applyEnvironmentOverrides() {
-        let suite = environmentConfig.userDefaultsSuite
-        for (key, value) in environmentConfig.defaultsOverrides {
+    private func applyEnvironmentOverrides(using config: ScreenshotEnvironmentConfig) {
+        let suite = config.userDefaultsSuite
+        for (key, value) in config.defaultsOverrides {
             if value is NSNull {
                 suite.removeObject(forKey: key)
             } else if let url = value as? URL {
@@ -390,7 +475,7 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ObservableObject 
             }
         }
 
-        if environmentConfig.suppressReleaseNotes {
+        if config.suppressReleaseNotes {
             ReleaseNotesManager.shared.setSessionSuppressionForTesting(evaluated: true, shown: true)
         }
     }

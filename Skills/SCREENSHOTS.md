@@ -176,7 +176,7 @@ GraceAppsLibrary provides a centralized, reusable screenshot pipeline across all
    ```swift
    guard ScreenshotEngine.isInMemoryStore(context: viewContext) else { return }
    ```
-3. **Zero Production Leakage:** All screenshot demo managers, `DebugScreenshotSection`, and preset seeders must be wrapped in `#if DEBUG ... #endif`.
+3. **Zero Production Leakage:** All screenshot demo managers and preset seeders must be wrapped in `#if DEBUG ... #endif`.
 
 ---
 

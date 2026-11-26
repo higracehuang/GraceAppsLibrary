@@ -18,7 +18,6 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
     public let onSelectOffering: ((String?) -> Void)?
     public let onboardingStorageKey: String
     public let onboardingView: (() -> OnboardingContent)?
-    public let screenshotSection: (() -> AnyView)?
     public let onResetOverrides: (() -> Void)?
     public let customContent: CustomContent
 
@@ -38,7 +37,6 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
         onSelectOffering: ((String?) -> Void)? = nil,
         onboardingStorageKey: String = OnboardingManager.defaultStorageKey,
         onboardingView: (() -> OnboardingContent)? = nil,
-        screenshotSection: (() -> AnyView)? = nil,
         onResetOverrides: (() -> Void)? = nil,
         @ViewBuilder customContent: () -> CustomContent = { EmptyView() }
     ) {
@@ -57,7 +55,6 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
         self.onSelectOffering = onSelectOffering
         self.onboardingStorageKey = onboardingStorageKey
         self.onboardingView = onboardingView
-        self.screenshotSection = screenshotSection
         self.onResetOverrides = onResetOverrides
         self.customContent = customContent()
     }
@@ -116,11 +113,6 @@ public struct DebugMenuView<CustomContent: View, OnboardingContent: View>: View 
                 )
             }
 
-            // MARK: - App Store Screenshots
-            if let screenshotSection = screenshotSection {
-                screenshotSection()
-            }
-
             // MARK: - App-Specific Custom Content
             customContent
 
@@ -155,7 +147,6 @@ extension DebugMenuView where OnboardingContent == EmptyView {
         paywallAction: (() -> Void)? = nil,
         loadOfferings: (() async -> [String])? = nil,
         onSelectOffering: ((String?) -> Void)? = nil,
-        screenshotSection: (() -> AnyView)? = nil,
         onResetOverrides: (() -> Void)? = nil,
         @ViewBuilder customContent: @escaping () -> CustomContent = { EmptyView() }
     ) {
@@ -175,7 +166,6 @@ extension DebugMenuView where OnboardingContent == EmptyView {
             onSelectOffering: onSelectOffering,
             onboardingStorageKey: OnboardingManager.defaultStorageKey,
             onboardingView: nil,
-            screenshotSection: screenshotSection,
             onResetOverrides: onResetOverrides,
             customContent: customContent
         )

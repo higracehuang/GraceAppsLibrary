@@ -18,7 +18,6 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
     public let onSelectOffering: ((String?) -> Void)?
     public let onboardingStorageKey: String
     public let onboardingView: (() -> OnboardingContent)?
-    public let screenshotSection: (() -> AnyView)?
     public let onResetOverrides: (() -> Void)?
     public let customContent: CustomContent
 
@@ -39,7 +38,6 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
         onSelectOffering: ((String?) -> Void)? = nil,
         onboardingStorageKey: String = OnboardingManager.defaultStorageKey,
         onboardingView: (() -> OnboardingContent)? = nil,
-        screenshotSection: (() -> AnyView)? = nil,
         onResetOverrides: (() -> Void)? = nil,
         @ViewBuilder customContent: () -> CustomContent = { EmptyView() }
     ) {
@@ -59,7 +57,6 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
         self.onSelectOffering = onSelectOffering
         self.onboardingStorageKey = onboardingStorageKey
         self.onboardingView = onboardingView
-        self.screenshotSection = screenshotSection
         self.onResetOverrides = onResetOverrides
         self.customContent = customContent()
     }
@@ -82,7 +79,6 @@ public struct DebugNavigationView<CustomContent: View, OnboardingContent: View>:
             onSelectOffering: onSelectOffering,
             onboardingStorageKey: onboardingStorageKey,
             onboardingView: onboardingView,
-            screenshotSection: screenshotSection,
             onResetOverrides: onResetOverrides,
             customContent: { customContent }
         )) {
@@ -110,7 +106,6 @@ extension DebugNavigationView where OnboardingContent == EmptyView {
         paywallAction: (() -> Void)? = nil,
         loadOfferings: (() async -> [String])? = nil,
         onSelectOffering: ((String?) -> Void)? = nil,
-        screenshotSection: (() -> AnyView)? = nil,
         onResetOverrides: (() -> Void)? = nil,
         @ViewBuilder customContent: @escaping () -> CustomContent = { EmptyView() }
     ) {
@@ -131,7 +126,6 @@ extension DebugNavigationView where OnboardingContent == EmptyView {
             onSelectOffering: onSelectOffering,
             onboardingStorageKey: OnboardingManager.defaultStorageKey,
             onboardingView: nil,
-            screenshotSection: screenshotSection,
             onResetOverrides: onResetOverrides,
             customContent: customContent
         )
