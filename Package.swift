@@ -16,6 +16,9 @@ let package = Package(
             name: "GraceAppsLibrary",
             targets: ["GraceAppsLibrary"]),
         .library(
+            name: "GraceAppsLibraryDebug",
+            targets: ["GraceAppsLibraryDebug"]),
+        .library(
             name: "GraceAppsLibraryAdMob",
             targets: ["GraceAppsLibraryAdMob"]),
         .library(
@@ -49,6 +52,10 @@ let package = Package(
             ]
         ),
         .target(
+            name: "GraceAppsLibraryDebug",
+            dependencies: ["GraceAppsLibrary"]
+        ),
+        .target(
             name: "GraceAppsLibraryAdMob",
             dependencies: [
                 "GraceAppsLibrary",
@@ -77,6 +84,12 @@ let package = Package(
         .testTarget(
             name: "GraceAppsLibraryTests",
             dependencies: ["GraceAppsLibrary"]),
+        .testTarget(
+            name: "GraceAppsLibraryDebugTests",
+            dependencies: [
+                "GraceAppsLibraryDebug",
+                "GraceAppsLibrary",
+            ]),
         .testTarget(
             name: "GraceAppsLibraryAdMobTests",
             dependencies: [

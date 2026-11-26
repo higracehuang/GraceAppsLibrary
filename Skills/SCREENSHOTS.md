@@ -171,11 +171,12 @@ GraceAppsLibrary provides a centralized, reusable screenshot pipeline across all
 
 ## 🔒 7. Production Encapsulation
 
-1. **In-Memory Store Isolation:** Screenshot seeders must only mutate mock in-memory stores via:
+1. **Dedicated Debug Module (`GraceAppsLibraryDebug`):** Link `GraceAppsLibraryDebug` and gate screenshot manager imports behind `#if DEBUG import GraceAppsLibraryDebug` so Release code paths fail to compile if screenshot symbols are referenced directly.
+2. **In-Memory Store Isolation:** Screenshot seeders must only mutate mock in-memory stores via `ScreenshotStoreSafety` (`ScreenshotEngine.isInMemoryStore(context:)` for CoreData or SwiftData):
    ```swift
    guard ScreenshotEngine.isInMemoryStore(context: viewContext) else { return }
    ```
-2. **Zero Production Leakage:** All screenshot demo managers, debug settings sections, and preset seeders must be wrapped in `#if DEBUG ... #endif`.
+3. **Zero Production Leakage:** All screenshot demo managers, `DebugScreenshotSection`, and preset seeders must be wrapped in `#if DEBUG ... #endif`.
 
 ---
 

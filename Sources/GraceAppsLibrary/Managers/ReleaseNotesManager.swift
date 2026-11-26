@@ -139,5 +139,12 @@ public final class ReleaseNotesManager {
             userDefaults.removeObject(forKey: lastViewedVersionKey)
         }
     }
+
+    /// Sets session release-notes suppression flags (used by `GraceAppsLibraryDebug` screenshot previews).
+    @MainActor
+    public func setSessionSuppressionForTesting(evaluated: Bool, shown: Bool) {
+        hasEvaluatedLaunchReleaseNotes = evaluated
+        Self.hasShownReleaseNotesThisSession = shown
+    }
     
 }

@@ -86,25 +86,15 @@ public enum StandardScreenshotPreset: String, CaseIterable, Identifiable, Screen
         }
     }
 
-    public static func from(token: String) -> StandardScreenshotPreset? {
-        let normalized = token.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        switch normalized {
-        case "1", "benefit", "main":
-            return .slot1Benefit
-        case "2", "feature", "top":
-            return .slot2Feature
-        case "3", "secondary", "notes", "history":
-            return .slot3SecondFeature
-        case "4", "4a", "result", "calendar", "stats":
-            return .slot4Result
-        case "4b", "celebration", "milestone", "modal":
-            return .slot4Celebration
-        case "5", "5a", "custom", "goals":
-            return .slot5Customization
-        case "5b", "settings", "pro":
-            return .slot5Settings
-        default:
-            return StandardScreenshotPreset.allCases.first { $0.rawValue == normalized }
+    public var aliases: [String] {
+        switch self {
+        case .slot1Benefit: return ["benefit", "main"]
+        case .slot2Feature: return ["feature", "top"]
+        case .slot3SecondFeature: return ["secondary", "notes", "history"]
+        case .slot4Result: return ["4a", "result", "calendar", "stats"]
+        case .slot4Celebration: return ["celebration", "milestone", "modal"]
+        case .slot5Customization: return ["5a", "custom", "goals"]
+        case .slot5Settings: return ["settings", "pro"]
         }
     }
 }

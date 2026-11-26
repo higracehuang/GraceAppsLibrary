@@ -20,6 +20,7 @@ A Swift package that provides information about Grace Apps' iOS applications, in
 1. Add this package to your Xcode project using Swift Package Manager.
 2. Link the products based on your target's needs:
    - **`GraceAppsLibrary`**: Core library with **zero external dependencies**. Safe and lightweight for iOS apps, watchOS apps, widgets, and app extensions.
+   - **`GraceAppsLibraryDebug`**: Automated App Store screenshot engine, preset providers, SwiftUI tab coordination, and `DebugScreenshotSection`. Import under `#if DEBUG import GraceAppsLibraryDebug` so screenshot automation never leaks into Release code paths.
    - **`GraceAppsLibraryAdMob`**: Centralized Google Mobile Ads (AdMob) integration providing `UniversalAdCoordinator`. Link only to iOS main app targets displaying ads.
 
 ```swift
@@ -27,6 +28,11 @@ import GraceAppsLibrary
 
 // In iOS targets needing AdMob interstitials:
 import GraceAppsLibraryAdMob
+
+// In DEBUG-only screenshot / QA helpers:
+#if DEBUG
+import GraceAppsLibraryDebug
+#endif
 ```
 ## Usage
 
@@ -409,7 +415,7 @@ DebugSectionView(
 
 #### 10. Automated App Store Screenshots & Marketing Presets
 
-GraceAppsLibrary provides an end-to-end framework and CLI runner for generating localized, marketing-ready App Store screenshots across iPhone and iPad with zero blank splash screens and automatic Pro entitlement overrides.
+GraceAppsLibraryDebug provides an end-to-end framework (paired with `GraceAppsLibrary`'s CLI runner) for generating localized, marketing-ready App Store screenshots across iPhone and iPad with zero blank splash screens and automatic Pro entitlement overrides.
 
 ##### The 5–6 Screen Framework
 Every App Store screenshot set across Grace Apps collects 5–6 screens showing:
@@ -441,7 +447,8 @@ If your app follows standard App Store slots (Benefit, Top Feature, Secondary Fe
 If you prefer custom slots, conform an enum to `ScreenshotPresetProvider`:
 
 ```swift
-import GraceAppsLibrary
+#if DEBUG
+import GraceAppsLibraryDebug
 
 public enum AppScreenshotPreset: String, CaseIterable, ScreenshotPresetProvider {
     case benefit = "1"

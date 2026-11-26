@@ -8,7 +8,7 @@
 import Foundation
 
 /// Supported languages for automated App Store screenshots across GraceApps.
-public enum ScreenshotLanguage: String, CaseIterable, Identifiable {
+public enum ScreenshotLanguage: String, CaseIterable, Identifiable, Sendable {
     case auto = "auto"
     case english = "en"
     case simplifiedChinese = "zh"

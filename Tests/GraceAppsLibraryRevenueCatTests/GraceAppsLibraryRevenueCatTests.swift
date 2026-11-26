@@ -154,10 +154,10 @@ final class GraceAppsLibraryRevenueCatTests: XCTestCase {
         // Verify localization bundle and keys exist
         let bundle = Bundle.graceAppsLibrary
         let titleEn = bundle.localizedString(forKey: "subscription.section_title", value: nil, table: nil)
-        XCTAssertEqual(titleEn, "Subscription")
+        XCTAssertEqual(titleEn, "Pro")
 
         let manageEn = bundle.localizedString(forKey: "subscription.manage", value: nil, table: nil)
-        XCTAssertEqual(manageEn, "Manage Subscription")
+        XCTAssertEqual(manageEn, "Manage Purchase")
 
         let activeEn = bundle.localizedString(forKey: "subscription.active", value: nil, table: nil)
         XCTAssertEqual(activeEn, "Active")
