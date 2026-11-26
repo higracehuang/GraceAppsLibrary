@@ -82,8 +82,8 @@
 "onboarding.skip" = "暂时跳过";
 
 /* Subscription */
-"subscription.section_title" = "订阅";
-"subscription.manage" = "管理订阅";
+"subscription.section_title" = "Pro";
+"subscription.manage" = "管理购买";
 "subscription.active" = "已激活";
 "subscription.upgrade_to %@" = "升级至 %@";
 "subscription.unlocked_all" = "已解锁全部功能";

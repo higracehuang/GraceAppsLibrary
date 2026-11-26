@@ -82,8 +82,8 @@
 "onboarding.skip" = "今はスキップ";
 
 /* Subscription */
-"subscription.section_title" = "サブスクリプション";
-"subscription.manage" = "サブスクリプションを管理";
+"subscription.section_title" = "Pro";
+"subscription.manage" = "購入を管理";
 "subscription.active" = "有効";
 "subscription.upgrade_to %@" = "%@ にアップグレード";
 "subscription.unlocked_all" = "全機能を解放済み";

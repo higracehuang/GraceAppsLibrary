@@ -82,8 +82,8 @@
 "onboarding.skip" = "지금은 건너뛰기";
 
 /* Subscription */
-"subscription.section_title" = "구독";
-"subscription.manage" = "구독 관리";
+"subscription.section_title" = "Pro";
+"subscription.manage" = "구매 관리";
 "subscription.active" = "구독 중";
 "subscription.upgrade_to %@" = "%@ (으)로 업그레이드";
 "subscription.unlocked_all" = "모든 기능 잠금 해제";

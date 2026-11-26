@@ -82,8 +82,8 @@
 "onboarding.skip" = "Vorläufig überspringen";
 
 /* Subscription */
-"subscription.section_title" = "Abonnement";
-"subscription.manage" = "Abonnement verwalten";
+"subscription.section_title" = "Pro";
+"subscription.manage" = "Kauf verwalten";
 "subscription.active" = "Aktiv";
 "subscription.upgrade_to %@" = "Auf %@ upgraden";
 "subscription.unlocked_all" = "Alle Funktionen freigeschaltet";
