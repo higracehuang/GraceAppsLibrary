@@ -87,7 +87,7 @@
 "subscription.manage" = "Manage Subscription";
 "subscription.active" = "Active";
 "subscription.upgrade_to %@" = "Upgrade to %@";
-"subscription.unlocked_all" = "All features & ad-free unlocked";
+"subscription.unlocked_all" = "All features unlocked";
 "subscription.thank_you" = "Thank you for supporting the app 💛";
 "subscription.pro_badge" = "PRO";
 

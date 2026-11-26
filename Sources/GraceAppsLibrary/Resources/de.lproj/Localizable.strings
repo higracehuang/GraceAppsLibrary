@@ -86,7 +86,7 @@
 "subscription.manage" = "Abonnement verwalten";
 "subscription.active" = "Aktiv";
 "subscription.upgrade_to %@" = "Auf %@ upgraden";
-"subscription.unlocked_all" = "Alle Funktionen freigeschaltet & werbefrei";
+"subscription.unlocked_all" = "Alle Funktionen freigeschaltet";
 "subscription.thank_you" = "Danke für deine Unterstützung der App 💛";
 "subscription.pro_badge" = "PRO";
 

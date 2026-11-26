@@ -86,7 +86,7 @@
 "subscription.manage" = "구독 관리";
 "subscription.active" = "구독 중";
 "subscription.upgrade_to %@" = "%@ (으)로 업그레이드";
-"subscription.unlocked_all" = "모든 기능 잠금 해제 및 광고 제거";
+"subscription.unlocked_all" = "모든 기능 잠금 해제";
 "subscription.thank_you" = "앱을 응원해 주셔서 감사합니다 💛";
 "subscription.pro_badge" = "PRO";
 
