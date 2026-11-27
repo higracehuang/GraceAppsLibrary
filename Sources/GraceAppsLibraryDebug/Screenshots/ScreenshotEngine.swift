@@ -292,7 +292,7 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
     }
 
     /// Whether screenshot capture is currently active in the process environment.
-    public static func isScreenshotCaptureActive(
+    public nonisolated static func isScreenshotCaptureActive(
         arguments: [String] = ProcessInfo.processInfo.arguments,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool {
@@ -301,29 +301,11 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
 
     /// Whether screenshot capture or mock-data launch flags are active in `arguments` / `environment`.
     /// Always `false` in Release builds.
-    public static func isMockDataModeActive(
+    public nonisolated static func isMockDataModeActive(
         arguments: [String] = ProcessInfo.processInfo.arguments,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool {
-        #if DEBUG
-        if isScreenshotCaptureActive(arguments: arguments, environment: environment) {
-            return true
-        }
-        let mockFlags = ["-USE_MOCK_DATA", "-ENABLE_MOCK_DATA", "-ENABLE_SCREENSHOT_MOCK_DATA"]
-        if arguments.contains(where: { mockFlags.contains($0) }) {
-            return true
-        }
-        let mockEnvKeys = ["USE_MOCK_DATA", "ENABLE_MOCK_DATA", "ENABLE_SCREENSHOT_MOCK_DATA"]
-        return mockEnvKeys.contains { key in
-            guard let raw = environment[key]?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-                  !raw.isEmpty else {
-                return false
-            }
-            return raw != "0" && raw != "false" && raw != "no"
-        }
-        #else
-        return false
-        #endif
+        DebugEntitlementOverride.isMockDataModeActive(arguments: arguments, environment: environment)
     }
 
     /// The effective language for demo data and copy.

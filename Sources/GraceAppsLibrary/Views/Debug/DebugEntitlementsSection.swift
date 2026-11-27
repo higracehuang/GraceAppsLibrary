@@ -30,6 +30,34 @@ public enum DebugEntitlementOverride: String, CaseIterable, Identifiable {
         #endif
     }
 
+    /// Returns true if screenshot capture or standalone mock-data launch flags
+    /// (`-USE_MOCK_DATA`, `-ENABLE_MOCK_DATA`, `-ENABLE_SCREENSHOT_MOCK_DATA`) are active.
+    /// Always returns `false` in Release (`DEBUG` unset) builds.
+    public static func isMockDataModeActive(
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> Bool {
+        #if DEBUG
+        if isScreenshotCaptureActive(arguments: arguments, environment: environment) {
+            return true
+        }
+        let mockFlags = ["-USE_MOCK_DATA", "-ENABLE_MOCK_DATA", "-ENABLE_SCREENSHOT_MOCK_DATA"]
+        if arguments.contains(where: { mockFlags.contains($0) }) {
+            return true
+        }
+        let mockEnvKeys = ["USE_MOCK_DATA", "ENABLE_MOCK_DATA", "ENABLE_SCREENSHOT_MOCK_DATA"]
+        return mockEnvKeys.contains { key in
+            guard let raw = environment[key]?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                  !raw.isEmpty else {
+                return false
+            }
+            return raw != "0" && raw != "false" && raw != "no"
+        }
+        #else
+        return false
+        #endif
+    }
+
     /// Resolves the effective pro/unlimited entitlement status based on this override and the actual store/cache status.
     /// In DEBUG builds:
     /// - When taking screenshots, automatically assumes forced pro (`true`) unless explicitly set to `.forceFree`.
