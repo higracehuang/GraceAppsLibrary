@@ -11,16 +11,19 @@ import SwiftUI
 @MainActor
 internal struct UXFlowViewModifier: ViewModifier {
     @ObservedObject var orchestrator: UXFlowOrchestrator
+    @State private var hostId = UUID()
     
     internal init(orchestrator: UXFlowOrchestrator = .shared) {
         self.orchestrator = orchestrator
     }
     
     func body(content: Content) -> some View {
+        let isTopmostHost = orchestrator.activeHostId == nil || orchestrator.activeHostId == hostId
         content
             .sheet(item: Binding<UXActionItem?>(
-                get: { orchestrator.activeSheetItem },
+                get: { isTopmostHost ? orchestrator.activeSheetItem : nil },
                 set: { newValue in
+                    guard isTopmostHost else { return }
                     if newValue == nil, let item = orchestrator.activeSheetItem {
                         orchestrator.onModalDismissed(actionId: item.id)
                     }
@@ -33,8 +36,9 @@ internal struct UXFlowViewModifier: ViewModifier {
                 }
             }
             .fullScreenCover(item: Binding<UXActionItem?>(
-                get: { orchestrator.activeCoverItem },
+                get: { isTopmostHost ? orchestrator.activeCoverItem : nil },
                 set: { newValue in
+                    guard isTopmostHost else { return }
                     if newValue == nil, let item = orchestrator.activeCoverItem {
                         orchestrator.onModalDismissed(actionId: item.id)
                     }
@@ -47,10 +51,10 @@ internal struct UXFlowViewModifier: ViewModifier {
                 }
             }
             .onAppear {
-                orchestrator.isHostMounted = true
+                orchestrator.mountHost(hostId)
             }
             .onDisappear {
-                orchestrator.isHostMounted = false
+                orchestrator.unmountHost(hostId)
             }
     }
 }

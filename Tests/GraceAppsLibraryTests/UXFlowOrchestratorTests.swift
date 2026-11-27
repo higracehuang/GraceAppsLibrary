@@ -724,4 +724,29 @@ final class UXFlowOrchestratorTests: XCTestCase {
         }
         wait(for: [exp], timeout: 1.0)
     }
+
+    func testNestedHostStackTracksTopmostHostAndRestoresUnderlyingHost() {
+        let orchestrator = UXFlowOrchestrator.shared
+        let rootHost = UUID()
+        let modalHost = UUID()
+
+        XCTAssertFalse(orchestrator.isHostMounted)
+        XCTAssertNil(orchestrator.activeHostId)
+
+        orchestrator.mountHost(rootHost)
+        XCTAssertTrue(orchestrator.isHostMounted)
+        XCTAssertEqual(orchestrator.activeHostId, rootHost)
+
+        orchestrator.mountHost(modalHost)
+        XCTAssertTrue(orchestrator.isHostMounted)
+        XCTAssertEqual(orchestrator.activeHostId, modalHost)
+
+        orchestrator.unmountHost(modalHost)
+        XCTAssertTrue(orchestrator.isHostMounted)
+        XCTAssertEqual(orchestrator.activeHostId, rootHost)
+
+        orchestrator.unmountHost(rootHost)
+        XCTAssertFalse(orchestrator.isHostMounted)
+        XCTAssertNil(orchestrator.activeHostId)
+    }
 }

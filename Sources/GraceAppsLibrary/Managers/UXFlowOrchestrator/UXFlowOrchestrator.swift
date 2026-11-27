@@ -30,6 +30,9 @@ public final class UXFlowOrchestrator: ObservableObject {
     
     /// Indicates whether a view modifier host (`scopedUXFlow`) is actively mounted.
     @Published public internal(set) var isHostMounted: Bool = false
+
+    /// Identifier of the topmost mounted `.scopedUXFlow()` host so background hosts behind covers do not collide.
+    @Published public internal(set) var activeHostId: UUID?
     
     // MARK: - Configuration
     
@@ -53,6 +56,7 @@ public final class UXFlowOrchestrator: ObservableObject {
     private var executedTagsThisFlow: Set<UXTag> = []
     private var flowCompletionCallback: (() -> Void)?
     private var settlingWorkItem: DispatchWorkItem?
+    private var activeHostStack: [UUID] = []
     
     internal init() {}
     
@@ -329,6 +333,19 @@ public final class UXFlowOrchestrator: ObservableObject {
         sessionActionCounts.removeValue(forKey: actionId)
     }
     
+    internal func mountHost(_ hostId: UUID) {
+        activeHostStack.removeAll(where: { $0 == hostId })
+        activeHostStack.append(hostId)
+        activeHostId = hostId
+        isHostMounted = true
+    }
+
+    internal func unmountHost(_ hostId: UUID) {
+        activeHostStack.removeAll(where: { $0 == hostId })
+        activeHostId = activeHostStack.last
+        isHostMounted = !activeHostStack.isEmpty
+    }
+
     public func resetForTesting() {
         settlingWorkItem?.cancel()
         settlingWorkItem = nil
@@ -336,6 +353,8 @@ public final class UXFlowOrchestrator: ObservableObject {
         activeCoverItem = nil
         isBusy = false
         currentActionId = nil
+        activeHostStack.removeAll()
+        activeHostId = nil
         isHostMounted = false
         actionQueue.removeAll()
         sessionActionCounts.removeAll()
