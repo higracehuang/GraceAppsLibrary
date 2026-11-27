@@ -1622,5 +1622,46 @@ final class ScreenshotAutomationTests: XCTestCase {
         engine.reset()
         window.isHidden = true
     }
+
+    @MainActor
+    func testScreenshotTabCoordinationHandleLaunch() {
+        @MainActor
+        final class TabLaunchEngine: ScreenshotEngine<MockPreset> {
+            var seededPresets: [MockPreset] = []
+            override func seedMockData(for preset: MockPreset, language: ScreenshotLanguage) {
+                seededPresets.append(preset)
+            }
+        }
+
+        let engine = TabLaunchEngine(arguments: ["MyApp", "-SCREENSHOT_PRESET", "2"], environment: [:])
+        var selectedTab = 0
+        let tabBinding = Binding(get: { selectedTab }, set: { selectedTab = $0 })
+
+        let rootView = Text("Tabs")
+            .screenshotTabCoordination(
+                engine: engine,
+                selectedTab: tabBinding,
+                handleLaunch: true,
+                storeSafety: .custom("Safe") { true }
+            )
+
+        let host = UIHostingController(rootView: rootView)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+
+        let appearExp = expectation(description: "Initial appear runs handleMockOrScreenshotLaunch and syncs tab")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            appearExp.fulfill()
+        }
+        wait(for: [appearExp], timeout: 2.0)
+
+        XCTAssertTrue(engine.hasAppliedLaunchPreset)
+        XCTAssertEqual(engine.seededPresets, [.second])
+        XCTAssertEqual(selectedTab, 1)
+
+        engine.reset()
+        window.isHidden = true
+    }
     #endif
 }

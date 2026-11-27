@@ -12,11 +12,16 @@ import SwiftUI
 private struct ScreenshotTabCoordinationModifier<Preset: ScreenshotPresetProvider, Tab: Hashable>: ViewModifier {
     @ObservedObject var engine: ScreenshotEngine<Preset>
     @Binding var selectedTab: Tab
+    let handleLaunch: Bool
+    let storeSafety: ScreenshotStoreSafety?
     let tabForPreset: @MainActor (Preset) -> Tab?
 
     func body(content: Content) -> some View {
         content
             .onAppear {
+                if handleLaunch {
+                    engine.handleMockOrScreenshotLaunch(storeSafety: storeSafety)
+                }
                 syncTab(for: engine.activePreset)
             }
             .onReceive(engine.$navigationTriggerId) { _ in
@@ -80,10 +85,14 @@ private struct ScreenshotDestinationModifier<Preset: ScreenshotPresetProvider, I
 public extension View {
     /// Coordinates a `Tab: Hashable` SwiftUI `TabView` selection with `ScreenshotEngine`
     /// preset updates and launch navigation triggers.
+    /// When `handleLaunch` is `true`, also runs the one-shot `engine.handleMockOrScreenshotLaunch(storeSafety:)`
+    /// on first appear before syncing the tab selection.
     /// In Release builds (`DEBUG` unset), returns `self` with zero runtime overhead.
     func screenshotTabCoordination<Preset: ScreenshotPresetProvider, Tab: Hashable>(
         engine: ScreenshotEngine<Preset>,
         selectedTab: Binding<Tab>,
+        handleLaunch: Bool = false,
+        storeSafety: ScreenshotStoreSafety? = nil,
         tabForPreset: @MainActor @escaping (Preset) -> Tab?
     ) -> some View {
         #if DEBUG
@@ -91,6 +100,8 @@ public extension View {
             ScreenshotTabCoordinationModifier(
                 engine: engine,
                 selectedTab: selectedTab,
+                handleLaunch: handleLaunch,
+                storeSafety: storeSafety,
                 tabForPreset: tabForPreset
             )
         )
@@ -101,17 +112,23 @@ public extension View {
 
     /// Coordinates an `Int`-indexed SwiftUI `TabView` selection with `ScreenshotEngine`
     /// preset updates and launch navigation triggers.
+    /// When `handleLaunch` is `true`, also runs the one-shot `engine.handleMockOrScreenshotLaunch(storeSafety:)`
+    /// on first appear before syncing the tab selection.
     /// Resolves target tab using `tabForPreset`, falling back to `engine.tabIndexForPreset` and `preset.targetTabIndex`.
     /// In Release builds (`DEBUG` unset), returns `self` with zero runtime overhead.
     func screenshotTabCoordination<Preset: ScreenshotPresetProvider>(
         engine: ScreenshotEngine<Preset>,
         selectedTab: Binding<Int>,
+        handleLaunch: Bool = false,
+        storeSafety: ScreenshotStoreSafety? = nil,
         tabForPreset: (@MainActor (Preset) -> Int?)? = nil
     ) -> some View {
         #if DEBUG
         screenshotTabCoordination(
             engine: engine,
             selectedTab: selectedTab,
+            handleLaunch: handleLaunch,
+            storeSafety: storeSafety,
             tabForPreset: { preset in
                 if let tabForPreset {
                     return tabForPreset(preset)
