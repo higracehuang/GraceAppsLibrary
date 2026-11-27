@@ -1453,4 +1453,174 @@ final class ScreenshotAutomationTests: XCTestCase {
         XCTAssertNil(succeeded)
         XCTAssertEqual(seeder.records, ["seeded-ja"])
     }
+
+    @MainActor
+    func testPaywallPresetRequiresFreeTierLifecycle() {
+        enum PaywallTestPreset: String, ScreenshotPresetProvider {
+            case benefit = "1"
+            case paywall = "4b"
+
+            var slotLabel: String { rawValue }
+            var title: String { rawValue }
+            var suggestedFilename: String { rawValue }
+            var systemImage: String { "star" }
+            var requiresFreeTier: Bool { self == .paywall }
+        }
+
+        @MainActor
+        final class PaywallCoordinator: ScreenshotEngine<PaywallTestPreset> {
+            var overrideState: DebugEntitlementOverride = .automatic
+
+            override func makeEntitlementOverrideBinding() -> Binding<DebugEntitlementOverride>? {
+                Binding(get: { self.overrideState }, set: { self.overrideState = $0 })
+            }
+        }
+
+        let engine = PaywallCoordinator(arguments: ["MyApp", "-SCREENSHOT_PRESET", "4b"], environment: [:])
+        XCTAssertFalse(engine.shouldShowPaywall)
+
+        let launchResult = engine.handleAppLaunch()
+        XCTAssertEqual(launchResult, .applied(presetId: "4b", language: .english))
+        XCTAssertTrue(engine.shouldShowPaywall)
+        XCTAssertEqual(engine.overrideState, .forceFree)
+
+        // Switching to a standard preset clears paywall & restores forced Pro
+        let proResult = engine.apply(preset: .benefit)
+        XCTAssertEqual(proResult, .applied(presetId: "1", language: .english))
+        XCTAssertFalse(engine.shouldShowPaywall)
+        XCTAssertEqual(engine.overrideState, .forcePro)
+
+        // Switching back to paywall preset and then resetting clears shouldShowPaywall
+        _ = engine.apply(preset: .paywall)
+        XCTAssertTrue(engine.shouldShowPaywall)
+        XCTAssertEqual(engine.overrideState, .forceFree)
+
+        engine.reset()
+        XCTAssertFalse(engine.shouldShowPaywall)
+    }
+
+    @MainActor
+    func testMockDataModeAndHandleMockOrScreenshotLaunch() throws {
+        @MainActor
+        final class MockLaunchCoordinator: ScreenshotEngine<MockPreset> {
+            let suite: UserDefaults
+            var entitlement: DebugEntitlementOverride = .automatic
+            var mockOnlySeeds: [ScreenshotLanguage] = []
+            var presetSeeds: [(MockPreset, ScreenshotLanguage)] = []
+
+            init(suite: UserDefaults, arguments: [String], environment: [String: String] = [:]) {
+                self.suite = suite
+                super.init(arguments: arguments, environment: environment)
+            }
+
+            override func makeEnvironmentConfig() -> ScreenshotEnvironmentConfig {
+                ScreenshotEnvironmentConfig(
+                    userDefaultsSuite: suite,
+                    defaultsOverrides: ["mockOnboarded": true],
+                    suppressReleaseNotes: false
+                )
+            }
+
+            override func makeEntitlementOverrideBinding() -> Binding<DebugEntitlementOverride>? {
+                Binding(get: { self.entitlement }, set: { self.entitlement = $0 })
+            }
+
+            override func seedMockData(for preset: MockPreset, language: ScreenshotLanguage) {
+                presetSeeds.append((preset, language))
+            }
+
+            override func seedMockOnlyLaunchData(language: ScreenshotLanguage) {
+                mockOnlySeeds.append(language)
+            }
+        }
+
+        let suiteName = "ScreenshotAutomationTests.\(UUID().uuidString)"
+        let suite = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { suite.removePersistentDomain(forName: suiteName) }
+
+        XCTAssertTrue(ScreenshotEngine<MockPreset>.isMockDataModeActive(arguments: ["MyApp", "-USE_MOCK_DATA"], environment: [:]))
+        XCTAssertTrue(ScreenshotEngine<MockPreset>.isMockDataModeActive(arguments: ["MyApp"], environment: ["ENABLE_MOCK_DATA": "1"]))
+        XCTAssertFalse(ScreenshotEngine<MockPreset>.isMockDataModeActive(arguments: ["MyApp"], environment: ["ENABLE_MOCK_DATA": "0"]))
+
+        let coordinator = MockLaunchCoordinator(
+            suite: suite,
+            arguments: ["MyApp", "-USE_MOCK_DATA", "-SCREENSHOT_LANG", "es"]
+        )
+        XCTAssertFalse(coordinator.isScreenshotCaptureActive)
+        XCTAssertTrue(coordinator.isMockDataModeActive)
+
+        // Blocked store leaves environment, entitlement, and hasAppliedMockLaunch untouched
+        let blocked = coordinator.handleMockOrScreenshotLaunch(
+            storeSafety: .custom("Blocked persistent") { false }
+        )
+        XCTAssertEqual(blocked, .blockedUnsafeStore("Blocked persistent"))
+        XCTAssertFalse(coordinator.hasAppliedMockLaunch)
+        XCTAssertTrue(coordinator.mockOnlySeeds.isEmpty)
+        XCTAssertNil(suite.object(forKey: "mockOnboarded"))
+
+        // Safe store runs once, applies defaults + entitlement + seedMockOnlyLaunchData
+        let first = coordinator.handleMockOrScreenshotLaunch(
+            storeSafety: .custom("Safe") { true }
+        )
+        XCTAssertEqual(first, .noPreset)
+        XCTAssertTrue(coordinator.hasAppliedMockLaunch)
+        XCTAssertTrue(suite.bool(forKey: "mockOnboarded"))
+        XCTAssertEqual(coordinator.entitlement, .forcePro)
+        XCTAssertEqual(coordinator.mockOnlySeeds, [.spanish])
+
+        // Re-entrancy is a no-op
+        _ = coordinator.handleMockOrScreenshotLaunch(storeSafety: .custom("Safe") { true })
+        XCTAssertEqual(coordinator.mockOnlySeeds.count, 1)
+
+        // Reset restores defaults and clears flags
+        coordinator.reset()
+        XCTAssertFalse(coordinator.hasAppliedMockLaunch)
+        XCTAssertFalse(coordinator.isMockDataModeActive)
+        XCTAssertNil(suite.object(forKey: "mockOnboarded"))
+    }
+
+    #if canImport(UIKit)
+    @available(iOS 17, *)
+    @MainActor
+    func testScreenshotDestinationModifier() {
+        let engine = ScreenshotEngine<MockPreset>(arguments: [], environment: [:])
+        let items = ["Alpha", "Beta", "Gamma"]
+        var renderedDestinations: [String] = []
+
+        let rootView = NavigationStack {
+            Text("Root")
+                .screenshotDestination(
+                    engine: engine,
+                    items: items,
+                    matching: { preset, list in
+                        switch preset {
+                        case .first: return list.first
+                        case .second: return list.dropFirst().first
+                        case .celebration: return nil
+                        }
+                    },
+                    destination: { item in
+                        Text(item)
+                            .onAppear { renderedDestinations.append(item) }
+                    }
+                )
+        }
+
+        let host = UIHostingController(rootView: rootView)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+
+        let applyExp = expectation(description: "Destination pushed for .second")
+        _ = engine.apply(preset: .second)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            applyExp.fulfill()
+        }
+        wait(for: [applyExp], timeout: 2.0)
+        XCTAssertTrue(renderedDestinations.contains("Beta"))
+
+        engine.reset()
+        window.isHidden = true
+    }
+    #endif
 }

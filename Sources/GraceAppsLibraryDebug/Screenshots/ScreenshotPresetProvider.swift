@@ -30,6 +30,7 @@ public protocol ScreenshotPresetProvider: Identifiable, CaseIterable, RawReprese
     var cliArgumentExample: String { get }
     var targetTabIndex: Int? { get }
     var aliases: [String] { get }
+    var requiresFreeTier: Bool { get }
 
     static func from(token: String) -> Self?
 }
@@ -38,6 +39,7 @@ public extension ScreenshotPresetProvider {
     var id: String { rawValue }
     var targetTabIndex: Int? { nil }
     var aliases: [String] { [] }
+    var requiresFreeTier: Bool { false }
 
     var cliArgumentExample: String {
         "-SCREENSHOT_PRESET \(rawValue)"

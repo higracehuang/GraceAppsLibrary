@@ -205,6 +205,8 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
     @Published open var selectedLanguage: ScreenshotLanguage = .auto
     /// Bumped on every successful apply / reset so `screenshotTabCoordination` re-syncs tab selection.
     @Published open var navigationTriggerId = UUID()
+    /// `true` when the active preset requires free-tier / paywall presentation (`preset.requiresFreeTier`).
+    @Published open var shouldShowPaywall: Bool = false
 
     /// Optional closure callback invoked when a preset is applied.
     open var onApply: ((Preset) -> Void)?
@@ -227,6 +229,9 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
     /// Tracks whether `handleAppLaunch` has already applied the launch preset in this session.
     public private(set) var hasAppliedLaunchPreset: Bool = false
 
+    /// Tracks whether `handleMockOrScreenshotLaunch` has already applied a mock-only launch in this session.
+    public private(set) var hasAppliedMockLaunch: Bool = false
+
     /// When taking screenshots, automatically assumes forced Pro status for marketing captures.
     open var assumeForcedPro: Bool = true
 
@@ -244,6 +249,8 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
     private let launchArguments: [String]
     private let launchEnvironment: [String: String]
     private var isLaunchCaptureFlagged: Bool = false
+    private var isMockLaunchFlagged: Bool = false
+    private var didForceFreeForPaywallPreset: Bool = false
     private var environmentSnapshot: EnvironmentSnapshot?
     #endif
 
@@ -255,6 +262,7 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
         self.launchArguments = arguments
         self.launchEnvironment = environment
         self.isLaunchCaptureFlagged = Self.isScreenshotCaptureActive(arguments: arguments, environment: environment)
+        self.isMockLaunchFlagged = Self.isMockDataModeActive(arguments: arguments, environment: environment)
         if let launchLang = ScreenshotLanguage.fromLaunchEnvironment(arguments: arguments, environment: environment) {
             self.selectedLanguage = launchLang
         }
@@ -273,12 +281,49 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
         #endif
     }
 
+    /// Whether screenshot capture or standalone mock-data launch flags (`-USE_MOCK_DATA`, `-ENABLE_MOCK_DATA`,
+    /// `-ENABLE_SCREENSHOT_MOCK_DATA`) are active. Always `false` in Release builds.
+    open var isMockDataModeActive: Bool {
+        #if DEBUG
+        return isScreenshotCaptureActive || isMockLaunchFlagged
+        #else
+        return false
+        #endif
+    }
+
     /// Whether screenshot capture is currently active in the process environment.
     public static func isScreenshotCaptureActive(
         arguments: [String] = ProcessInfo.processInfo.arguments,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool {
         DebugEntitlementOverride.isScreenshotCaptureActive(arguments: arguments, environment: environment)
+    }
+
+    /// Whether screenshot capture or mock-data launch flags are active in `arguments` / `environment`.
+    /// Always `false` in Release builds.
+    public static func isMockDataModeActive(
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> Bool {
+        #if DEBUG
+        if isScreenshotCaptureActive(arguments: arguments, environment: environment) {
+            return true
+        }
+        let mockFlags = ["-USE_MOCK_DATA", "-ENABLE_MOCK_DATA", "-ENABLE_SCREENSHOT_MOCK_DATA"]
+        if arguments.contains(where: { mockFlags.contains($0) }) {
+            return true
+        }
+        let mockEnvKeys = ["USE_MOCK_DATA", "ENABLE_MOCK_DATA", "ENABLE_SCREENSHOT_MOCK_DATA"]
+        return mockEnvKeys.contains { key in
+            guard let raw = environment[key]?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                  !raw.isEmpty else {
+                return false
+            }
+            return raw != "0" && raw != "false" && raw != "no"
+        }
+        #else
+        return false
+        #endif
     }
 
     /// The effective language for demo data and copy.
@@ -312,14 +357,56 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
     /// Override in subclasses to populate CoreData/SwiftData mock records for `preset` and `language`.
     open func seedMockData(for preset: Preset, language: ScreenshotLanguage) {}
 
+    /// Override in subclasses to populate mock records for mock-only launches (`-USE_MOCK_DATA` / `-ENABLE_MOCK_DATA` without a preset).
+    open func seedMockOnlyLaunchData(language: ScreenshotLanguage) {}
+
     /// Override in subclasses to update app-specific navigation / sheet / simulation flags for `preset`.
     open func coordinateNavigation(for preset: Preset) {}
 
     /// Override in subclasses to clear app-specific state during `reset()`.
     open func resetAppState() {}
 
+    /// Handles either a preset launch (`handleAppLaunch`) or a mock-only launch (`-USE_MOCK_DATA` / `-ENABLE_MOCK_DATA`)
+    /// with store safety gating, scoped environment overrides, and one-shot protection.
+    @discardableResult
+    open func handleMockOrScreenshotLaunch(
+        selectedTab: Binding<Int>? = nil,
+        entitlementOverride: Binding<DebugEntitlementOverride>? = nil,
+        storeSafety: ScreenshotStoreSafety? = nil
+    ) -> ScreenshotApplyResult {
+        #if DEBUG
+        if activePreset != nil {
+            return handleAppLaunch(
+                selectedTab: selectedTab,
+                entitlementOverride: entitlementOverride,
+                storeSafety: storeSafety
+            )
+        }
+
+        guard isMockDataModeActive, !hasAppliedMockLaunch else { return .noPreset }
+        let effectiveSafety = storeSafety ?? makeStoreSafety()
+        if let reason = effectiveSafety?.validate() {
+            return .blockedUnsafeStore(reason)
+        }
+
+        hasAppliedMockLaunch = true
+        let config = makeEnvironmentConfig()
+        captureEnvironmentSnapshotIfNeeded(using: config)
+        applyEnvironmentOverrides(using: config)
+
+        let effectiveEntitlement = entitlementOverride ?? makeEntitlementOverrideBinding()
+        if assumeForcedPro {
+            configureMarketingEntitlement(entitlementOverride: effectiveEntitlement)
+        }
+        seedMockOnlyLaunchData(language: effectiveLanguage)
+        return .noPreset
+        #else
+        return .noPreset
+        #endif
+    }
+
     /// Automatically switches the selected tab if the active preset defines a `targetTabIndex`,
-    /// configures Pro entitlement if `assumeForcedPro` is enabled (respecting `-FORCE_FREE` / `.forceFree`),
+    /// configures Pro/Free entitlement (`preset.requiresFreeTier` or `assumeForcedPro`, respecting `-FORCE_FREE` / `.forceFree`),
     /// enforces one-shot launch protection (`hasAppliedLaunchPreset`), and invokes `apply(preset:storeSafety:)` if `autoApply` is true.
     @discardableResult
     open func handleAppLaunch(
@@ -344,17 +431,12 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
                 return .blockedUnsafeStore(reason)
             }
             hasAppliedLaunchPreset = true
-            if assumeForcedPro && isScreenshotCaptureActive {
-                configureMarketingEntitlement(entitlementOverride: effectiveEntitlement)
-            }
             if let targetTab = tabIndexForPreset?(preset) ?? preset.targetTabIndex {
                 selectedTab?.wrappedValue = targetTab
             }
             return applyValidated(preset: preset, entitlementOverride: effectiveEntitlement)
         } else {
-            if assumeForcedPro && isScreenshotCaptureActive {
-                configureMarketingEntitlement(entitlementOverride: effectiveEntitlement)
-            }
+            applyPresetEntitlement(for: preset, entitlementOverride: effectiveEntitlement)
             if let targetTab = tabIndexForPreset?(preset) ?? preset.targetTabIndex {
                 selectedTab?.wrappedValue = targetTab
             }
@@ -423,8 +505,12 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
     open func reset() {
         #if DEBUG
         hasAppliedLaunchPreset = false
+        hasAppliedMockLaunch = false
         activePreset = nil
+        shouldShowPaywall = false
         isLaunchCaptureFlagged = false
+        isMockLaunchFlagged = false
+        didForceFreeForPaywallPreset = false
         restoreEnvironmentSnapshot()
         resetAppState()
         navigationTriggerId = UUID()
@@ -433,6 +519,28 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
     }
 
     #if DEBUG
+    private func applyPresetEntitlement(
+        for preset: Preset,
+        entitlementOverride: Binding<DebugEntitlementOverride>?
+    ) {
+        if preset.requiresFreeTier {
+            shouldShowPaywall = true
+            didForceFreeForPaywallPreset = true
+            entitlementOverride?.wrappedValue = .forceFree
+        } else {
+            shouldShowPaywall = false
+            if didForceFreeForPaywallPreset {
+                didForceFreeForPaywallPreset = false
+                if entitlementOverride?.wrappedValue == .forceFree {
+                    entitlementOverride?.wrappedValue = .automatic
+                }
+            }
+            if assumeForcedPro {
+                configureMarketingEntitlement(entitlementOverride: entitlementOverride)
+            }
+        }
+    }
+
     private func applyValidated(
         preset: Preset,
         entitlementOverride: Binding<DebugEntitlementOverride>?
@@ -442,9 +550,7 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
         applyEnvironmentOverrides(using: config)
 
         self.activePreset = preset
-        if assumeForcedPro {
-            configureMarketingEntitlement(entitlementOverride: entitlementOverride)
-        }
+        applyPresetEntitlement(for: preset, entitlementOverride: entitlementOverride)
         let resolvedLanguage = effectiveLanguage
         seedMockData(for: preset, language: resolvedLanguage)
         coordinateNavigation(for: preset)
