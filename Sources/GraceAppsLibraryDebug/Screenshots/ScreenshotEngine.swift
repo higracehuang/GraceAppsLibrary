@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import GraceAppsLibrary
+@_exported import GraceAppsLibraryCore
 #if canImport(CoreData)
 import CoreData
 #endif
@@ -296,7 +297,7 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
         arguments: [String] = ProcessInfo.processInfo.arguments,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool {
-        DebugEntitlementOverride.isScreenshotCaptureActive(arguments: arguments, environment: environment)
+        GraceLaunchFlags.isScreenshotCaptureActive(arguments: arguments, environment: environment)
     }
 
     /// Whether screenshot capture or mock-data launch flags are active in `arguments` / `environment`.
@@ -305,7 +306,7 @@ open class ScreenshotEngine<Preset: ScreenshotPresetProvider>: ScreenshotDemoCoo
         arguments: [String] = ProcessInfo.processInfo.arguments,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool {
-        DebugEntitlementOverride.isMockDataModeActive(arguments: arguments, environment: environment)
+        GraceLaunchFlags.isMockDataModeActive(arguments: arguments, environment: environment)
     }
 
     /// The effective language for demo data and copy.

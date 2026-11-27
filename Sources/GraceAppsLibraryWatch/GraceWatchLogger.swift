@@ -1,5 +1,6 @@
 import Foundation
 import os
+@_exported import GraceAppsLibraryCore
 
 /// Lightweight, self-contained logger for `GraceAppsLibraryWatch` (no dependency on `GraceAppsLibrary`).
 public enum GraceWatchLogger {

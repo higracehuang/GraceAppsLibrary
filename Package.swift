@@ -45,15 +45,19 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
+            name: "GraceAppsLibraryCore",
+            dependencies: []
+        ),
+        .target(
             name: "GraceAppsLibrary",
-            dependencies: [],
+            dependencies: ["GraceAppsLibraryCore"],
             resources: [
                 .process("Resources"),
             ]
         ),
         .target(
             name: "GraceAppsLibraryDebug",
-            dependencies: ["GraceAppsLibrary"]
+            dependencies: ["GraceAppsLibrary", "GraceAppsLibraryCore"]
         ),
         .target(
             name: "GraceAppsLibraryAdMob",
@@ -72,7 +76,7 @@ let package = Package(
         ),
         .target(
             name: "GraceAppsLibraryWatch",
-            dependencies: [],
+            dependencies: ["GraceAppsLibraryCore"],
             resources: [
                 .process("Resources"),
             ]

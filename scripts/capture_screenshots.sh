@@ -403,6 +403,8 @@ except Exception:
 " "${out_file}" 2>/dev/null || echo "ready")
 
         if [[ "${is_ready}" == "ready" ]]; then
+          sleep 1.5
+          xcrun simctl io "${udid}" screenshot "${out_file}" >/dev/null 2>&1
           break
         fi
 
