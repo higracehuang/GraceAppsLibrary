@@ -922,30 +922,82 @@ private func validateLaunchFlags(in swiftFiles: [URL], targetName: String) {
         return
     }
 
-    let forbiddenPatterns: [(pattern: String, message: String)] = [
-        (
-            #"ProcessInfo\.processInfo\.arguments\.contains\s*\(\s*"(?:-(?:USE_MOCK_DATA|ENABLE_MOCK_DATA|ENABLE_SCREENSHOT_MOCK_DATA|SCREENSHOT_PRESET|screenshotPreset))"\s*\)"#,
-            "Use GraceLaunchFlags.isMockDataModeActive() / isScreenshotCaptureActive() from GraceAppsLibraryCore instead of inspecting ProcessInfo.processInfo.arguments directly."
-        ),
-        (
-            #"ProcessInfo\.processInfo\.environment\s*\[\s*"(?:USE_MOCK_DATA|ENABLE_MOCK_DATA|ENABLE_SCREENSHOT_MOCK_DATA|SCREENSHOT_PRESET)"\s*\]"#,
-            "Use GraceLaunchFlags.isMockDataModeActive() / isScreenshotCaptureActive() from GraceAppsLibraryCore instead of inspecting ProcessInfo.processInfo.environment directly."
-        )
-    ]
+    let argPattern = #"(?:ProcessInfo\.processInfo\.arguments|CommandLine\.arguments|\barguments|\bargs)\s*\.contains\s*\(\s*"([^"]+)"\s*\)"#
+    let envPattern = #"(?:ProcessInfo\.processInfo\.environment|\benvironment|\benv)\s*\[\s*"([^"]+)"\s*\]"#
+    let mockFlagFamilyPattern = #"(?i)^-?(?:use_?mock_?data|enable_?mock_?data|enable_?screenshot_?mock_?data|mock_?data|screenshot_?preset|screenshot_?capture|is_?screenshot_?active|live_?screenshot_?mode|.*_use_?mock_?data)$"#
+    let uiTestFlagPattern = #"(?i)ui_?test"#
 
     for fileURL in swiftFiles {
         guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
-        let lines = contents.components(separatedBy: .newlines)
+        let stripped = stripComments(from: contents)
+        let lines = stripped.components(separatedBy: .newlines)
+
         for (index, line) in lines.enumerated() {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if trimmed.hasPrefix("//") || trimmed.hasPrefix("/*") || trimmed.hasPrefix("*") {
-                continue
-            }
-            for rule in forbiddenPatterns {
-                if line.range(of: rule.pattern, options: .regularExpression) != nil {
-                    Diagnostics.error("\(fileURL.path):\(index + 1): \(rule.message)")
+            for flag in regexCaptures(pattern: argPattern, in: line) + regexCaptures(pattern: envPattern, in: line) {
+                if flag.range(of: mockFlagFamilyPattern, options: .regularExpression) != nil {
+                    Diagnostics.error(
+                        "\(fileURL.path):\(index + 1): Use GraceLaunchFlags.isMockDataModeActive() / isScreenshotCaptureActive() instead of checking launch flag '\(flag)' directly."
+                    )
                 }
             }
+        }
+
+        validateUseMockDataBodies(in: stripped, fileURL: fileURL, uiTestFlagPattern: uiTestFlagPattern)
+    }
+}
+
+private func regexCaptures(pattern: String, in text: String) -> [String] {
+    guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+    let nsRange = NSRange(text.startIndex..<text.endIndex, in: text)
+    return regex.matches(in: text, range: nsRange).compactMap { match in
+        guard match.numberOfRanges > 1,
+              let range = Range(match.range(at: 1), in: text) else {
+            return nil
+        }
+        return String(text[range])
+    }
+}
+
+private func validateUseMockDataBodies(in stripped: String, fileURL: URL, uiTestFlagPattern: String) {
+    let declPattern = #"\b(?:static|class|public|internal|private|fileprivate|\s)*(?:var\s+useMockData\b|func\s+shouldUseMockData\b)"#
+    guard let declRegex = try? NSRegularExpression(pattern: declPattern) else { return }
+    let nsRange = NSRange(stripped.startIndex..<stripped.endIndex, in: stripped)
+
+    for match in declRegex.matches(in: stripped, range: nsRange) {
+        guard let declStart = Range(match.range, in: stripped)?.lowerBound else { continue }
+        let afterDecl = stripped[declStart...]
+        guard let braceStart = afterDecl.firstIndex(of: "{") else { continue }
+
+        var depth = 0
+        var braceEnd: String.Index?
+        var idx = braceStart
+        while idx < stripped.endIndex {
+            let ch = stripped[idx]
+            if ch == "{" { depth += 1 }
+            else if ch == "}" {
+                depth -= 1
+                if depth == 0 {
+                    braceEnd = stripped.index(after: idx)
+                    break
+                }
+            }
+            idx = stripped.index(after: idx)
+        }
+        guard let endIndex = braceEnd else { continue }
+        let body = String(stripped[braceStart..<endIndex])
+
+        // Stored/constant fallback `= false` has no `{`, so every block here is a getter or helper body.
+        let lineNumber = stripped[..<declStart].components(separatedBy: .newlines).count
+        if !body.contains("GraceLaunchFlags.isMockDataModeActive") {
+            Diagnostics.error(
+                "\(fileURL.path):\(lineNumber): Delegate useMockData / shouldUseMockData directly to GraceLaunchFlags.isMockDataModeActive(...)."
+            )
+        } else if body.contains("||") ||
+            body.range(of: #""[^"]+""#, options: .regularExpression) != nil ||
+            body.range(of: uiTestFlagPattern, options: .regularExpression) != nil {
+            Diagnostics.error(
+                "\(fileURL.path):\(lineNumber): Do not add custom flag literals or '||' fallbacks in useMockData / shouldUseMockData; delegate solely to GraceLaunchFlags.isMockDataModeActive(...)."
+            )
         }
     }
 }
