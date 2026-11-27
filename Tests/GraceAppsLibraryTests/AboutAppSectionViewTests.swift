@@ -39,4 +39,26 @@ final class AboutAppSectionViewTests: XCTestCase {
         XCTAssertEqual(view.appStoreId, "123456789")
         XCTAssertTrue(view.releaseNotes.isEmpty)
     }
+
+    func testBuildTypeAndDisplayVersionStringHideDebugDuringScreenshots() {
+        let bundle = Bundle.main
+        let expectedVersion = "\(bundle.releaseVersionNumber) (\(bundle.buildVersionNumber))"
+
+        #if DEBUG
+        XCTAssertEqual(bundle.resolvedBuildType(arguments: [], environment: [:]), "Debug")
+        XCTAssertEqual(bundle.resolvedDisplayVersionString(arguments: [], environment: [:]), "Debug - \(expectedVersion)")
+
+        XCTAssertEqual(bundle.resolvedBuildType(arguments: ["-SCREENSHOT_PRESET", "1"], environment: [:]), "")
+        XCTAssertEqual(bundle.resolvedDisplayVersionString(arguments: ["-SCREENSHOT_PRESET", "1"], environment: [:]), expectedVersion)
+
+        XCTAssertEqual(bundle.resolvedBuildType(arguments: [], environment: ["SCREENSHOT_PRESET": "1"]), "")
+        XCTAssertEqual(bundle.resolvedDisplayVersionString(arguments: [], environment: ["SCREENSHOT_PRESET": "1"]), expectedVersion)
+
+        XCTAssertEqual(bundle.resolvedBuildType(arguments: [], environment: ["IS_SCREENSHOT_ACTIVE": "1"]), "")
+        XCTAssertEqual(bundle.resolvedDisplayVersionString(arguments: [], environment: ["IS_SCREENSHOT_ACTIVE": "1"]), expectedVersion)
+        #else
+        XCTAssertEqual(bundle.resolvedBuildType(arguments: [], environment: [:]), "")
+        XCTAssertEqual(bundle.resolvedDisplayVersionString(arguments: [], environment: [:]), expectedVersion)
+        #endif
+    }
 }
