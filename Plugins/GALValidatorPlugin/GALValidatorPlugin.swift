@@ -45,12 +45,15 @@ private func validateSwiftSources(
     validateRequiredSettingsSections(in: swiftFiles, targetName: targetName)
     validateUXOrchestration(in: swiftFiles, targetName: targetName)
     validateLoggerUsage(in: swiftFiles, targetName: targetName)
+    validateLaunchFlags(in: swiftFiles, targetName: targetName)
+    validateScreenshotEngine(in: swiftFiles, projectRoot: projectRoot, targetName: targetName)
 
     if let projectRoot = projectRoot {
         validateUXMoments(in: projectRoot)
         validateFastlaneIAPs(in: swiftFiles, allInputFiles: allInputFiles, projectRoot: projectRoot)
         validateSmokeTest(in: projectRoot)
         validateWatchTranslations(in: projectRoot, allInputFiles: allInputFiles)
+        validateScreenshotScripts(in: projectRoot, targetName: targetName, swiftFiles: swiftFiles)
     }
 }
 
@@ -882,4 +885,213 @@ private func findFiles(named fileName: String? = nil, withExtension ext: String?
         }
     }
     return results
+}
+
+// MARK: - 12. GraceLaunchFlags, ScreenshotEngine & Screenshot Scripts
+
+private func isWatchOrExtensionTarget(in swiftFiles: [URL], targetName: String) -> Bool {
+    if targetName.localizedCaseInsensitiveContains("watch") ||
+        targetName.localizedCaseInsensitiveContains("widget") {
+        return true
+    }
+    return swiftFiles.contains { url in
+        guard let contents = try? String(contentsOf: url, encoding: .utf8) else { return false }
+        return contents.contains("import WatchKit") || contents.contains("import WidgetKit")
+    }
+}
+
+private func isTestTarget(in swiftFiles: [URL], targetName: String) -> Bool {
+    targetName.hasSuffix("Tests") ||
+        targetName.hasSuffix("UITests") ||
+        swiftFiles.contains { $0.path.contains("/Tests/") }
+}
+
+private func hasScreenshotsConfigFile(in projectRoot: URL?) -> Bool {
+    guard let root = projectRoot else { return false }
+    let fm = FileManager.default
+    return fm.fileExists(atPath: root.appendingPathComponent("Marketing/screenshots.json").path) ||
+        fm.fileExists(atPath: root.appendingPathComponent("screenshots.json").path)
+}
+
+private func validateLaunchFlags(in swiftFiles: [URL], targetName: String) {
+    guard !isTestTarget(in: swiftFiles, targetName: targetName) else { return }
+    guard targetName != "GraceAppsLibrary" &&
+        targetName != "GraceAppsLibraryCore" &&
+        targetName != "GraceAppsLibraryDebug" &&
+        targetName != "GraceAppsLibraryWatch" else {
+        return
+    }
+
+    let forbiddenPatterns: [(pattern: String, message: String)] = [
+        (
+            #"ProcessInfo\.processInfo\.arguments\.contains\s*\(\s*"(?:-(?:USE_MOCK_DATA|ENABLE_MOCK_DATA|ENABLE_SCREENSHOT_MOCK_DATA|SCREENSHOT_PRESET|screenshotPreset))"\s*\)"#,
+            "Use GraceLaunchFlags.isMockDataModeActive() / isScreenshotCaptureActive() from GraceAppsLibraryCore instead of inspecting ProcessInfo.processInfo.arguments directly."
+        ),
+        (
+            #"ProcessInfo\.processInfo\.environment\s*\[\s*"(?:USE_MOCK_DATA|ENABLE_MOCK_DATA|ENABLE_SCREENSHOT_MOCK_DATA|SCREENSHOT_PRESET)"\s*\]"#,
+            "Use GraceLaunchFlags.isMockDataModeActive() / isScreenshotCaptureActive() from GraceAppsLibraryCore instead of inspecting ProcessInfo.processInfo.environment directly."
+        )
+    ]
+
+    for fileURL in swiftFiles {
+        guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+        let lines = contents.components(separatedBy: .newlines)
+        for (index, line) in lines.enumerated() {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("//") || trimmed.hasPrefix("/*") || trimmed.hasPrefix("*") {
+                continue
+            }
+            for rule in forbiddenPatterns {
+                if line.range(of: rule.pattern, options: .regularExpression) != nil {
+                    Diagnostics.error("\(fileURL.path):\(index + 1): \(rule.message)")
+                }
+            }
+        }
+    }
+}
+
+private func validateScreenshotEngine(
+    in swiftFiles: [URL],
+    projectRoot: URL?,
+    targetName: String
+) {
+    guard !isTestTarget(in: swiftFiles, targetName: targetName),
+          !isWatchOrExtensionTarget(in: swiftFiles, targetName: targetName) else {
+        return
+    }
+
+    let hasConfig = hasScreenshotsConfigFile(in: projectRoot)
+    var usesDebugModule = false
+    var hasEngineSubclass = false
+    var hasCoordinationModifier = false
+    var firstScreenshotFile: URL? = nil
+
+    for fileURL in swiftFiles {
+        guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+        let stripped = stripComments(from: contents)
+
+        if stripped.contains("import GraceAppsLibraryDebug") {
+            usesDebugModule = true
+        }
+        if stripped.contains(": ScreenshotEngine<") {
+            hasEngineSubclass = true
+            firstScreenshotFile = firstScreenshotFile ?? fileURL
+        }
+        if stripped.contains(".screenshotTabCoordination(") || stripped.contains(".screenshotDestination(") {
+            hasCoordinationModifier = true
+        }
+
+        if stripped.contains("ScreenshotDemoManager") ||
+            stripped.contains("ScreenshotMockDataManager") ||
+            stripped.contains("ScreenshotPresetProvider") {
+            firstScreenshotFile = firstScreenshotFile ?? fileURL
+        }
+
+        if stripped.range(of: #"\bScreenshotMockDataManager\b"#, options: .regularExpression) != nil {
+            Diagnostics.error(
+                "\(fileURL.path):1: Merge ScreenshotMockDataManager into ScreenshotDemoManager using ScreenshotMockDataSeeding from GraceAppsLibraryDebug."
+            )
+        }
+
+        if countOccurrences(of: "class ScreenshotDemoManager", in: contents) > 1 {
+            Diagnostics.error(
+                "\(fileURL.path):1: Remove duplicate #else Release stub for ScreenshotDemoManager; ScreenshotEngine and .screenshotTabCoordination are already Release no-ops in GraceAppsLibraryDebug."
+            )
+        }
+
+        if stripped.contains("ScreenshotPresetProvider"),
+           stripped.range(of: #"static\s+func\s+from\s*\(\s*token\s*:"#, options: .regularExpression) != nil {
+            Diagnostics.error(
+                "\(fileURL.path):1: Remove custom static func from(token:); define var aliases: [String] on your ScreenshotPresetProvider instead."
+            )
+        }
+
+        if stripped.contains(": ScreenshotEngine<") {
+            if stripped.contains("UniversalPurchaseCoordinator.shared.setStoreStatus(") {
+                Diagnostics.error(
+                    "\(fileURL.path):1: Use makeEntitlementOverrideBinding() bound to UniversalPurchaseCoordinator.shared.debugOverride instead of calling setStoreStatus(...) in ScreenshotEngine subclasses."
+                )
+            }
+            let touchesStoreContext = stripped.contains("ModelContext") ||
+                stripped.contains("NSManagedObjectContext") ||
+                stripped.contains("FetchDescriptor") ||
+                stripped.contains("NSFetchRequest")
+            if touchesStoreContext && !stripped.contains("override func makeStoreSafety(") {
+                Diagnostics.error(
+                    "\(fileURL.path):1: Override makeStoreSafety() returning .swiftData(...) or .coreData(...) on your ScreenshotEngine subclass to protect persistent stores."
+                )
+            }
+        }
+    }
+
+    guard hasConfig || firstScreenshotFile != nil else { return }
+
+    let anchorPath = (firstScreenshotFile?.path) ?? projectRoot?.appendingPathComponent("Marketing/screenshots.json").path ?? targetName
+    if !usesDebugModule {
+        Diagnostics.error(
+            "\(anchorPath):1: App uses screenshots/ScreenshotDemoManager but does not import GraceAppsLibraryDebug. Link GraceAppsLibraryDebug and migrate to ScreenshotEngine."
+        )
+    }
+    if !hasEngineSubclass {
+        Diagnostics.error(
+            "\(anchorPath):1: App uses screenshots/ScreenshotDemoManager but does not subclass ScreenshotEngine<Preset> from GraceAppsLibraryDebug."
+        )
+    }
+    if hasEngineSubclass && !hasCoordinationModifier {
+        Diagnostics.error(
+            "\(anchorPath):1: Subclasses ScreenshotEngine<...> without mounting .screenshotTabCoordination(...) or .screenshotDestination(...) in SwiftUI."
+        )
+    }
+}
+
+private func validateScreenshotScripts(in projectRoot: URL, targetName: String, swiftFiles: [URL]) {
+    guard !isTestTarget(in: swiftFiles, targetName: targetName),
+          !isWatchOrExtensionTarget(in: swiftFiles, targetName: targetName),
+          hasScreenshotsConfigFile(in: projectRoot) else {
+        return
+    }
+
+    let fm = FileManager.default
+    let scriptDirs = ["Scripts", "scripts"].map { projectRoot.appendingPathComponent($0) }
+        .filter { dir in
+            var isDir: ObjCBool = false
+            return fm.fileExists(atPath: dir.path, isDirectory: &isDir) && isDir.boolValue
+        }
+
+    let runnerCandidates = scriptDirs.map { $0.appendingPathComponent("screenshots.sh") }
+        .filter { fm.fileExists(atPath: $0.path) }
+
+    guard let mainRunner = runnerCandidates.first else {
+        Diagnostics.error(
+            "\(projectRoot.path):1: Found screenshots.json, but Scripts/screenshots.sh (or scripts/screenshots.sh) delegating to GraceAppsLibrary/scripts/screenshots.sh is missing."
+        )
+        return
+    }
+
+    if let content = try? String(contentsOf: mainRunner, encoding: .utf8),
+       !content.contains("GraceAppsLibrary") {
+        Diagnostics.error(
+            "\(mainRunner.path):1: screenshots.sh must delegate to GraceAppsLibrary/scripts/screenshots.sh rather than reimplementing capture/render locally."
+        )
+    }
+
+    for dir in scriptDirs {
+        let captureScript = dir.appendingPathComponent("capture_screenshots.sh")
+        if fm.fileExists(atPath: captureScript.path),
+           let content = try? String(contentsOf: captureScript, encoding: .utf8),
+           !content.contains("GraceAppsLibrary") || content.contains("xcrun simctl") {
+            Diagnostics.error(
+                "\(captureScript.path):1: Delegate capture_screenshots.sh to GraceAppsLibrary/scripts/capture_screenshots.sh instead of invoking xcrun simctl locally."
+            )
+        }
+
+        let generateScript = dir.appendingPathComponent("generate_screenshots.sh")
+        if fm.fileExists(atPath: generateScript.path),
+           let content = try? String(contentsOf: generateScript, encoding: .utf8),
+           !content.contains("GraceAppsLibrary") || content.contains("--headless") {
+            Diagnostics.error(
+                "\(generateScript.path):1: Delegate generate_screenshots.sh to GraceAppsLibrary/scripts/render_screenshots.py instead of rendering locally."
+            )
+        }
+    }
 }
