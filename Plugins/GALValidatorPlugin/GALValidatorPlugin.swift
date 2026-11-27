@@ -1129,20 +1129,16 @@ private func validateScreenshotScripts(in projectRoot: URL, targetName: String, 
 
     for dir in scriptDirs {
         let captureScript = dir.appendingPathComponent("capture_screenshots.sh")
-        if fm.fileExists(atPath: captureScript.path),
-           let content = try? String(contentsOf: captureScript, encoding: .utf8),
-           !content.contains("GraceAppsLibrary") || content.contains("xcrun simctl") {
+        if fm.fileExists(atPath: captureScript.path) {
             Diagnostics.error(
-                "\(captureScript.path):1: Delegate capture_screenshots.sh to GraceAppsLibrary/scripts/capture_screenshots.sh instead of invoking xcrun simctl locally."
+                "\(captureScript.path):1: Remove redundant capture_screenshots.sh; use a single Scripts/screenshots.sh (or scripts/screenshots.sh) delegating to GraceAppsLibrary/scripts/screenshots.sh."
             )
         }
 
         let generateScript = dir.appendingPathComponent("generate_screenshots.sh")
-        if fm.fileExists(atPath: generateScript.path),
-           let content = try? String(contentsOf: generateScript, encoding: .utf8),
-           !content.contains("GraceAppsLibrary") || content.contains("--headless") {
+        if fm.fileExists(atPath: generateScript.path) {
             Diagnostics.error(
-                "\(generateScript.path):1: Delegate generate_screenshots.sh to GraceAppsLibrary/scripts/render_screenshots.py instead of rendering locally."
+                "\(generateScript.path):1: Remove redundant generate_screenshots.sh; use a single Scripts/screenshots.sh (or scripts/screenshots.sh) delegating to GraceAppsLibrary/scripts/screenshots.sh."
             )
         }
     }
