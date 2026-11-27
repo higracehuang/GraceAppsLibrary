@@ -622,7 +622,113 @@ private func validateLoggerUsage(in swiftFiles: [URL], targetName: String) {
                 "\(fileURL.path):1: Direct OSLog / os.Logger usage is disallowed in iOS app targets. Use GraceLogger from GraceAppsLibrary instead."
             )
         }
+
+        for lineNumber in findUnconditionalPrintLines(in: contents) {
+            Diagnostics.error(
+                "\(fileURL.path):\(lineNumber): Direct print(...) outside #if DEBUG is disallowed in iOS app targets. Use GraceLogger from GraceAppsLibrary instead."
+            )
+        }
     }
+}
+
+private func findUnconditionalPrintLines(in source: String) -> [Int] {
+    var violations: [Int] = []
+    var conditionStack: [(isDebug: Bool, inElseBranch: Bool)] = []
+    var inBlockComment = false
+    let printRegex = try? NSRegularExpression(pattern: #"(?:^|[^A-Za-z0-9_.])print\s*\("#, options: [])
+
+    let lines = source.components(separatedBy: .newlines)
+    for (index, rawLine) in lines.enumerated() {
+        let trimmed = rawLine.trimmingCharacters(in: .whitespaces)
+
+        if inBlockComment {
+            if trimmed.contains("*/") {
+                inBlockComment = false
+            }
+            continue
+        }
+        if trimmed.hasPrefix("/*") {
+            if !trimmed.contains("*/") {
+                inBlockComment = true
+            }
+            continue
+        }
+        if trimmed.hasPrefix("//") || trimmed.hasPrefix("*") {
+            continue
+        }
+
+        if trimmed.hasPrefix("#if") {
+            let expr = String(trimmed.dropFirst(3)).trimmingCharacters(in: .whitespaces)
+            let isDebug = isDebugCondition(expr)
+            conditionStack.append((isDebug: isDebug, inElseBranch: false))
+            continue
+        } else if trimmed.hasPrefix("#elseif") {
+            if !conditionStack.isEmpty {
+                let expr = String(trimmed.dropFirst(7)).trimmingCharacters(in: .whitespaces)
+                let prevWasDebug = conditionStack[conditionStack.count - 1].isDebug
+                conditionStack[conditionStack.count - 1] = (
+                    isDebug: !prevWasDebug && isDebugCondition(expr),
+                    inElseBranch: false
+                )
+            }
+            continue
+        } else if trimmed.hasPrefix("#else") {
+            if !conditionStack.isEmpty {
+                conditionStack[conditionStack.count - 1].inElseBranch = true
+            }
+            continue
+        } else if trimmed.hasPrefix("#endif") {
+            if !conditionStack.isEmpty {
+                conditionStack.removeLast()
+            }
+            continue
+        }
+
+        let insideDebugBlock = conditionStack.contains { $0.isDebug && !$0.inElseBranch }
+        if insideDebugBlock {
+            continue
+        }
+
+        let codeWithoutStrings = stripDoubleQuotedStrings(from: rawLine)
+        let codeBeforeInlineComment = codeWithoutStrings.components(separatedBy: "//").first ?? codeWithoutStrings
+        if let regex = printRegex {
+            let nsRange = NSRange(location: 0, length: codeBeforeInlineComment.utf16.count)
+            if regex.firstMatch(in: codeBeforeInlineComment, options: [], range: nsRange) != nil {
+                violations.append(index + 1)
+            }
+        }
+    }
+    return violations
+}
+
+private func isDebugCondition(_ expr: String) -> Bool {
+    guard !expr.contains("!DEBUG") else { return false }
+    return expr.range(of: #"\bDEBUG\b"#, options: .regularExpression) != nil
+}
+
+private func stripDoubleQuotedStrings(from line: String) -> String {
+    var result = ""
+    var inString = false
+    var escaped = false
+    for ch in line {
+        if escaped {
+            escaped = false
+            continue
+        }
+        if ch == "\\" && inString {
+            escaped = true
+            continue
+        }
+        if ch == "\"" {
+            inString.toggle()
+            result.append(ch)
+            continue
+        }
+        if !inString {
+            result.append(ch)
+        }
+    }
+    return result
 }
 
 // MARK: - 10. Pre-Release Smoke Test Doc
